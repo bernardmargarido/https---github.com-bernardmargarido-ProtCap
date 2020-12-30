@@ -109,7 +109,7 @@ If _oAstrein:ObterIntegracao()
 
         _cError := ""
         _cStatus:= "1"
-        _cChave := RTrim(_oJson[#"NewDataSet"][#"INTITEM"][#"ITE_CODIGO"]) + RTrim(_oJson[#"NewDataSet"][#"INTITEM"][#"MAT_CODIGO"])
+        _cChave := "/"+ RTrim(_oJson[#"NewDataSet"][#"INTITEM"][#"ITE_CODIGO"]) + "/"+ RTrim(_oJson[#"NewDataSet"][#"INTITEM"][#"SCM_CODIGO"]) + "/"+ RTrim(_oJson[#"NewDataSet"][#"INTITEM"][#"MAT_CODIGO"])
 
         //--------------+
         // Atualiza Z12 |
@@ -270,10 +270,6 @@ While (_cAlias)->( !Eof() )
             If lMsErroAuto
                 RollBackSx8()
                 
-                //MakeDir("/erros/")
-                //_cArqLog    := "SA1_" + RTrim(Z12->Z12_CHAVE) + "_" + DToS(Date()) + Left(Time(),2) + SubStr(Time(),4,2) + Right(Time(),2) + ".LOG"
-                //_cMsgLog    := MostraErro("/erros/",_cArqLog)
-
                 //-------------------+
                 // Log erro ExecAuto |
                 //-------------------+
@@ -323,7 +319,7 @@ While (_cAlias)->( !Eof() )
             _oIntItem   := _oJson[#"NewDataSet"][#"INTITEM"]
             _nOpc       := 0    
             _cCpj       := PadR(_oMaterial[#"A2_CGC"],_nTCGC)
-            _cIdAstrein := _oIntItem[#"ITE_CODIGO"]
+            _cIdAstrein := _oIntItem[#"MAT_CODIGO"]
 
             //------------------------------------+    
             // Valida codigo e loja do fornecedor |
@@ -371,19 +367,15 @@ While (_cAlias)->( !Eof() )
                 EndIf 
             Next _nX
 
-            //-----------------------+
-            // Roda ExecAuto Cliente |
-            //-----------------------+
+            //--------------------------+
+            // Roda ExecAuto Fornecedor |
+            //--------------------------+
             lMsErroAuto     := .F.
             lAutoErrNoFile  := .T.
             MsExecAuto({|x,y| Mata020(x,y)}, _aArray, _nOpc)
 
             If lMsErroAuto
                 RollBackSx8()
-                
-                //MakeDir("/erros/")
-                //_cArqLog    := "SA2_" + RTrim(Z12->Z12_CHAVE) + "_" + DToS(Date()) + Left(Time(),2) + SubStr(Time(),4,2) + Right(Time(),2) + ".LOG"
-                //_cMsgLog    := MostraErro("/erros/",_cArqLog)
 
                 //-------------------+
                 // Log erro ExecAuto |
@@ -434,7 +426,8 @@ While (_cAlias)->( !Eof() )
             _oIntItem   := _oJson[#"NewDataSet"][#"INTITEM"]
             _nOpc       := 3    
             _cCodPrd    := PadR(_oMaterial[#"B1_COD"],_nTProd)
-            _cIdAstrein := _oIntItem[#"ITE_CODIGO"]
+            _cIdAstrein := _oIntItem[#"MAT_CODIGO"]
+            _lSB5       := .F.
 
             //-------------------+    
             // Posiciona produto | 
@@ -442,7 +435,7 @@ While (_cAlias)->( !Eof() )
             If SB1->( dbSeek(xFilial("SB1") + _cCodPrd) )
                 _nOpc := 4
             EndIf
-
+          
             //-----------------------+    
             // Cria array de cliente |
             //-----------------------+
@@ -473,18 +466,14 @@ While (_cAlias)->( !Eof() )
             Next _nX
 
             //-----------------------+
-            // Roda ExecAuto Cliente |
+            // Roda ExecAuto produto |
             //-----------------------+
             lMsErroAuto     := .F.
             lAutoErrNoFile  := .T.
-            MsExecAuto({|x,y| Mata020(x,y)}, _aArray, _nOpc)
+            MsExecAuto({|x,y| Mata010(x,y)}, _aArray, _nOpc)
 
             If lMsErroAuto
                 RollBackSx8()
-                
-                //MakeDir("/erros/")
-                //_cArqLog    := "SA2_" + RTrim(Z12->Z12_CHAVE) + "_" + DToS(Date()) + Left(Time(),2) + SubStr(Time(),4,2) + Right(Time(),2) + ".LOG"
-                //_cMsgLog    := MostraErro("/erros/",_cArqLog)
 
                 //-------------------+
                 // Log erro ExecAuto |
@@ -510,11 +499,21 @@ While (_cAlias)->( !Eof() )
             Else
 
                 ConfirmSx8()
+
+                //---------------------------------------+
+                // Valida se tem complemento de produtos | 
+                //---------------------------------------+
+                If !BzApi001f(SB1->B1_COD,SB1->B1_DESC)
+                    RestArea(_aArea)
+                    Return .T.
+                EndIf 
+
                 BzApi001d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,"","2",4)
+
                 //-----------------------------------------------------------+
                 // Adiciona dados para realizar a baixa dos dados na Astrein |
                 //-----------------------------------------------------------+
-                aAdd(_aRetAstr,{_cIdAstrein,"0","FORNECEDOR PROCESSADO COM SUCESSO",RTrim(SA2->A2_COD) + RTrim(SA2->A2_LOJA)})
+                aAdd(_aRetAstr,{_cIdAstrein,"0","PRODUTO PROCESSADO COM SUCESSO",RTrim(SB1->B1_COD)})
 
             Endif
         EndIf
@@ -526,6 +525,114 @@ EndDo
 
 RestArea(_aArea)
 Return .T.
+
+/***********************************************************************************/
+/*/{Protheus.doc} BzApi001f
+    @description Grava / Atualiza complemento de produto 
+    @type  Static Function
+    @author Bernard M. Margarido
+    @since 03/11/2020
+/*/
+/***********************************************************************************/
+Static Function BzApi001f(_cCodPrd,_cDescPrd,_oMaterial,_oIntItem)
+Local _aArea    := GetArea() 
+
+Local _nOpc     := 3
+
+Local _lRet     := .T.
+Local _lSB5     := .F.
+
+//--------------------------+    
+// SB1 - Tabela de Produtos |
+//--------------------------+
+dbSelectArea("SB5")
+SB5->( dbSetOrder(1) )
+                
+_aArray     := {}
+_aErroAuto  := {}
+_aStruct    := SB5->( dbStruct() )
+_cIdAstrein := _oIntItem[#"MAT_CODIGO"]
+
+//-------------------+    
+// Posiciona produto | 
+//-------------------+    
+If SB5->( dbSeek(xFilial("SB5") + _cCodPrd) )
+    _nOpc := 4
+EndIf
+
+//-----------------------+    
+// Cria array de cliente |
+//-----------------------+
+aAdd(_aArray, {"B5_COD", _cCodPrd, Nil})
+aAdd(_aArray, {"B5_CEME", _cDescPrd, Nil})
+
+For _nX := 1 To Len(_aStruct)
+    If ValType(_oMaterial[#_aStruct[_nX][1]]) <> "U"
+        If RTrim(_oMaterial[#_aStruct[_nX][1]]) <> "NAO APLICAVEL"
+            Do Case 
+                Case _aStruct[_nX][2] == "D"
+                    _xRet := cTod(_oMaterial[#_aStruct[_nX][1]])
+                Case _aStruct[_nX][2] == "N"
+                    _xRet := Val(_oMaterial[#_aStruct[_nX][1]])
+                Case _aStruct[_nX][2] == "L"
+                    _xRet := IIF(SubStr(_oMaterial[#_aStruct[_nX][1]],1,1) $ "T/t", .T., .F.)
+                OtherWise
+                    _xRet := _oMaterial[#_aStruct[_nX][1]]
+            EndCase
+            _lSB5   := .T.    
+            aAdd(_aArray,{_aStruct[_nX][1], _xRet, Nil })
+        EndIf
+    //----------------------------------------------+
+    // Campos que não fazem parte do Layput Astrein | 
+    //----------------------------------------------+
+    EndIf 
+Next _nX
+
+//--------------------------------------+
+// Roda ExecAuto complemento de produto |
+//--------------------------------------+
+If _lSB5
+    lMsErroAuto     := .F.
+    lAutoErrNoFile  := .T.
+    MsExecAuto({|x,y| Mata180(x,y)}, _aArray, _nOpc)
+
+    If lMsErroAuto
+        RollBackSx8()
+
+        //-------------------+
+        // Log erro ExecAuto |
+        //-------------------+
+        _aErroAuto := GetAutoGRLog()
+
+        //------------------------------------+
+        // Retorna somente a linha com o erro | 
+        //------------------------------------+
+        ErroAuto(_aErroAuto,@_cMsgLog)
+
+        //--------------------+
+        // Atualiza historico | 
+        //--------------------+
+        BzApi001d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cMsgLog,"3",4)
+
+        BzApi001e(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cMsgLog)
+
+        //-----------------------------------------------------------+
+        // Adiciona dados para realizar a baixa dos dados na Astrein |
+        //-----------------------------------------------------------+
+        aAdd(_aRetAstr,{_cIdAstrein,"1",_cMsgLog,""})
+
+        _lRet   := .F.
+    Else
+
+        ConfirmSx8()
+
+        _lRet   := .T.
+
+    EndIf
+EndIf
+
+RestArea(_aArea)
+Return _lRet  
 
 /***********************************************************************************/
 /*/{Protheus.doc} BzApi001d
@@ -896,7 +1003,8 @@ _cQuery += " WHERE " + CRLF
 _cQuery += "	Z12_FILIAL = '" + xFilial("Z12") + "' AND " + CRLF
 _cQuery += "	Z12_CHAVE <> '' AND " + CRLF
 _cQuery += "	Z12_ID = '" + _cIdProc + "' AND " + CRLF
-_cQuery += "	Z12_STPROC IN('1','3') AND " + CRLF
+// _cQuery += "	Z12_STPROC IN('1','3') AND " + CRLF
+_cQuery += "	Z12_STPROC = '1' AND " + CRLF
 _cQuery += "	D_E_L_E_T_ = '' "
 
 _cAlias := MPSysOpenQuery(_cQuery)
