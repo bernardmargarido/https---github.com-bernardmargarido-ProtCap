@@ -20,8 +20,6 @@ Static cDirSave	:= "categorias/"
 /*/
 /**************************************************************************************************/
 User Function AECOI001()
-Local _nX				:= 0
-
 Private cThread			:= Alltrim(Str(ThreadId()))
 Private cStaLog			:= "0"
 Private cArqLog			:= ""	

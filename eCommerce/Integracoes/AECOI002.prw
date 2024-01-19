@@ -219,7 +219,7 @@ If _oVTEX:Marca()
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError)})
@@ -233,7 +233,7 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError)})
@@ -245,7 +245,7 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= "Sem comunicação com o integrador"
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . " )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . "})

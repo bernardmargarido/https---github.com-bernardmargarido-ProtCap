@@ -80,27 +80,24 @@ Return Nil
 Static Function AECOINT03()
 Local aArea			:= GetArea()
 
-Local cCodPai 		:= ""
-Local cNomePrd		:= ""
-Local cTitPrd		:= "" 
-Local cSubTitPrd	:= "" 
-Local cDescPrd		:= "" 
-Local cCarcacPrd	:= "" 
-Local cKeyword		:= "" 
-Local cStatus		:= ""
-Local cTpProd		:= ""
-Local cIdLoja		:= ""
+Local _cGrade		:= ""
+Local _cCodProd		:= ""
+Local _cName		:= ""
+Local _cTitle 		:= ""
+Local _cKeyWord 	:= ""
+Local _cMetaTag 	:= ""
+Local _cDescription := ""
+Local _cDescriShort := ""
+Local _cDescMarca	:= ""
+Local _cStatus 		:= ""
+Local _cTaxCode		:= ""
+Local _cRest 		:= ""
+
+Local _nIdVTex		:= 0
+Local _nIdBrand 	:= 0
+Local _nRecno		:= 0
 
 Local cAlias		:= GetNextAlias()
-
-Local nCat01		:= 0  
-Local nCat02		:= 0   
-Local nCat03		:= 0  
-Local nCat04		:= 0
-Local nCat05		:= 0
-Local nFabric		:= 0
-Local nIdProd		:= 0
-Local nToReg		:= 0
 
 Local oJSon			:= Nil 
 
@@ -122,79 +119,55 @@ While (cAlias)->( !Eof() )
 	//-----------------------------------+
 	// Incrementa regua de processamento |
 	//-----------------------------------+
-	IncProc("Produtos " + Alltrim((cAlias)->CODIGO) + " - " + Alltrim((cAlias)->NOME) )
-
+	IncProc("Produtos " + RTrim((cAlias)->PR_CODIGO) + " - " + RTrim((cAlias)->PR_DESCRICAO) )
 					
 	//----------------------+
 	// Dados da Produto Pai |
 	//----------------------+
-	cCodPai 	:= (cAlias)->CODIGO
-	cNomePrd	:= (cAlias)->NOME
-	cTitPrd		:= (cAlias)->TIUTLO 
-	cSubTitPrd	:= (cAlias)->SUBTITULO 
-	cDescPrd	:= (cAlias)->DESCECO 
-	cCarcacPrd	:= (cAlias)->DESCCARA 
-	cKeyword	:= (cAlias)->KEYWORDS 
-	cStatus		:= (cAlias)->STATUSPRD
-	cTpProd		:= (cAlias)->TPPROD
-	cIdLoja		:= (cAlias)->IDLOJA
-	
-	nCat01		:= (cAlias)->CATEGO01  
-	nCat02		:= (cAlias)->CATEGO02   
-	nCat03		:= (cAlias)->CATEGO03  
-	nCat04		:= (cAlias)->CATEGO04
-	nCat05		:= (cAlias)->CATEGO05
-	nFabric		:= (cAlias)->CODMARCA
-	nIdProd		:= (cAlias)->IDPROD
+	_cGrade 						:= (cAlias)->GRADE
+	_cCodProd 						:= RTrim((cAlias)->PR_CODIGO)
+	_cName							:= RTrim((cAlias)->EC_TITULO)
+	_cTitle 						:= RTrim((cAlias)->EC_TITULO)
+	_cKeyWord 						:= ""
+	_cMetaTag 						:= ""
+	_cDescription 					:= RTrim((cAlias)->EC_DESCRICAO)
+	_cDescriShort 					:= ""
+	_cDescMarca						:= RTrim((cAlias)->PR_DESC_MARCA)
+	_cStatus 						:= (cAlias)->EC_FLAG
+	_cTaxCode 						:= (cAlias)->PR_NCM
 
-	If !Empty(nCat01)
-		nCatDepar := nCat01
-	EndIf	
-
-	If !Empty(nCat02)
-		nCatDepar := nCat02
-	EndIf	
-
-	If !Empty(nCat03)
-		nCatDepar := nCat03
-	EndIf	
-
-	If !Empty(nCat04)
-		nCatDepar := nCat04
-	EndIf
-
-	If !Empty(nCat05)
-		nCatDepar := nCat05
-	EndIf
+	_nIdVTex						:= (cAlias)->PR_IDPROD
+	_nIdBrand 						:= (cAlias)->PR_MARCA
+	_nRecno							:= (cAlias)->RECNOPROD
 
 	oJSon							:= Nil 
 	oJSon 							:= JSonObject():New()
 
-	oJSon["Name"]					:= RTrim(cNomePrd)
-	oJSon["DepartmentId"]			:= nCatDepar
-	oJSon["CategoryId"]				:= nCat01
-	oJSon["BrandId"]				:= nFabric
-	oJSon["LinkId"]					:= Lower(Alltrim(cTitPrd))
-	oJSon["RefId"]					:= RTrim(cCodPai)
-	oJSon["IsVisible"]				:= IIF(cStatus == "A",.T.,.F.)
-	oJSon["Description"]			:= RTrim(cDescPrd)
-	oJSon["DescriptionShort"]		:= RTrim(cSubTitPrd)
-	oJSon["KeyWords"]				:= RTrim(cKeyword)
-	oJSon["Title"]					:= RTrim(cTitPrd)
-	oJSon["IsActive"]				:= IIF(cStatus == "A",.T.,.F.)
-	oJSon["TaxCode"]				:= Nil
-	oJSon["MetaTagDescription"]		:= RTrim(cCarcacPrd)
+	oJSon["Name"]					:= _cName
+	oJSon["DepartmentId"]			:= 0
+	oJSon["CategoryId"]				:= 0
+	oJSon["BrandId"]				:= _nIdBrand
+	oJSon["LinkId"]					:= Nil
+	oJSon["RefId"]					:= _cCodProd
+	oJSon["IsVisible"]				:= IIF(_cStatus == "1",.T.,.F.)
+	oJSon["Description"]			:= _cDescription
+	oJSon["DescriptionShort"]		:= _cDescriShort
+	oJSon["KeyWords"]				:= Nil
+	oJSon["Title"]					:= _cTitle
+	oJSon["IsActive"]				:= IIF(_cStatus == "1",.T.,.F.)
+	oJSon["TaxCode"]				:= _cTaxCode
+	oJSon["MetaTagDescription"]		:= Nil
 	oJSon["SupplierId"]				:= Nil
 	oJSon["ShowWithoutStock"]		:= .T.
 	
-	cRest							:= oJSon:ToJson()		
+	_cRest							:= oJSon:ToJson()		
 
-	LogExec("ENVIANDO PRODUTO " + Alltrim((cAlias)->CODIGO) + " - " + Alltrim((cAlias)->NOME) )
+	LogExec("ENVIANDO PRODUTO " + RTrim((cAlias)->PR_CODIGO) + " - " + RTrim((cAlias)->PR_DESCRICAO) )
 
 	//-----------------------------------------+
 	// Rotina realiza o envio para o ecommerce |
 	//-----------------------------------------+
-	AEcoEnv(cCodPai,cNomePrd,cRest,nIdProd,(cAlias)->RECNOB5)
+	AEcoEnv(_cGrade,_cCodProd,_cName,_cRest,_nIdVTex,_nRecno)
 	
 	(cAlias)->( dbSkip() )
 				
@@ -219,29 +192,36 @@ Return .T.
 	@type function
 /*/
 /**************************************************************************************************/
-Static Function AEcoEnv(cCodPai,cNomePrd,cRest,nIdProd,nRecnoB5)
+Static Function AEcoEnv(_cGrade,_cCodProd,_cName,_cRest,_nIdVTex,_nRecno)
 Local aArea			:= GetArea()
 
 Local _oVTEX 		:= VTEX():New()
 Local _oJSon 		:= Nil 
 
-Private cType		:= ""
+Local cChave		:= ""
+Local cPolitica		:= ""
+Local cStatus		:= ""
+Local cMsgErro		:= ""
 
-LogExec("ENVIANDO PRODUTO " + cCodPai + " - " + Alltrim(cNomePrd) + " ." )
+Local nIDVtex		:= 0
+Local nRegRep		:= 0
+Local nIdLV			:= 0
+
+LogExec("ENVIANDO PRODUTO " + _cCodProd + " - " + Alltrim(_cName) + " ." )
 
 //--------------------------------+
 // Cria diretorio caso nao exista |
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsonproduto_" + RTrim(cCodPai) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsonproduto_" + RTrim(_cCodProd) + ".json",_cRest)
 
 //---------------------+
 // Parametros de envio | 
 //---------------------+
-_oVTEX:cMetodo		:= IIF(nIdProd > 0, "PUT", "POST")
-_oVTEX:cJSon		:= cRest
-_oVTEX:cID			:= cValToChar(nIdProd)
+_oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
+_oVTEX:cJSon		:= _cRest
+_oVTEX:cID			:= cValToChar(_nIdVTex)
 
 If _oVTEX:Produto()
 	
@@ -249,44 +229,108 @@ If _oVTEX:Produto()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
 	If ValType(_oJSon) <> "U"
 		
-		LogExec("PRODUTO " + cCodPai + " - " + Alltrim(cNomePrd) + " . ENVIADA COM SUCESSO." )
+		LogExec("PRODUTO " + _cCodProd + " - " + Alltrim(_cName) + " . ENVIADA COM SUCESSO." )
 											
 		//------------------+
 		// Atualiza produto |
 		//------------------+
-		SB5->( dbGoTo(nRecnoB5) )
-		RecLock("SB5",.F.)
-			SB5->B5_XIDPROD := _oJSon['Id']
-			SB5->B5_XENVECO := "2"
-			SB5->B5_XENVSKU := "1"
-			SB5->B5_XENVCAT := "2"
-			SB5->B5_XDTEXP	:= Date()
-			SB5->B5_XHREXP	:= Time()
-		SB5->( MsunLock() )	
+		If _cGrade == "S"
 
-		//--------------------------------------------------+
-		// Adiciona Array para envio dos campos especificos |
-		//--------------------------------------------------+
-		aAdd(aPrdEnv,{SB5->B5_FILIAL,SB5->B5_COD,SB5->B5_XIDPROD})
+			SB4->( dbGoTo(_nRecno) )
+			RecLock("SB4",.F.)
+				SB4->B4_XIDPRD := _oJSon['Id']
+			SB4->( MsunLock() )	
+
+			cChave		:= SB4->B4_FILIAL + SB4->B4_COD
+
+			//--------------------------------------------------+
+			// Adiciona Array para envio dos campos especificos |
+			//--------------------------------------------------+
+			aAdd(aPrdEnv,{SB4->B4_FILIAL,SB4->B4_COD,SB4->B4_XIDPRD})
+
+		Else 
+
+			SB1->( dbGoTo(_nRecno) )
+			RecLock("SB1",.F.)
+				SB1->B1_XIDPRD := _oJSon['Id']
+			SB1->( MsunLock() )	
+
+			cChave		:= SB1->B1_FILIAL + SB1->B1_COD
+
+			//--------------------------------------------------+
+			// Adiciona Array para envio dos campos especificos |
+			//--------------------------------------------------+
+			aAdd(aPrdEnv,{SB1->B1_FILIAL,SB1->B1_COD,SB1->B1_XIDPRD})
+
+		EndIf 
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "1"
+		cMsgErro	:= ""
+		nIDVtex		:= _oJSon['Id']
+
 
 	Else
 		If ValType(_oVTEX:cError) <> "U"
-			aAdd(aMsgErro,{cCodPai,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+
+			//----------------+
+			// Parametros LOG |
+			//----------------+
+			cStatus		:= "2"
+			cMsgErro	:= RTrim(_oVTEX:cError)
+			nIDVtex		:= _nIdVTex
+
+			aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
 		Else 
-			aAdd(aMsgErro,{cCodPai,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". "})
-			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ")
+
+			//----------------+
+			// Parametros LOG |
+			//----------------+
+			cStatus		:= "2"
+			cMsgErro	:= "Sem comunicação com o integrador"
+			nIDVtex		:= _nIdVTex
+
+			aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". "})
+			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ")
 		EndIf 
 	EndIf	
 Else
 	If Type(_oVTEX:cError) <> "U"
-		aAdd(aMsgErro,{cCodPai,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
 	Else 
-		aAdd(aMsgErro,{cCodPai,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". "})
-		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(cCodPai) + " - " + Upper(Alltrim(cNomePrd)) + ". ")
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= "Sem comunicação com o integrador"
+		nIDVtex		:= _nIdVTex
+
+		aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". "})
+		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ")
 	EndIf 
 EndIf
+
+//---------------+
+// Grava LOG ZT0 |
+//---------------+
+cPolitica	:= ""
+nRegRep		:= 0
+nIdLV		:= 0
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -311,56 +355,91 @@ Default _cLojaID	:= ""
 // Query consulta produtos pai |
 //-----------------------------+
 cQuery := "	SELECT " + CRLF
-cQuery += "		CODIGO, " + CRLF 
-cQuery += "		CODMARCA, " + CRLF 
-cQuery += "		NOME, " + CRLF
-cQuery += "		TIUTLO, " + CRLF
-cQuery += "		SUBTITULO, " + CRLF
-cQuery += "		CATEGO01, " + CRLF
-cQuery += "		CATEGO02, " + CRLF
-cQuery += "		CATEGO03, " + CRLF  
-cQuery += "		CATEGO04, " + CRLF  
-cQuery += "		CATEGO05, " + CRLF  
-cQuery += "		IDPROD, " + CRLF
-cQuery += "		IDLOJA, " + CRLF
-cQuery += "		DESCECO, " + CRLF 
-cQuery += "		DESCCARA, " + CRLF 
-cQuery += "		KEYWORDS, " + CRLF
-cQuery += "		STATUSPRD, " + CRLF
-cQuery += "		TPPROD, " + CRLF
-cQuery += "		RECNOB5 " + CRLF
-cQuery += "	FROM " + CRLF
-cQuery += "	( " + CRLF
+cQuery += "		GRADE, " + CRLF
+cQuery += "		FILIAL, " + CRLF
+cQuery += "		PR_IDPROD, " + CRLF
+cQuery += "		PR_CODIGO, " + CRLF
+cQuery += "		PR_DESCRICAO,  " + CRLF
+cQuery += "		PR_DESC_TECNICA, " + CRLF
+cQuery += "		PR_NCM, " + CRLF
+cQuery += "		PR_DEPARTAMENTO, " + CRLF
+cQuery += "		PR_CATEGORIA, " + CRLF
+cQuery += "		PR_MARCA, " + CRLF
+cQuery += "		PR_DESC_MARCA, " + CRLF
+cQuery += "		PR_STATUS, " + CRLF
+cQuery += "		EC_TITULO, " + CRLF
+cQuery += "		EC_DESCRICAO, " + CRLF
+cQuery += "		EC_CARACTERISTICA, " + CRLF
+cQuery += "		EC_FLAG, " + CRLF
+cQuery += "		EC_CUBAGEM, " + CRLF
+cQuery += "		EC_PROFUNDIDADE, " + CRLF
+cQuery += "		EC_COMPRIMENTO, " + CRLF
+cQuery += "		EC_LARGURA, " + CRLF
+cQuery += "		RECNOPROD " + CRLF
+cQuery += " FROM ( " + CRLF
 cQuery += "		SELECT " + CRLF 
-cQuery += "			B5.B5_COD CODIGO, " + CRLF 
-cQuery += "			ISNULL(AY2.AY2_XIDMAR,0) CODMARCA, " + CRLF 
-cQuery += "			B5.B5_XNOMPRD NOME, " + CRLF
-cQuery += "			B5.B5_XTITULO TIUTLO, " + CRLF
-cQuery += "			B5.B5_XSUBTIT SUBTITULO, " + CRLF
-cQuery += "			ISNULL((SELECT AY0.AY0_XIDCAT FROM " + RetSqlName("AY0") + " AY0 WHERE AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = B5.B5_XCAT01 AND AY0.D_E_L_E_T_ = '' ),0) CATEGO01, " + CRLF   
-cQuery += "			ISNULL((SELECT AY0.AY0_XIDCAT FROM " + RetSqlName("AY0") + " AY0 WHERE AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = B5.B5_XCAT02 AND AY0.D_E_L_E_T_ = '' ),0) CATEGO02, " + CRLF  
-cQuery += "			ISNULL((SELECT AY0.AY0_XIDCAT FROM " + RetSqlName("AY0") + " AY0 WHERE AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = B5.B5_XCAT03 AND AY0.D_E_L_E_T_ = '' ),0) CATEGO03, " + CRLF 
-cQuery += "			ISNULL((SELECT AY0.AY0_XIDCAT FROM " + RetSqlName("AY0") + " AY0 WHERE AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = B5.B5_XCAT04 AND AY0.D_E_L_E_T_ = '' ),0) CATEGO04, " + CRLF 
-cQuery += "			ISNULL((SELECT AY0.AY0_XIDCAT FROM " + RetSqlName("AY0") + " AY0 WHERE AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = B5.B5_XCAT05 AND AY0.D_E_L_E_T_ = '' ),0) CATEGO05, " + CRLF 
-cQuery += "			B5.B5_XIDPROD IDPROD, " + CRLF
-cQuery += "			B5.B5_XIDLOJA IDLOJA, " + CRLF
-cQuery += "			ISNULL(CAST(CAST(B5.B5_XDESCRI AS BINARY(2048)) AS VARCHAR(2048)),'') DESCECO, " + CRLF 
-cQuery += "			ISNULL(CAST(CAST(B5.B5_XCARACT AS BINARY(2048)) AS VARCHAR(2048)),'') DESCCARA, " + CRLF
-cQuery += "			ISNULL(CAST(CAST(B5.B5_XKEYWOR AS BINARY(2048)) AS VARCHAR(2048)),'') KEYWORDS, " + CRLF
-cQuery += "			B5.B5_XSTAPRD STATUSPRD, " + CRLF
-cQuery += "			B5.B5_XTPPROD TPPROD, " + CRLF
-cQuery += "			B5.R_E_C_N_O_ RECNOB5 " + CRLF
-cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("SB5") + " B5 " + CRLF 
-cQuery += "			LEFT OUTER JOIN " + RetSqlName("AY2") + " AY2 ON AY2.AY2_FILIAL = '" + xFilial("AY2") + "' AND AY2.AY2_CODIGO = B5.B5_XCODMAR AND AY2.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			'S' GRADE, " + CRLF
+cQuery += "			B4.B4_FILIAL FILIAL, " + CRLF
+cQuery += "			B4.B4_XIDPRD PR_IDPROD, " + CRLF
+cQuery += "			B4.B4_COD PR_CODIGO, " + CRLF
+cQuery += "			B4.B4_DESC PR_DESCRICAO, " + CRLF 
+cQuery += "			ISNULL(CAST(CAST(B4_XDESCTE AS BINARY(2048)) AS VARCHAR(2048)),'') PR_DESC_TECNICA, " + CRLF
+cQuery += "			B4_POSIPI PR_NCM, " + CRLF
+cQuery += "			'' PR_DEPARTAMENTO, " + CRLF
+cQuery += "			'' PR_CATEGORIA, " + CRLF
+cQuery += "			ZTD.ZTD_IDLV PR_MARCA, " + CRLF
+cQuery += "			ZTD.ZTD_DESC PR_DESC_MARCA, " + CRLF
+cQuery += "			B4.B4_XATIVO PR_STATUS, " + CRLF
+cQuery += "			ISNULL(CAST(CAST(MHH_ECTITU AS BINARY(2048)) AS VARCHAR(2048)),'') EC_TITULO, " + CRLF
+cQuery += "			ISNULL(CAST(CAST(MHH_ECDESC AS BINARY(2048)) AS VARCHAR(2048)),'') EC_DESCRICAO, " + CRLF
+cQuery += "			ISNULL(CAST(CAST(MHH_ECCARA AS BINARY(2048)) AS VARCHAR(2048)),'') EC_CARACTERISTICA, " + CRLF
+cQuery += "			MHH_FLAG EC_FLAG, " + CRLF
+cQuery += "			MHH_ECCUBA EC_CUBAGEM, " + CRLF
+cQuery += "			MHH_ECPROF EC_PROFUNDIDADE, " + CRLF
+cQuery += "			MHH_ECCOMP EC_COMPRIMENTO, " + CRLF
+cQuery += "			MHH_ECLARG EC_LARGURA, " + CRLF
+cQuery += "			B4.R_E_C_N_O_ RECNOPROD " + CRLF
+cQuery += "		FROM " + CRLF 
+cQuery += "			" + RetSqlName("SB4") + " B4 (NOLOCK) " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("MHH") + " MHH (NOLOCK) ON MHH.MHH_FILIAL = B4.B4_FILIAL AND MHH.MHH_COD = B4.B4_COD AND MHH.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("ZTD") + " ZTD (NOLOCK) ON ZTD.ZTD_FILIAL = '" + xFilial("ZTD") + "' AND ZTD.ZTD_COD = B4.B4_XMARCA AND ZTD.D_E_L_E_T_ = '' " + CRLF
 cQuery += "		WHERE " + CRLF
-cQuery += "			B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-cQuery += "			B5.B5_XENVECO = '1' AND " + CRLF
-cQuery += "			B5.B5_XENVSKU = '1' AND " + CRLF
-cQuery += "			B5.B5_XUSAECO = 'S' AND " + CRLF
-cQuery += "			B5.D_E_L_E_T_ = '' " + CRLF
-cQuery += "	) PRDPAI " + CRLF
-cQuery += "	ORDER BY CODIGO "
+cQuery += "			B4.B4_FILIAL = '" + xFilial("SB4") + "' AND " + CRLF
+cQuery += "			B4.B4_XINTLV  = '1' AND " + CRLF
+cQuery += "			B4.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		UNION ALL " + CRLF
+cQuery += "		SELECT " + CRLF 
+cQuery += "			'N' GRADE, " + CRLF
+cQuery += "			B1.B1_FILIAL FILIAL, " + CRLF
+cQuery += "			B1.B1_XIDPRD PR_IDPROD, " + CRLF
+cQuery += "			B1.B1_COD PR_CODIGO, " + CRLF
+cQuery += "			B1.B1_DESC PR_DESCRICAO,  " + CRLF
+cQuery += "			ISNULL(CAST(CAST(B1_XDESCTE AS BINARY(2048)) AS VARCHAR(2048)),'') PR_DESC_TECNICA, " + CRLF
+cQuery += "			B1_POSIPI PR_NCM, " + CRLF
+cQuery += "			'' PR_DEPARTAMENTO, " + CRLF 
+cQuery += "			'' PR_CATEGORIA, " + CRLF
+cQuery += "			ZTD.ZTD_IDLV PR_MARCA, " + CRLF
+cQuery += "			ZTD.ZTD_DESC PR_DESC_MARCA, " + CRLF
+cQuery += "			B1.B1_XATIVO PR_STATUS, " + CRLF
+cQuery += "			B5_ECTITU EC_TITULO, " + CRLF
+cQuery += "			ISNULL(CAST(CAST(B5_ECDESCR AS BINARY(2048)) AS VARCHAR(2048)),'') EC_DESCRICAO, " + CRLF
+cQuery += "			ISNULL(CAST(CAST(B5_ECCARAC AS BINARY(2048)) AS VARCHAR(2048)),'') EC_CARACTERISTICA, " + CRLF
+cQuery += "			B5_ECFLAG EC_FLAG, " + CRLF
+cQuery += "			B5_ECCUBAG EC_CUBAGEM, " + CRLF
+cQuery += "			B5_ECPROFU EC_PROFUNDIDADE, " + CRLF
+cQuery += "			B5_ECCOMP EC_COMPRIMENTO, " + CRLF
+cQuery += "			B5_ECLARGU EC_LARGURA, " + CRLF
+cQuery += "			B1.R_E_C_N_O_ RECNOPROD " + CRLF
+cQuery += "		FROM  " + CRLF
+cQuery += "			" + RetSqlName("SB1") + " B1 (NOLOCK) " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB5") + " B5 (NOLOCK) ON B5.B5_FILIAL = B1.B1_FILIAL AND B5.B5_COD = B1.B1_COD AND B5.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("ZTD") + " ZTD (NOLOCK) ON ZTD.ZTD_FILIAL = '" + xFilial("ZTD") + "' AND ZTD.ZTD_COD = B1.B1_XMARCA AND ZTD.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		WHERE " + CRLF
+cQuery += "			B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+cQuery += "			B1.B1_GRADE IN('','N') AND " + CRLF
+cQuery += "			B1.B1_XINTLV = '1' AND " + CRLF
+cQuery += "			B1.D_E_L_E_T_ = '' " + CRLF
+cQuery += " )PRODUTOS "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 count To nToReg  
