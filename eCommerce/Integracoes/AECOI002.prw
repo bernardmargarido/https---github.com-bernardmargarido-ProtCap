@@ -203,6 +203,7 @@ If _oVTEX:Marca()
 
 		RecLock("ZTD",.F.)
 			ZTD->ZTD_IDVTX		:= _oJSon['Id']
+			ZTD->ZTD_INTLV		:= '2'
 		ZTD->( MsUnLock() )	
 
 		//----------------+

@@ -238,7 +238,8 @@ If _oVTEX:Produto()
 
 			SB4->( dbGoTo(_nRecno) )
 			RecLock("SB4",.F.)
-				SB4->B4_XIDPRD := _oJSon['Id']
+				SB4->B4_XIDPRD 	:= _oJSon['Id']
+				SB4->B4_XINTLV	:= '2'
 			SB4->( MsunLock() )	
 
 			cChave		:= SB4->B4_FILIAL + SB4->B4_COD
@@ -253,6 +254,7 @@ If _oVTEX:Produto()
 			SB1->( dbGoTo(_nRecno) )
 			RecLock("SB1",.F.)
 				SB1->B1_XIDPRD := _oJSon['Id']
+				SB1->B1_XINTLV	:= '2'
 			SB1->( MsunLock() )	
 
 			cChave		:= SB1->B1_FILIAL + SB1->B1_COD

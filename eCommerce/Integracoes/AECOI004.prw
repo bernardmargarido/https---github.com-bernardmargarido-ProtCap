@@ -87,33 +87,31 @@ Return Nil
 /*/
 /**************************************************************************************************/
 Static Function AECOINT04()
-Local aArea		:= GetArea()
+Local aArea			:= GetArea()
 
-Local cCodPai 	:= ""
-Local cNomePrd	:= "" 
-Local cCodSku	:= ""
-Local cNomeSku	:= ""
-Local cCodBar	:= ""  
-Local cLocal	:= ""
-Local cUnidade	:= ""
-Local cStatPrd	:= ""
-Local cAlias	:= GetNextAlias()
+Local cAlias		:= GetNextAlias()
+Local _cCodSku 		:= ""
+Local _cName		:= ""		
+Local _cCodBar 		:= ""
+Local _cCodFabric	:= ""
+Local _cStatus		:= ""
+Local _cUM 			:= ""
+Local _cRest		:= ""
 
-Local nCodMarca	:= 0
-Local nPeso		:= 0
-Local nPrcVen	:= 0   
-Local nAltPrd	:= 0   
-Local nAltEmb	:= 0   
-Local nProfPrd	:= 0   
-Local nProfEmb	:= 0   
-Local nLargPrd	:= 0 
-Local nLargEmb	:= 0 
-Local nIdProd	:= 0   
-Local nIdSku	:= 0 
-Local nToReg	:= 0
-Local nRecno	:= 0
+Local _nAltura 		:= 0 
+Local _nComp		:= 0 
+Local _nLargura 	:= 0 
+Local _nAltEmb		:= 0 
+Local _nCompEmb 	:= 0 
+Local _nLargEmb 	:= 0 
+Local _nPeso 		:= 0 
+Local _nCubagem 	:= 0 
+Local _nIdVTex		:= 0 
+Local _nIdProd		:= 0 
+Local _nRecno		:= 0 
+Local nToReg		:= 0
 
-Local oJSon		:= Nil 
+Local oJSon			:= Nil 
 
 //----------------------------------------+
 // Valida se existem SKU a serem enviadas |
@@ -133,94 +131,83 @@ While (cAlias)->( !Eof() )
 	//-----------------------------------+
 	// Incrementa regua de processamento |
 	//-----------------------------------+
-	IncProc("Sku " + Alltrim((cAlias)->CODSKU) + " - " + Alltrim((cAlias)->NOMESKU) )
-			
+	IncProc("Sku " + RTrim((cAlias)->SKU_COD) + " - " + RTrim((cAlias)->SKU_DESC) )
+
+	LogExec("ENVIANDO SKU " + RTrim((cAlias)->SKU_COD) + " - " + RTrim((cAlias)->SKU_DESC) )
+
 	//-----------+
 	// Dados SKU |
 	//-----------+
-	cCodPai 	:= (cAlias)->CODIGO
-	cNomePrd	:= RTrim((cAlias)->NOMEPAI)
-	cCodSku		:= (cAlias)->CODSKU
-	cNomeSku	:= RTrim((cAlias)->NOMEPAI) 
-	cCodBar		:= RTrim((cAlias)->CODBARRA)  
-	cLocal		:= (cAlias)->ARMAZEM
-	cUnidade	:= (cAlias)->UNIDADE
-	cStatPrd	:= (cAlias)->STATUSPRD
-	cYouTube 	:= IIF(Empty((cAlias)->YOUTUBE),"",'https://www.youtube.com/watch?v=' + RTrim((cAlias)->YOUTUBE))
-	
-	//-----------------------------+   
-	// Peso convertido para Gramas |
-	//-----------------------------+
-	nCodMarca	:= (cAlias)->CODMARCA
-	nPeso		:= (cAlias)->PESOLIQ
-	nPesBruto	:= (cAlias)->PESOBRUP
-	nPrcVen		:= (cAlias)->PRCVEN
-	nAltPrd		:= (cAlias)->ALTPRD   
-	nAltEmb		:= (cAlias)->ALTEMB   
-	nProfPrd	:= (cAlias)->PROPRD   
-	nProfEmb	:= (cAlias)->PROEMB   
-	nLargPrd	:= (cAlias)->LARGPRD 
-	nLargEmb	:= (cAlias)->LARGEMB
-	
-	//-----------------------
-	// ID Produto eCommerce |
-	//-----------------------
-	nIdProd		:= (cAlias)->IDPROD   
-	nIdSku		:= (cAlias)->IDSKU
-	nRecno 		:= (cAlias)->RECNOSB5
+	_cCodSku 	:= RTrim((cAlias)->SKU_COD)
+	_cName		:= RTrim((cAlias)->SKU_TITULO)
+	_cCodBar 	:= RTrim((cAlias)->SKU_EAN)
+	_cCodFabric	:= RTrim((cAlias)->SKU_FRABRICANTE)
+	_cUM 		:= (cAlias)->SKU_UNIDADE_MEDIDA
 
-	
+	_nAltura 	:= (cAlias)->SKU_ALTURA 
+	_nComp		:= (cAlias)->SKU_PROFUNDIDADE
+	_nLargura 	:= (cAlias)->SKU_LARGURA 
+	_nAltEmb	:= (cAlias)->SKU_ALTURA_EMB 
+	_nCompEmb 	:= (cAlias)->SKU_PROFUNDIDADE_EMB
+	_nLargEmb 	:= (cAlias)->SKU_LARGURA_EMB
+	_nPeso 		:= (cAlias)->SKU_PESO_LIQUIDO
+	_nCubagem 	:= 0
+	_nIdVTex	:= (cAlias)->SKU_IDVTEX
+	_nIdProd	:= (cAlias)->PR_IDVTEX
+	_nRecno		:= (cAlias)->SKU_RECNO
+
+	_lStatus 	:= IIF((cAlias)->SKU_BLOQUEIO == '1', .F., (cAlias)->SKU_STATUS <> '2')
 	//------------------------------+
 	// Calcula a Cubagem do Produto |
 	//------------------------------+
-	If nAltEmb > 0 .And. nProfEmb > 0 .And. nLargEmb > 0 
-		nCubic := Round(nAltEmb * nProfEmb * nLargEmb,2) 
+	If _nAltEmb > 0 .And. _nCompEmb > 0 .And. _nLargEmb > 0 
+		_nCubagem := Round(_nAltEmb * _nCompEmb * _nLargEmb,2) 
 	Else
-		nCubic := Round(nAltPrd * nProfPrd * nLargPrd,2)
+		_nCubagem := Round(_nAltura * _nComp * _nLargura,2)
 	EndIf
 
 	oJSon							:= Nil 
 	oJSon 							:= JSonObject():New()
 
-   	oJSon["ProductId"]				:= nIdProd
-   	oJSon["IsActive"]				:= .F. //IIF(cStatPrd == "A",.T.,.F.)
-   	oJSon["ActivateIfPossible"]		:= .F.
-	oJSon["Name"]					:= cNomeSku
-	oJSon["RefId"]					:= cCodSku
-	oJSon["Ean"]					:= cCodBar
-	oJSon["PackagedHeight"]			:= nAltEmb
-	oJSon["PackagedLength"]			:= nProfEmb
-	oJSon["PackagedWidth"]			:= nLargEmb
-	oJSon["PackagedWeightKg"]		:= nPesBruto
-	oJSon["Height"]					:= nAltPrd
-	oJSon["Length"]					:= nProfPrd
-	oJSon["Width"]					:= nLargPrd
-	oJSon["WeightKg"]				:= nPeso
-	oJSon["CubicWeight"]			:= nCubic
+   	oJSon["ProductId"]				:= _nIdProd
+   	oJSon["IsActive"]				:= _lStatus
+   	oJSon["ActivateIfPossible"]		:= _cStatus
+	oJSon["Name"]					:= _cName
+	oJSon["RefId"]					:= _cCodSku
+	oJSon["Ean"]					:= _cCodBar
+	oJSon["PackagedHeight"]			:= _nAltEmb
+	oJSon["PackagedLength"]			:= _nCompEmb
+	oJSon["PackagedWidth"]			:= _nLargEmb
+	oJSon["PackagedWeightKg"]		:= _nPeso
+	oJSon["Height"]					:= _nAltura
+	oJSon["Length"]					:= _nComp
+	oJSon["Width"]					:= _nLargura
+	oJSon["WeightKg"]				:= _nPeso
+	oJSon["CubicWeight"]			:= _nCubagem
 	oJSon["IsKit"]					:= .F.
-	oJSon["CreationDate"]			:= IIF(nIdSku > 0, Nil, FwTimeStamp(3))
+	oJSon["CreationDate"]			:= IIF(_nIdVTex > 0, Nil, FwTimeStamp(3))
 	oJSon["RewardValue"]			:= 0
 	oJSon["EstimatedDateArrival"]	:= Nil 
-	oJSon["ManufacturerCode"]		:= Alltrim(Str(nCodMarca))
+	oJSon["ManufacturerCode"]		:= _cCodFabric
 	oJSon["CommercialConditionId"]	:= Nil 
-	oJSon["MeasurementUnit"]		:= cUnidade
+	oJSon["MeasurementUnit"]		:= _cUM
 	oJSon["UnitMultiplier"]			:= 1
 	oJSon["ModalType"]				:= Nil 
 	oJSon["KitItensSellApart"]		:= .F.
 
+	/*
 	If !Empty(cYouTube)
 		oJSon["Videos"]				:= {}
 		aAdd(oJSon["Videos"],cYouTube)
 	EndIf 
+	*/
 
-	cRest							:= oJSon:ToJson()		
-
-	LogExec("ENVIANDO SKU " + Alltrim((cAlias)->CODSKU) + " - " + Alltrim((cAlias)->NOMESKU) )
+	_cRest							:= oJSon:ToJson()		
 		 
 	//---------------------------------------+
 	// Rotina realiza o envio para a Rakuten |
 	//---------------------------------------+
-	AEcoEnv(cRest,cCodSku,cNomeSku,nIdProd,nIdSku,nRecno)
+	AEcoEnv(_cRest,_cCodSku,_cName,_nIdProd,_nIdVTex,_nRecno)
 	
 	(cAlias)->( dbSkip() )
 				
@@ -243,68 +230,132 @@ Return .T.
 	@type function
 /*/
 /**************************************************************************************************/
-Static Function AEcoEnv(cRest,cCodSku,cNomeSku,nIdProd,nIdSku,nRecnoSb5)
+Static Function AEcoEnv(_cRest,_cCodSku,_cName,_nIdProd,_nIdVTex,_nRecno)
 Local aArea			:= GetArea()
+
+Local cChave		:= ""
+Local cPolitica		:= ""
+Local cStatus		:= ""
+Local cMsgErro		:= ""
+
+Local nIDVtex		:= 0
+Local nRegRep		:= 0
+Local nIdLV			:= 0
 
 Local _oVTEX 		:= VTEX():New()
 Local _oJSon 		:= Nil 
 
 Private cType		:= ''
 
-LogExec("ENVIANDO PRODUTO " + cCodSku + " - " + Alltrim(cNomeSku) + " ." )
+LogExec("ENVIANDO PRODUTO " + _cCodSku + " - " + Alltrim(_cName) + " ." )
 
 //--------------------------------+
 // Cria diretorio caso nao exista |
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsonsku_" + RTrim(cCodSku) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsonsku_" + RTrim(_cCodSku) + ".json",cRest)
 
 //---------------------+
 // Parametros de envio | 
 //---------------------+
-_oVTEX:cMetodo		:= IIF(nIdSku > 0, "PUT", "POST")
-_oVTEX:cJSon		:= cRest
-_oVTEX:cID			:= cValToChar(nIdSku)
+_oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
+_oVTEX:cJSon		:= _cRest
+_oVTEX:cID			:= cValToChar(_nIdVTex)
 
 If _oVTEX:Sku()
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
 	If ValType(_oJSon) <> "U"
 		
-		LogExec("PRODUTO SKU " + cCodSku + " - " + Alltrim(cNomeSku) + " . ENVIADA COM SUCESSO.")
+		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cName) + " . ENVIADA COM SUCESSO.")
 
 		//---------------+
 		// Posiciona SKU |
 		//---------------+
-		If nRecnoSb5 > 0
-			SB5->( dbGoTo(nRecnoSb5) )
-			RecLock("SB5",.F.)
-				SB5->B5_XENVSKU := "2"
-				SB5->B5_XENVECO := "2"
-				SB5->B5_XIDSKU	:= _oJSon['Id']
-			SB5->( MsUnLock() )	
+		If _nRecno > 0
+			SB1->( dbGoTo(_nRecno) )
+			RecLock("SB1",.F.)
+				SB1->B1_XIDSKU	:= _oJSon['Id']
+				SB1->B1_XINTLV	:= '2'
+			SB1->( MsUnLock() )	
 		EndIf
-		LogExec("PRODUTO SKU " + cCodSku + " - " + Alltrim(cNomeSku) + " . ENVIADA COM SUCESSO.")
+
+		cChave		:= SB1->B1_FILIAL + SB1->B1_COD
+
+		//--------------------------------------------------+
+		// Adiciona Array para envio dos campos especificos |
+		//--------------------------------------------------+
+		aAdd(aPrdEnv,{SB1->B1_FILIAL,SB1->B1_COD,_nIdVTex,_nIdProd})
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "1"
+		cMsgErro	:= ""
+		nIDVtex		:= _oJSon['Id']
+
+		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cName) + " . ENVIADA COM SUCESSO.")
 
 	Else
 		If ValType(_oVTEX:cError) <> "U"
-			aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIARSKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-			LogExec("ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+
+			//----------------+
+			// Parametros LOG |
+			//----------------+
+			cStatus		:= "2"
+			cMsgErro	:= RTrim(_oVTEX:cError)
+			nIDVtex		:= _nIdVTex
+
+			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIARSKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+
 		Else 
-			aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". "})
-			LogExec("ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ")
+
+			//----------------+
+			// Parametros LOG |
+			//----------------+
+			cStatus		:= "2"
+			cMsgErro	:= "Sem comunicação com o integrador"
+			nIDVtex		:= _nIdVTex
+
+			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". "})
+			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ")
 		EndIf 
 	EndIf	
 Else
 	If ValType(_oVTEX:cError) <> "U"
-		aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-		LogExec("ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " +  RTrim(_oVTEX:cError))
 	Else 
-		aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". "})
-		LogExec("ERRO AO ENVIAR SKU " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ")
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= "Sem comunicação com o integrador"
+		nIDVtex		:= _nIdVTex
+
+		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". "})
+		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ")
 	EndIf 
 EndIf
+
+//---------------+
+// Grava LOG ZT0 |
+//---------------+
+cPolitica	:= ""
+nRegRep		:= 0
+nIdLV		:= 0
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -323,8 +374,11 @@ Return .T.
 /******************************************************************************************************/
 Static Function AEcoQry(cAlias,nToReg,_cLojaID)
 Local cQuery 		:= ""
+Local _aGrade 		:= Separa(GetMv("MV_MASCGRD"),",")
 
-Local cCodTab		:= GetNewPar("EC_TABECO")
+Local _nTProd 		:= Val(_aGrade[1])
+Local _nTLinha 		:= Val(_aGrade[2])
+Local _nTColuna		:= Val(_aGrade[3])
 
 Default _cLojaID	:= ""
 
@@ -332,66 +386,129 @@ Default _cLojaID	:= ""
 // Query consulta produtos pai |
 //-----------------------------+
 cQuery := "	SELECT " + CRLF
-cQuery += "		CODIGO, " + CRLF
-cQuery += "		NOMEPAI, " + CRLF
-cQuery += "		CODSKU, " + CRLF
-cQuery += "		NOMESKU, " + CRLF
-cQuery += "		CODBARRA, " + CRLF
-cQuery += "		ARMAZEM, " + CRLF
-cQuery += "		UNIDADE, " + CRLF
-cQuery += "		PESOLIQ, " + CRLF
-cQuery += "		PESOBRUP, " + CRLF
-cQuery += "		ALTPRD, " + CRLF
-cQuery += "		ALTEMB, " + CRLF
-cQuery += "		PROPRD, " + CRLF
-cQuery += "		PROEMB, " + CRLF
-cQuery += "		LARGPRD, " + CRLF
-cQuery += "		LARGEMB, " + CRLF  
-cQuery += "		CODMARCA, " + CRLF
-cQuery += "		IDPROD, " + CRLF
-cQuery += "		IDSKU, " + CRLF
-cQuery += "		STATUSPRD, " + CRLF
-cQuery += "		PRCVEN,  " + CRLF
-cQuery += "		YOUTUBE,  " + CRLF
-cQuery += "		RECNOSB5 " + CRLF
-cQuery += "	FROM " + CRLF
-cQuery += "	( " + CRLF
-cQuery += "		SELECT " + CRLF
-cQuery += "			B5.B5_COD CODIGO, " + CRLF
-cQuery += "			B5.B5_XNOMPRD NOMEPAI, " + CRLF
-cQuery += "			B5.B5_COD CODSKU, " + CRLF
-cQuery += "			B1.B1_DESC NOMESKU, " + CRLF
-cQuery += "			B1.B1_CODBAR CODBARRA, " + CRLF
-cQuery += "			B1.B1_LOCPAD ARMAZEM, " + CRLF
-cQuery += "			B1.B1_UM UNIDADE, " + CRLF
-cQuery += "			CASE WHEN B5.B5_PESO > 0 THEN B5.B5_PESO ELSE B1.B1_PESO END PESOLIQ, " + CRLF
-cQuery += "			B1.B1_PESBRU PESOBRUP, " + CRLF
-cQuery += "			CASE WHEN B5.B5_ALTURA > 0 THEN B5.B5_ALTURA ELSE B5.B5_XALTPRD END ALTPRD, " + CRLF
-cQuery += "			CASE WHEN B5.B5_ALTURLC > 0 THEN B5.B5_ALTURLC ELSE B5.B5_XALTEMB END ALTEMB, " + CRLF
-cQuery += "			CASE WHEN B5.B5_COMPR > 0 THEN B5.B5_COMPR ELSE B5.B5_XPROPRD END PROPRD, " + CRLF
-cQuery += "			CASE WHEN B5.B5_COMPRLC > 0 THEN B5.B5_COMPRLC ELSE B5.B5_XPROEMB END PROEMB, " + CRLF
-cQuery += "			CASE WHEN B5.B5_LARG > 0 THEN B5.B5_LARG ELSE B5.B5_XLARPRD END LARGPRD, " + CRLF
-cQuery += "			CASE WHEN B5.B5_LARGLC > 0 THEN B5.B5_LARGLC ELSE B5.B5_XLAREMB END LARGEMB, " + CRLF
-cQuery += "			AY2.AY2_XIDMAR CODMARCA, " + CRLF
-cQuery += "			B5.B5_XIDPROD IDPROD, " + CRLF
-cQuery += "			B5.B5_XIDSKU IDSKU, " + CRLF
-cQuery += "			B5.B5_xSTATUS STATUSPRD, " + CRLF
-cQuery += "			ISNULL(DA1.DA1_PRCVEN,0) PRCVEN, " + CRLF  
-cQuery += "			B5.B5_XYOUTUB YOUTUBE, " + CRLF  
-cQuery += "			B5.R_E_C_N_O_ RECNOSB5 " + CRLF
-cQuery += "		FROM " + CRLF 
-cQuery += "			" + RetSqlName("SB5") + " B5 " + CRLF   
-cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B5.B5_COD AND B1.B1_MSBLQL <> '1' AND B1.D_E_L_E_T_ = '' " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("AY2") + " AY2 ON AY2.AY2_FILIAL = '" + xFilial("AY2") + "' AND AY2.AY2_CODIGO = B5.B5_XCODMAR AND AY2.D_E_L_E_T_ = '' " + CRLF
-cQuery += "			LEFT OUTER JOIN " + RetSqlName("DA1") + " DA1 ON DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND DA1.DA1_CODTAB = '" + cCodTab + "' AND DA1.DA1_CODPRO = B1.B1_COD AND DA1.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		GRADE, " + CRLF
+cQuery += "		PR_CODPROD, " + CRLF
+cQuery += "		PR_IDVTEX, " + CRLF
+cQuery += "		PR_DESC, " + CRLF
+cQuery += "		SKU_COD, " + CRLF
+cQuery += "		SKU_IDVTEX, " + CRLF
+cQuery += "		SKU_DESC, " + CRLF
+cQuery += "		SKU_TITULO, " + CRLF
+cQuery += "		SKU_EAN, " + CRLF
+cQuery += "		SKU_ALTURA, " + CRLF
+cQuery += "		SKU_LARGURA, " + CRLF
+cQuery += "		SKU_PROFUNDIDADE, " + CRLF
+cQuery += "		SKU_ALTURA_EMB, " + CRLF
+cQuery += "		SKU_LARGURA_EMB, " + CRLF
+cQuery += "		SKU_PROFUNDIDADE_EMB, " + CRLF
+cQuery += "		SKU_CUBAGEM, " + CRLF
+cQuery += "		SKU_PESO_LIQUIDO, " + CRLF
+cQuery += "		SKU_FRABRICANTE, " + CRLF
+cQuery += "		SKU_UNIDADE_MEDIDA, " + CRLF
+cQuery += "		SKU_NCM, " + CRLF
+cQuery += "		SKU_PRECO_CUSTO, " + CRLF
+cQuery += "		SKU_PRECO_VENDA, " + CRLF
+cQuery += "		SKU_STATUS, " + CRLF
+cQuery += "		SKU_BLOQUEIO, " + CRLF
+cQuery += "		SKU_RECNO " + CRLF
+cQuery += "	FROM ( " + CRLF
+cQuery += "		SELECT " + CRLF 
+cQuery += "			B1.B1_GRADE GRADE, " + CRLF
+cQuery += "			B4.B4_COD PR_CODPROD, " + CRLF
+cQuery += "			B4.B4_XIDPRD PR_IDVTEX, " + CRLF
+cQuery += "			B4.B4_DESC PR_DESC, " + CRLF
+cQuery += "			B1.B1_COD SKU_COD, " + CRLF
+cQuery += "			B1.B1_XIDSKU SKU_IDVTEX, " + CRLF
+cQuery += "			B1.B1_DESC SKU_DESC, " + CRLF
+cQuery += "			LINHA.BV_DESCRI + ' ' + COLUNA.BV_DESCRI SKU_TITULO, " + CRLF
+cQuery += "			B1.B1_CODBAR SKU_EAN, " + CRLF
+cQuery += "			B5.B5_ALTURA SKU_ALTURA, " + CRLF
+cQuery += "			B5.B5_LARG SKU_LARGURA, " + CRLF
+cQuery += "			B5.B5_COMPR SKU_PROFUNDIDADE, " + CRLF
+cQuery += "			B5.B5_ALTURLC SKU_ALTURA_EMB, " + CRLF
+cQuery += "			B5.B5_LARGLC SKU_LARGURA_EMB, " + CRLF
+cQuery += "			B5.B5_COMPRLC SKU_PROFUNDIDADE_EMB, " + CRLF
+cQuery += "			1 SKU_CUBAGEM, " + CRLF
+cQuery += "			B1.B1_PESO SKU_PESO_LIQUIDO, " + CRLF
+cQuery += "			B1_FABRIC SKU_FRABRICANTE, " + CRLF
+cQuery += "			B1_UM SKU_UNIDADE_MEDIDA, " + CRLF
+cQuery += "			B1.B1_POSIPI SKU_NCM, " + CRLF
+cQuery += "			B1.B1_PRV1 SKU_PRECO_CUSTO, " + CRLF
+cQuery += "			B1.B1_PRV1 SKU_PRECO_VENDA, " + CRLF
+cQuery += "			B1.B1_XATIVO SKU_STATUS, " + CRLF
+cQuery += "			B1.B1_MSBLQL SKU_BLOQUEIO, " + CRLF
+cQuery += "			B1.R_E_C_N_O_ SKU_RECNO " + CRLF
+cQuery += "		FROM " + CRLF
+cQuery += "			" + RetSqlName("SB1") + " B1 (NOLOCK) " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB4") + " B4 (NOLOCK) ON B4.B4_FILIAL = B1.B1_FILIAL AND B4.B4_COD = SUBSTRING(B1.B1_COD,1,10) AND B4.B4_XINTLV = '2' AND B4.B4_XIDPRD > 0 AND AND B4.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB5") + " B5 (NOLOCK) ON B5.B5_FILIAL = B1.B1_FILIAL AND B5.B5_COD = B1.B1_COD AND B5.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			CROSS APPLY ( " + CRLF
+cQuery += "				SELECT " + CRLF
+cQuery += "					RTRIM(BV.BV_DESCRI) BV_DESCRI " + CRLF
+cQuery += "				FROM " + CRLF
+cQuery += "					SBV010 BV (NOLOCK) " + CRLF
+cQuery += "				WHERE " + CRLF
+cQuery += "					BV.BV_FILIAL = '" + xFilial("SBV") + "' AND " + CRLF
+cQuery += "					BV.BV_TABELA = B4.B4_LINHA AND " + CRLF
+cQuery += "					BV.BV_TIPO = '1' AND " + CRLF
+cQuery += "					BV.BV_CHAVE = SUBSTRING(B1.B1_COD," + cValToChar( _nTProd + 1 ) + "," + cValToChar( _nTLinha ) + ") AND " + CRLF
+cQuery += "					BV.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			) LINHA " + CRLF
+cQuery += "			CROSS APPLY ( " + CRLF
+cQuery += "				SELECT " + CRLF
+cQuery += "					RTRIM(BV.BV_DESCRI) BV_DESCRI " + CRLF
+cQuery += "				FROM " + CRLF
+cQuery += "					SBV010 BV (NOLOCK) " + CRLF
+cQuery += "				WHERE " + CRLF 
+cQuery += "					BV.BV_FILIAL = '" + xFilial("SBV") + "' AND " + CRLF
+cQuery += "					BV.BV_TABELA = B4.B4_COLUNA AND " + CRLF
+cQuery += "					BV.BV_TIPO = '2' AND " + CRLF
+cQuery += "					BV.BV_CHAVE = SUBSTRING(B1.B1_COD," + cValToChar( _nTProd + _nTLinha + 1 ) + "," + cValToChar( _nTColuna ) + ") AND " + CRLF
+cQuery += "					BV.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		) COLUNA " + CRLF
 cQuery += "		WHERE " + CRLF
-cQuery += "			B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-cQuery += "			B5.B5_XUSAECO = 'S' AND " + CRLF
-cQuery += "			B5.B5_XENVECO = '2' AND " + CRLF
-cQuery += "			B5.B5_XENVSKU = '1' AND " + CRLF
-cQuery += "			B5.D_E_L_E_T_ = ' ' " + CRLF
-cQuery += "	) SKU " + CRLF
-cQuery += "	ORDER BY CODIGO "
+cQuery += "			B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+cQuery += "			B1.B1_GRADE = 'S' AND " + CRLF
+cQuery += "			B1.B1_XINTLV = '1' AND " + CRLF
+cQuery += "			B1.D_E_L_E_T_ = '' " + CRLF	
+cQuery += "		UNION ALL " + CRLF
+cQuery += "		SELECT " + CRLF
+cQuery += "			B1.B1_GRADE GRADE, " + CRLF
+cQuery += "			B1.B1_COD PR_CODPROD, " + CRLF
+cQuery += "			B1.B1_XIDPRD PR_IDVTEX, " + CRLF
+cQuery += "			B1.B1_DESC PR_DESC, " + CRLF
+cQuery += "			B1.B1_COD SKU_COD, " + CRLF
+cQuery += "			B1.B1_XIDSKU SKU_IDVTEX, " + CRLF
+cQuery += "			B1.B1_DESC SKU_DESC, " + CRLF
+cQuery += "			B5_ECTITU SKU_TITULO, " + CRLF
+cQuery += "			B1.B1_CODBAR SKU_EAN, " + CRLF
+cQuery += "			B5.B5_ALTURA SKU_ALTURA, " + CRLF
+cQuery += "			B5.B5_LARG SKU_LARGURA, " + CRLF
+cQuery += "			B5.B5_COMPR SKU_PROFUNDIDADE, " + CRLF
+cQuery += "			B5.B5_ALTURLC SKU_ALTURA_EMB, " + CRLF
+cQuery += "			B5.B5_LARGLC SKU_LARGURA_EMB, " + CRLF
+cQuery += "			B5.B5_COMPRLC SKU_PROFUNDIDADE_EMB, " + CRLF
+cQuery += "			1 SKU_CUBAGEM, " + CRLF
+cQuery += "			B1.B1_PESO SKU_PESO_LIQUIDO, " + CRLF
+cQuery += "			B1_FABRIC SKU_FRABRICANTE, " + CRLF
+cQuery += "			B1_UM SKU_UNIDADE_MEDIDA, " + CRLF
+cQuery += "			B1.B1_POSIPI SKU_NCM, " + CRLF
+cQuery += "			B1.B1_PRV1 SKU_PRECO_CUSTO, " + CRLF
+cQuery += "			B1.B1_PRV1 SKU_PRECO_VENDA, " + CRLF
+cQuery += "			B1.B1_XATIVO SKU_STATUS, " + CRLF
+cQuery += "			B1.B1_MSBLQL SKU_BLOQUEIO, " + CRLF
+cQuery += "			B1.R_E_C_N_O_ SKU_RECNO " + CRLF
+cQuery += "		FROM " + CRLF
+cQuery += "			" + RetSqlName("SB1") + " B1 (NOLOCK) " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB5") + " B5 (NOLOCK) ON B5.B5_FILIAL = B1.B1_FILIAL AND B5.B5_COD = B1.B1_COD AND B5.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		WHERE " + CRLF
+cQuery += "			B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+cQuery += "			B1.B1_GRADE IN('','N') AND " + CRLF
+cQuery += "			B1.B1_XINTLV = '1' AND " + CRLF
+cQuery += "			B1.B1_XIDPRD > 0 AND " + CRLF
+cQuery += "			B1.D_E_L_E_T_ = '' " + CRLF
+cQuery += " ) SKU " + CRLF
+cQuery += "	ORDER BY SKU_COD "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 count To nToReg  
