@@ -34,15 +34,20 @@ Class VTEX
 
     Method New() Constructor 
     Method GetSSLCache() 
-    Method Categoria() 
-    Method Marca() 
-    Method Produto()
-    Method GrupoEspecifico()
-    Method CampoEspecifico()
-    Method ProdutoSpecification()
+    Method Category() 
+    Method Brand() 
+    Method EspecificationGroup()
+    Method Especification()
+    Method EspecificationField()
+    Method EspecificationValue()
+    Method Product()
+    Method ProductSpecification()
     Method Sku()
-    Method Precos() 
-    Method Estoque()
+    Method SkuSpecification()
+    Method Prices() 
+    Method Stocks()
+    Method Orders()
+    Method Invoice()
 
 EndClass
 
@@ -103,14 +108,14 @@ EndIf
 Return _lRet 
 
 /*************************************************************************************************/
-/*/{Protheus.doc} Categoria
+/*/{Protheus.doc} Category
     @description Metodo realiza o envio das categorias e-Commerce
     @author Bernard M Margarido
     @since 01/06/2023
     @version version
 /*/
 /*************************************************************************************************/
-Method Categoria() Class VTEX
+Method Category() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -217,14 +222,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} Marca
+/*/{Protheus.doc} Brand
     @description Metodo realiza o envio das marcas para o ecommerce
     @author Bernard M Margarido
     @since 02/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method Marca() Class VTEX
+Method Brand() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -331,125 +336,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} Produto
-    @description Metodo - realiza o envio e atualização dos produtos eCommerce
-    @author Bernard M margarido
-    @since 07/06/2023
-    @version version
-/*/
-/***************************************************************************************************/
-Method Produto() Class VTEX
-Local _aHeadOut     := {}
-
-Local _lRet         := .T.    
-
-Local _oJSonRet     := Nil 
-Local _oFwRest      := Nil 
-
-//---------------+
-// Usa cache SSL |
-//---------------+
-::GetSSLCache()
-
-//----------------+
-// Header conexão |
-//----------------+
-aAdd(_aHeadOut, "Content-Type: application/json")
-aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
-aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
-
-//----------------------------------+
-// Instancia classe de conexao REST |
-//----------------------------------+
-_oFwRest := FWRest():New(::cUrl)
-
-//--------------------+
-// Timeout de conexao |
-//--------------------+
-_oFwRest:nTimeOut := 600
-
-If Self:cMetodo == "GET"
-    //-------------------------+
-    // Metodo a ser consultado |
-    //-------------------------+
-    _oFwRest:SetPath("/api/catalog/pvt/product/" + RTrim(Self:cID))
-
-    If _oFwRest:Get(_aHeadOut)
-        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-        _lRet           := .T.
-    Else
-        If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
-        Else 
-            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
-        EndIf
-        _lRet   := .F.
-    EndIf 
-
-ElseIf Self:cMetodo == "POST"
-
-    //-------------------------+
-    // Metodo a ser consultado |
-    //-------------------------+
-    _oFwRest:SetPath("/api/catalog/pvt/product")
-    _oFwRest:SetPostParams(EncodeUtf8(Self:cJSon))
-
-    If _oFwRest:Post(_aHeadOut)
-        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-        _lRet           := .T.
-    Else
-        If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
-        Else 
-            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
-        EndIf
-        _lRet   := .F.
-    EndIf 
-
-
-ElseIf Self:cMetodo == "PUT"
-
-    _oFwRest:SetPath("/api/catalog/pvt/product/" + RTrim(Self:cID))
-    If _oFwRest:Put(_aHeadOut,EncodeUtf8(Self:cJSon))
-        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-        _lRet           := .T.
-    Else
-        If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
-        Else 
-            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
-        EndIf
-        _lRet   := .F.
-    EndIf 
-
-EndIf 
-
-FreeObj(_oFwRest)
-FreeObj(_oJSonRet) 
-       
-Return _lRet 
-
-/***************************************************************************************************/
-/*/{Protheus.doc} GrupoEspecifico
+/*/{Protheus.doc} EspecificationGroup
     @description Metodo - Realiza o envio dos grupos especificos
     @author Bernard M Margarido
     @since 13/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method GrupoEspecifico() Class VTEX
+Method EspecificationGroup() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -553,14 +447,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} CampoEspecifico
+/*/{Protheus.doc} Especification
     @description Método - realiza o envio dos campos especificos e-Commerce
     @author Bernard M Margarido
     @since 14/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method CampoEspecifico() Class VTEX
+Method Especification() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -664,14 +558,347 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} ProdutoSpecification
+/*/{Protheus.doc} EspecificationField
+    @description Método - realiza o envio dos campos especificos e-Commerce
+    @author Bernard M Margarido
+    @since 14/06/2023
+    @version version
+/*/
+/***************************************************************************************************/
+Method EspecificationField() Class VTEX
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(::cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/specification/fieldGet/" + RTrim(Self:cID))
+
+    If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+ElseIf Self:cMetodo == "POST"
+
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/specification/field")
+    _oFwRest:SetPostParams(EncodeUtf8(Self:cJSon))
+
+    If _oFwRest:Post(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+
+ElseIf Self:cMetodo == "PUT"
+
+    _oFwRest:SetPath("/api/catalog/pvt/specification/field")
+    If _oFwRest:Put(_aHeadOut,EncodeUtf8(Self:cJSon))
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+EndIf 
+
+FreeObj(_oFwRest)
+FreeObj(_oJSonRet)
+
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} EspecificationValue
+    @description Método - realiza o envio dos valores dos campos especificos e-Commerce
+    @author Bernard M Margarido
+    @since 14/06/2023
+    @version version
+/*/
+/***************************************************************************************************/
+Method EspecificationValue() Class VTEX
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(::cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/specificationvalue/" + RTrim(Self:cID))
+
+    If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+ElseIf Self:cMetodo == "POST"
+
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/specificationvalue")
+    _oFwRest:SetPostParams(EncodeUtf8(Self:cJSon))
+
+    If _oFwRest:Post(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+
+ElseIf Self:cMetodo == "PUT"
+
+    _oFwRest:SetPath("/api/catalog/pvt/specificationvalue/field/" + RTrim(Self:cID) )
+    If _oFwRest:Put(_aHeadOut,EncodeUtf8(Self:cJSon))
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+EndIf 
+
+FreeObj(_oFwRest)
+FreeObj(_oJSonRet)
+
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} Product
+    @description Metodo - realiza o envio e atualização dos produtos eCommerce
+    @author Bernard M margarido
+    @since 07/06/2023
+    @version version
+/*/
+/***************************************************************************************************/
+Method Product() Class VTEX
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(::cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/product/" + RTrim(Self:cID))
+
+    If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+ElseIf Self:cMetodo == "POST"
+
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/product")
+    _oFwRest:SetPostParams(EncodeUtf8(Self:cJSon))
+
+    If _oFwRest:Post(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+
+ElseIf Self:cMetodo == "PUT"
+
+    _oFwRest:SetPath("/api/catalog/pvt/product/" + RTrim(Self:cID))
+    If _oFwRest:Put(_aHeadOut,EncodeUtf8(Self:cJSon))
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+EndIf 
+
+FreeObj(_oFwRest)
+FreeObj(_oJSonRet) 
+       
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} ProductSpecification
     @description Metodo - realiza o envio dos campos especificos dos produtos 
     @author Bernard M margarido
     @since 15/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method ProdutoSpecification() Class VTEX
+Method ProductSpecification() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -884,14 +1111,124 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} Precos
+/*/{Protheus.doc} SkuSpecification
+    @description Metodo - realiza o envio dos campos especificos dos sku's 
+    @author Bernard M margarido
+    @since 15/06/2023
+    @version version
+/*/
+/***************************************************************************************************/
+Method SkuSpecification() Class VTEX
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(::cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/stockkeepingunit/"+ RTrim(Self:cID) +"/specification")
+
+    If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+ElseIf Self:cMetodo == "POST"
+
+    //-------------------------+
+    // Metodo a ser consultado |
+    //-------------------------+
+    _oFwRest:SetPath("/api/catalog/pvt/stockkeepingunit/"+ RTrim(Self:cID) +"/specification")
+    _oFwRest:SetPostParams(EncodeUtf8(Self:cJSon))
+
+    If _oFwRest:Post(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+
+ElseIf Self:cMetodo == "PUT"
+
+    _oFwRest:SetPath("/api/catalog/pvt/stockkeepingunit/"+ RTrim(Self:cID) +"/specification")
+    If _oFwRest:Put(_aHeadOut,EncodeUtf8(Self:cJSon))
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+
+EndIf 
+
+FreeObj(_oFwRest)
+FreeObj(_oJSonRet)    
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} Prices
     @description Metodo - Realiza ao envio da atualização de preços dos produtos 
     @author Bernard M Margarido 
     @since 18/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method Precos() Class VTEX 
+Method Prices() Class VTEX 
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -994,7 +1331,7 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} Estoque
+/*/{Protheus.doc} Stocks
     @description Metodo - Realiza a atualização de saldos para o e-Commerce
     @author Bernard M Margarido
     @since 21/06/2023
@@ -1003,7 +1340,7 @@ Return _lRet
     @return return_var, return_type, return_description
 /*/
 /***************************************************************************************************/
-Method Estoque() Class VTEX
+Method Stocks() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    

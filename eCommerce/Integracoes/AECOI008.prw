@@ -219,7 +219,7 @@ _oVTEX:cJSon		:= cRest
 _oVTEX:cID			:= cValToChar(nIdSku)
 _oVTEX:cWarehouse 	:= cWarehouse
 
-If _oVTEX:Estoque()
+If _oVTEX:Stocks()
 	
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)

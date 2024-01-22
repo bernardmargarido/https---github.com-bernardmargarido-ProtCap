@@ -130,7 +130,7 @@ While (cAlias)->( !Eof() )
 	_oJSon				:= JSonObject():New()
 	_oJSon['id']		:= nIdCpo
 	_oJSon['name']		:= cCampo
-	_oJSon['Value']	:= {}
+	_oJSon['Value']		:= {}
 	aAdd(_oJSon['Value'],cDesCampo)
 
 	//aAdd(_oJSon,_oAdd)
@@ -188,7 +188,7 @@ _oVTEX:cMetodo		:= "POST"
 _oVTEX:cJSon		:= cRest
 _oVTEX:cID			:= cValToChar(nIdProd)
 
-If _oVTEX:ProdutoSpecification()
+If _oVTEX:ProductSpecification()
 	
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)

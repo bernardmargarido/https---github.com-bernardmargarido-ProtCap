@@ -186,7 +186,7 @@ _oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
 _oVTEX:cJSon		:= _cRest
 _oVTEX:cID			:= cValToChar(_nIdVTex)
 
-If _oVTEX:Marca()
+If _oVTEX:Brand()
 
 	//--------------------+
 	// Posiciona Registro |

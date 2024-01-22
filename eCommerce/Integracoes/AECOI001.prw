@@ -204,11 +204,11 @@ MemoWrite(cDirImp + cDirSave + "\jsoncategoria_" + RTrim(_cCodCat) + ".json",_cR
 //---------------------+
 // Parametros de envio | 
 //---------------------+
-_oVTEX:cMetodo		:= IIF(nIdCat > 0, "PUT", "POST")
+_oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
 _oVTEX:cJSon		:= _cRest
-_oVTEX:cID			:= cValToChar(nIdCat)
+_oVTEX:cID			:= cValToChar(_nIdVTex)
 
-If _oVTEX:Categoria()
+If _oVTEX:Category()
 
 	//--------------------+
 	// Posiciona Registro |
@@ -240,7 +240,7 @@ If _oVTEX:Categoria()
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A CATEGORIA " + _cCodCat + " - " + _cName + " . ERRO: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodCat,"ERRO AO ENVIAR CATEGORIA " + _cCodCat + " - " + _cName + " . ERRO: " + RTrim(_oVTEX:cError)}) 
@@ -253,7 +253,7 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A CATEGORIA " + _cCodCat + " - " + _cName + " . ERRO: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodCat,"ERRO AO ENVIAR CATEGORIA " + _cCodCat + " - " + _cName + " . ERRO: " + RTrim(_oVTEX:cError) }) 
@@ -264,7 +264,7 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= "Sem comunicação com o integrador"
-		nIDVtex		:= nIdCat
+		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A CATEGORIA " + _cCodCat + " - " + _cName + " .")
 		aAdd(aMsgErro,{_cCodCat,"ERRO AO ENVIAR CATEGORIA " + _cCodCat + " - " + _cName + " ."}) 

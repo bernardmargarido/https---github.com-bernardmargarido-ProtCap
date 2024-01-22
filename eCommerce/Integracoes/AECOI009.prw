@@ -215,7 +215,7 @@ _oVTEX:cMetodo		:= "PUT"
 _oVTEX:cJSon		:= cRest
 _oVTEX:cID			:= cValToChar(nIdSku)
 
-If _oVTEX:Precos()
+If _oVTEX:Prices()
 	
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)

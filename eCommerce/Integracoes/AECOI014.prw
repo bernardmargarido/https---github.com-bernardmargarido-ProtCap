@@ -7,7 +7,7 @@
 
 #DEFINE CRLF CHR(13) + CHR(10)
 
-Static cCodInt	:= "014"
+Static cCodInt	:= "ZTI"
 Static cDescInt	:= "GroupSpecification"
 Static cDirImp	:= "/ecommerce/"
 Static cDirSave	:= "especificos/"
@@ -34,13 +34,6 @@ Private dDtaInt			:= Date()
 Private aMsgErro		:= {}
 Private _aRecno			:= {}
 
-Private _oProcess 		:= Nil
-
-//----------------------------------+
-// Grava Log inicio das Integrações | 
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
-
 //------------------------------+
 // Inicializa Log de Integracao |
 //------------------------------+
@@ -60,11 +53,6 @@ LogExec("FINALIZA INTEGRACAO DE GRUPOS DE CAMPOS ESPECIFICOS COM A VTEX - DATA/H
 LogExec(Replicate("-",80))
 LogExec("")
 
-//----------------------------------+
-// Grava Log inicio das Integrações |
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)    
-
 Return Nil 
 
 /**************************************************************************************************/
@@ -78,19 +66,23 @@ Return Nil
 Static Function AECOINT14()
 Local aArea		:= GetArea()
 
-Local cName     := ""
-Local cCod      := ""
+Local _cCodGrp 	:= ""
+Local _cNome	:= ""
+Local _cRest	:= ""
+
 Local cAlias	:= GetNextAlias()
 
+Local _nPosition:= 0 
+Local _nIdVTex	:= 0
+Local _nIdCateg	:= 0
+Local _nRecno 	:= 0
 Local nToReg	:= 0
-Local nIdCat	:= 0
-Local nRecno    := 0 
-
+ 
 Local oJSon 	:= Nil 
 
-//-----------------------------------------------+
-// Valida se existem categorias a serem enviadas |
-//-----------------------------------------------+
+//------------------------------------------+
+// Valida se existem grupo a serem enviados |
+//------------------------------------------+
 If !AEcoQry(cAlias,@nToReg)
 	LogExec("NAO EXISTEM REGISTROS PARA SEREM ENVIADOS.")
 	RestArea(aArea)
@@ -106,30 +98,35 @@ While (cAlias)->( !Eof() )
     //-----------------------------------+
     // Incrementa regua de processamento |
     //-----------------------------------+
-    IncProc("Grupo Especificos " + (cAlias)->WS5_COD + " " + (cAlias)->WS5_DESC )
+    IncProc("Grupo Especificos " + (cAlias)->ZTI_CODIGO + " " + Rtrim((cAlias)->ZTI_DESC) )
 
-    nIdCat             := (cAlias)->AY0_XIDCAT
-    nIdGrp             := (cAlias)->WS5_IDECO
-    nRecno             := (cAlias)->RECNOWS5
+	_cCodGrp 	:= (cAlias)->ZTI_CODIGO
+	_cNome		:= Rtrim((cAlias)->ZTI_DESC)
 
-    cCod               := (cAlias)->WS5_COD
-    cName              := (cAlias)->DESCEC
-
+	_nIdVTex	:= (cAlias)->ZTI_IDVTX
+	_nIdCateg	:= (cAlias)->ACU_XIDLV
+	_nPosition 	:= (cAlias)->ZTI_POSIT
+	_nRecno 	:= (cAlias)->RECNOZTI
+   
     //--------------------+
     // Dados da Categoria |
     //--------------------+
     oJSon 				:= Nil 
     oJSon 				:= JSonObject():New()
 		
-    oJSon["CategoryId"] := nIdCat
-    oJSon["Name"]		:= RTrim(cName)
+    oJSon["CategoryId"] := _nIdCateg
+    oJSon["Name"]		:= RTrim(_cNome)
     
-	cRest				:= oJSon:ToJson()		
+	If _nIdVTex > 0 
+		oJSon["Position"] := _nPosition
+	EndIf 
+
+	_cRest				:= oJSon:ToJson()		
 
     //-----------------------------------------+
     // Rotina realiza o envio para o ecommerce |
     //-----------------------------------------+
-    AEcoEnv(cRest,cCod,cName,nIdGrp,nIdCat,nRecno)
+    AEcoEnv(_cRest,_cCodGrp,_cNome,_nIdVTex,_nIdCateg,_nRecno)
 				
 	(cAlias)->( dbSkip() )
 		
@@ -153,58 +150,109 @@ Return .T.
 	@since     		13/06/2023
 /*/								
 /*************************************************************************************/
-Static Function AEcoEnv(cRest,cCod,cName,nIdGrp,nIdCat,nRecno)
+Static Function AEcoEnv(_cRest,_cCodGrp,_cNome,_nIdVTex,_nIdCateg,_nRecno)
 Local _oVTEX 		:= VTEX():New()
 Local _oJSon 		:= Nil 
 
+Local cChave		:= ""
+Local cPolitica		:= ""
+Local cStatus		:= ""
+Local cMsgErro		:= ""
+
+Local nIDVtex		:= 0
+Local nRegRep		:= 0
+Local nIdLV			:= 0
+
 Private cType		:= ""
 
-LogExec("ENVIANDO GRUPO ESPECIFICOS " + cCod + " - " + RTrim(cName) + " ." )
+LogExec("ENVIANDO GRUPO ESPECIFICOS " + _cCodGrp + " - " + RTrim(_cNome) + " ." )
 
 //--------------------------------+
 // Cria diretorio caso nao exista |
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsongrupo_especificos_" + RTrim(cCod) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsongrupo_especificos_" + RTrim(_cCodGrp) + ".json",cRest)
 
 //---------------------+
 // Parametros de envio | 
 //---------------------+
-_oVTEX:cMetodo		:= IIF(nIdGrp > 0, "PUT", "POST")
-_oVTEX:cJSon		:= cRest
-_oVTEX:cID			:= cValToChar(nIdGrp)
+_oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
+_oVTEX:cJSon		:= _cRest
+_oVTEX:cID			:= cValToChar(_nIdVTex)
 
 If _oVTEX:GrupoEspecifico()
-	//--------------------+
-	// Posiciona Registro |
-	//--------------------+
-	WS5->( dbGoTo(nRecno) )
 
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
 	If ValType(_oJSon) <> "U"
-		RecLock("WS5",.F.)
-			WS5->WS5_ENVECO := "2"
-			WS5->WS5_IDECO	:= _oJSon['Id']
-			WS5->WS5_DTEXP	:= Date()
-			WS5->WS5_HREXP	:= Time()
-		WS5->( MsUnLock() )
-		LogExec("GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " . ENVIADO COM SUCESSO." )	
+
+		//--------------------+
+		// Posiciona Registro |
+		//--------------------+
+		ZTI->( dbGoTo(nRecno) )
+
+		RecLock("ZTI",.F.)
+			ZTI->ZTI_INTLV := "2"
+			ZTI->ZTI_IDVTX	:= _oJSon['Id']
+			ZTI->ZTI_POSIT	:= _oJSon['Position']
+		ZTI->( MsUnLock() )
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "1"
+		cMsgErro	:= ""
+		nIDVtex		:= _oJSon['Id']
+
+		LogExec("GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " . ENVIADO COM SUCESSO." )	
+
 	Else
-		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " . ERRO: " + RTrim(_oVTEX:cError) )
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " . ERRO: " + RTrim(_oVTEX:cError)}) 
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " . ERRO: " + RTrim(_oVTEX:cError) )
+		aAdd(aMsgErro,{_cCodGrp,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " . ERRO: " + RTrim(_oVTEX:cError)}) 
 	EndIf
 Else 
 	cType := '_oVTEX:cError'
 	If Type(cType) <> "U"
-		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " . ERRO: " + RTrim(_oVTEX:cError) )
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " . ERRO: " + RTrim(_oVTEX:cError) }) 
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " . ERRO: " + RTrim(_oVTEX:cError) )
+		aAdd(aMsgErro,{_cCodGrp,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " . ERRO: " + RTrim(_oVTEX:cError) }) 
 	Else 
-		LogExec("ERRO AO ENVIAR A GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " .")
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cName) + " ."}) 
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= "Sem comunicação com o integrador"
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR A GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " .")
+		aAdd(aMsgErro,{_cCodGrp,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodGrp + " - " + RTrim(_cNome) + " ."}) 
 	EndIf 
 EndIf 
+
+//---------------+
+// Grava LOG ZT0 |
+//---------------+
+cChave		:= xFilial("ZTI") + _cCodGrp
+cPolitica	:= ""
+nRegRep		:= 0
+nIdLV		:= 0
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -219,30 +267,25 @@ Return .T.
 	@since     		13/06/2023
 /*/
 /**************************************************************************************************/
-Static Function AEcoQry(cAlias,nToReg,_cLojaID)
+Static Function AEcoQry(cAlias,nToReg)
 Local cQuery 		:= ""
-
-Default _cLojaID	:= ""
 
 //---------------------------+
 // Query consulta categorias |
 //---------------------------+
 cQuery := "	SELECT " + CRLF
-cQuery += "		WS5.WS5_COD, " + CRLF
-cQuery += "	    WS5.WS5_DESC, " + CRLF
-cQuery += "	    CAST(CAST(WS5.WS5_DESCEC AS BINARY(2048)) AS VARCHAR(2048) ) DESCEC, " + CRLF
-cQuery += "	    WS5.WS5_CAT01, " + CRLF
-cQuery += "	    AY0.AY0_XIDCAT, " + CRLF
-cQuery += "	    WS5.WS5_IDECO, " + CRLF
-cQuery += "     WS5.R_E_C_N_O_ RECNOWS5 " + CRLF
-cQuery += " FROM " + CRLF
-cQuery += "	    " + RetSqlName("WS5") + " WS5 (NOLOCK) " + CRLF
-cQuery += "	    INNER JOIN " + RetSqlName("AY0") + " AY0 (NOLOCK) ON AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = WS5.WS5_CAT01 AND AY0.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		ZTI.ZTI_CODIGO, " + CRLF
+cQuery += "		ZTI.ZTI_DESC, " + CRLF
+cQuery += "		ZTI.ZTI_IDVTX, " + CRLF
+cQuery += "		COALESCE(ACU.ACU_XIDLV,0) ACU_XIDLV, " + CRLF
+cQuery += "		ZTI.R_E_C_N_O_ RECNOZTI " + CRLF
+cQuery += " FROM  " + CRLF
+cQuery += "		" + RetSqlName("ZTI") + " ZTI (NOLOCK) " + CRLF 
+cQuery += "		LEFT JOIN " + RetSqlName("ACU") + " ACU (NOLOCK) ON ACU.ACU_FILIAL = '" + xFilial("ACU") + "' AND ACU.ACU_COD = ZTI.ZTI_CATEG AND ACU.D_E_L_E_T_ = '' " + CRLF
 cQuery += " WHERE " + CRLF
-cQuery += "	    WS5.WS5_FILIAL = '" + xFilial("WS5") + "' AND " + CRLF
-cQuery += "	    WS5.WS5_ENVECO = '1' AND " + CRLF
-cQuery += "	    WS5.D_E_L_E_T_ = '' " + CRLF
-cQuery += " ORDER BY WS5.WS5_COD "
+cQuery += "		ZTI_FILIAL = '" + xFilial("ZTI") + "' AND " + CRLF
+cQuery += "		ZTI_INTLV = '1' AND " + CRLF
+cQuery += "		ZTI.D_E_L_E_T_ = '' "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 count To nToReg  

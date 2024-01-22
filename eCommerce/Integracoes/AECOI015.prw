@@ -34,13 +34,6 @@ Private dDtaInt			:= Date()
 Private aMsgErro		:= {}
 Private _aRecno			:= {}
 
-Private _oProcess 		:= Nil
-
-//----------------------------------+
-// Grava Log inicio das Integrações | 
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
-
 //------------------------------+
 // Inicializa Log de Integracao |
 //------------------------------+
@@ -60,11 +53,6 @@ LogExec("FINALIZA INTEGRACAO DE GRUPOS DE CAMPOS ESPECIFICOS COM A VTEX - DATA/H
 LogExec(Replicate("-",80))
 LogExec("")
 
-//----------------------------------+
-// Grava Log inicio das Integrações |
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)    
-
 Return Nil 
 
 /**************************************************************************************************/
@@ -78,19 +66,27 @@ Return Nil
 Static Function AECOINT15()
 Local aArea		:= GetArea()
 
-Local cName     := ""
-Local cCod      := ""
-Local cDesc     := ""
 Local cAlias	:= GetNextAlias()
+Local _cCodigo	:= ""
+Local _cName 	:= ""
+Local _cDesc 	:= ""
+Local _cRest	:= ""
 
-Local nIdGrp    := 0
-Local nIdCpo    := 0
-Local nIdCat    := 0 
-Local nType     := 0
+Local _nTpCampo	:= 0
+Local _nIdVTex	:= 0
+Local _nIdCateg	:= 0
+Local _nIdGrupo := 0 
+Local _nRecno	:= 0 
+
 Local nToReg	:= 0
-Local nRecno    := 0 
+
+Local _lFiltro 	:= .F.
+Local _lAtivo 	:= .F.
+Local _lObrig	:= .F.
 
 Local oJSon 	:= Nil 
+
+// tabela ZTE 
 
 //-----------------------------------------------+
 // Valida se existem categorias a serem enviadas |
@@ -110,17 +106,21 @@ While (cAlias)->( !Eof() )
     //-----------------------------------+
     // Incrementa regua de processamento |
     //-----------------------------------+
-    IncProc("Grupo Especificos " + (cAlias)->WS7_ITEM + " " + (cAlias)->WS7_CAMPO )
+    IncProc("Campos Especificos " + (cAlias)->ZTE_COD + " " + RTrim((cAlias)->ZTE_NOME) )
 
-    nIdGrp              := (cAlias)->WS5_IDECO
-    nIdCpo              := (cAlias)->WS7_IDECO
-    nIdCat              := (cAlias)->AY0_XIDCAT
-    nType               := Val((cAlias)->WS7_TPCPO)
-    nRecno              := (cAlias)->RECNOWS7
+	_cCodigo	:= (cAlias)->ZTE_COD
+	_cName 		:= RTrim((cAlias)->ZTE_NOME)
+	_cDesc 		:= RTrim((cAlias)->ZTE_DESC)
 
-    cCod                := (cAlias)->WS7_ITEM
-    cDesc               := (cAlias)->WS7_CAMPO
-    cName               := (cAlias)->DESCECO
+	_nTpCampo	:= (cAlias)->ZTE_TPCAMP
+	_nIdVTex	:= (cAlias)->ZTE_IDCAMP
+	_nIdCateg	:= (cAlias)->ACU_XIDLV
+	_nIdGrupo 	:= (cAlias)->ZTE_IDGRUP
+	_nRecno		:= (cAlias)->RECNOZTE
+
+	_lFiltro 	:= (cAlias)->ZTE_FILTRO
+	_lAtivo 	:= (cAlias)->ZTE_ATIVO
+	_lObrig		:= (cAlias)->ZTE_OBRIGA
 
     //--------------------+
     // Dados da Categoria |
@@ -128,18 +128,21 @@ While (cAlias)->( !Eof() )
     oJSon 				    := Nil 
     oJSon 				    := JSonObject():New()
     
-    oJSon["FieldTypeId"]    := nType
-    oJSon["FieldGroupId"]   := nIdGrp
-    oJSon["CategoryId"]     := nIdCat
-    oJSon["Name"]           := RTrim(cName)
-    oJSon["IsActive"]       := .T.
+    oJSon["FieldTypeId"]    := _nTpCampo
+    oJSon["FieldGroupId"]   := _nIdGrupo
+    oJSon["CategoryId"]     := _nIdCateg
+    oJSon["Name"]           := _cName
+	oJSon["Description"]    := _cDesc
+	oJSon["IsFilter"]    	:= _lFiltro
+	oJSon["IsRequired"]    	:= _lObrig
+    oJSon["IsActive"]       := _lAtivo
         
-	cRest				:= oJSon:ToJson()		
+	_cRest					:= oJSon:ToJson()		
 
     //-----------------------------------------+
     // Rotina realiza o envio para o ecommerce |
     //-----------------------------------------+
-    AEcoEnv(cRest,cCod,cDesc,nIdCpo,nRecno)
+    AEcoEnv(_cRest,_cCodigo,_cName,_nIdVTex,_nRecno)
 				
 	(cAlias)->( dbSkip() )
 		
@@ -163,58 +166,108 @@ Return .T.
 	@since     		13/06/2023
 /*/								
 /*************************************************************************************/
-Static Function AEcoEnv(cRest,cCod,cDesc,nIdCpo,nRecno)
+Static Function AEcoEnv(_cRest,_cCodigo,_cName,_nIdVTex,_nRecno)
 Local _oVTEX 		:= VTEX():New()
 Local _oJSon 		:= Nil 
 
+Local cChave		:= ""
+Local cPolitica		:= ""
+Local cStatus		:= ""
+Local cMsgErro		:= ""
+
+Local nIDVtex		:= 0
+Local nRegRep		:= 0
+Local nIdLV			:= 0
+
 Private cType		:= ""
 
-LogExec("ENVIANDO GRUPO ESPECIFICOS " + cCod + " - " + RTrim(cDesc) + " ." )
+LogExec("ENVIANDO GRUPO ESPECIFICOS " + _cCodigo + " - " + RTrim(_cName) + " ." )
 
 //--------------------------------+
 // Cria diretorio caso nao exista |
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsoncampos_especificos_" + RTrim(cCod) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsoncampos_especificos_" + RTrim(_cCodigo) + ".json",cRest)
 
 //---------------------+
 // Parametros de envio | 
 //---------------------+
-_oVTEX:cMetodo		:= IIF(nIdCpo > 0, "PUT", "POST")
-_oVTEX:cJSon		:= cRest
-_oVTEX:cID			:= cValToChar(nIdCpo)
+_oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
+_oVTEX:cJSon		:= _cRest
+_oVTEX:cID			:= cValToChar(_nIdVTex)
 
 If _oVTEX:CampoEspecifico()
-	//--------------------+
-	// Posiciona Registro |
-	//--------------------+
-	WS7->( dbGoTo(nRecno) )
-
+	
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
 	If ValType(_oJSon) <> "U"
-		RecLock("WS7",.F.)
-			WS7->WS7_ENVECO := "2"
-			WS7->WS7_IDECO	:= _oJSon['Id']
-			WS7->WS7_DTEXP	:= Date()
-			WS7->WS7_HREXP	:= Time()
-		WS7->( MsUnLock() )
-		LogExec("GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " . ENVIADO COM SUCESSO." )	
+
+		//--------------------+
+		// Posiciona Registro |
+		//--------------------+
+		ZTE->( dbGoTo(nRecno) )
+
+		RecLock("ZTE",.F.)
+			ZTE->ZTE_XINTLV := "2"
+			ZTE->ZTE_IDCAMP	:= _oJSon['Id']
+		ZTE->( MsUnLock() )
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "1"
+		cMsgErro	:= ""
+		nIDVtex		:= _oJSon['Id']
+
+		LogExec("GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " . ENVIADO COM SUCESSO." )	
 	Else
-		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " . ERRO: " + RTrim(_oVTEX:cError) )
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " . ERRO: " + RTrim(_oVTEX:cError)}) 
+		
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " . ERRO: " + RTrim(_oVTEX:cError) )
+		aAdd(aMsgErro,{_cCodigo,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " . ERRO: " + RTrim(_oVTEX:cError)}) 
 	EndIf
 Else 
 	cType := '_oVTEX:cError'
 	If Type(cType) <> "U"
-		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " . ERRO: " + RTrim(_oVTEX:cError) )
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " . ERRO: " + RTrim(_oVTEX:cError) }) 
-	Else 
-		LogExec("ERRO AO ENVIAR A GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " .")
-		aAdd(aMsgErro,{cCod,"ERRO AO ENVIAR GRUPO ESPECIFICO " + cCod + " - " + RTrim(cDesc) + " ."}) 
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= RTrim(_oVTEX:cError)
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " . ERRO: " + RTrim(_oVTEX:cError) )
+		aAdd(aMsgErro,{_cCodigo,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " . ERRO: " + RTrim(_oVTEX:cError) }) 
+	Else
+
+		//----------------+
+		// Parametros LOG |
+		//----------------+
+		cStatus		:= "2"
+		cMsgErro	:= "Sem comunicação com o integrador"
+		nIDVtex		:= _nIdVTex
+
+		LogExec("ERRO AO ENVIAR A GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " .")
+		aAdd(aMsgErro,{_cCodigo,"ERRO AO ENVIAR GRUPO ESPECIFICO " + _cCodigo + " - " + RTrim(_cName) + " ."}) 
 	EndIf 
 EndIf 
+
+//---------------+
+// Grava LOG ZT0 |
+//---------------+
+cChave		:= xFilial("ZTE") + _cCodigo
+cPolitica	:= ""
+nRegRep		:= 0
+nIdLV		:= 0
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -238,24 +291,25 @@ Default _cLojaID	:= ""
 // Query consulta categorias |
 //---------------------------+
 cQuery := "	SELECT " + CRLF
-cQuery += "		WS7.WS7_COD, " + CRLF
-cQuery += "	    WS7.WS7_ITEM, " + CRLF
-cQuery += "	    WS7.WS7_CAMPO, " + CRLF 
-cQuery += "	    WS7.WS7_TPCPO, " + CRLF 
-cQuery += "	    CAST(CAST(WS7.WS7_DESCEC AS BINARY(1024)) AS VARCHAR(1024)) DESCECO, " + CRLF
-cQuery += " 	WS7.WS7_IDECO, " + CRLF
-cQuery += " 	WS5.WS5_IDECO, " + CRLF 
-cQuery += "	    AY0.AY0_XIDCAT, " + CRLF
-cQuery += " 	WS7.R_E_C_N_O_ RECNOWS7 " + CRLF 
+cQuery += "		ZTE.ZTE_COD, " + CRLF
+cQuery += "		ZTE.ZTE_TPCAMP, " + CRLFC
+cQuery += "		ZTE.ZTE_IDGRUP, " + CRLF
+cQuery += "		ZTE.ZTE_NOME, " + CRLF 
+cQuery += "		ZTE.ZTE_DESC, " + CRLF 
+cQuery += "		ZTE.ZTE_FILTRO, " + CRLF
+cQuery += "		ZTE.ZTE_ATIVO, " + CRLF
+cQuery += "		ZTE.ZTE_OBRIGA, " + CRLF
+cQuery += "		ZTE.ZTE_IDCAMP, " + CRLF
+cQuery += "		ZTE.ZTE_SKUPRD, " + CRLF
+cQuery += "		ZTE.R_E_C_N_O_ RECNOZTE, " + CRLF
+cQuery += "		ACU.ACU_XIDLV " + CRLF
 cQuery += " FROM " + CRLF
-cQuery += " 	" + RetSqlName("WS7") + " WS7 (NOLOCK) " + CRLF
-cQuery += " 	INNER JOIN " + RetSqlName("WS5") + " WS5 (NOLOCK) ON WS5.WS5_FILIAL = WS7.WS7_FILIAL AND WS5.WS5_COD = WS7.WS7_COD AND WS5.WS5_ENVECO = '2' AND WS5.WS5_IDECO > 0 AND WS5.D_E_L_E_T_ = '' " + CRLF
-cQuery += "	    INNER JOIN " + RetSqlName("AY0") + " AY0 (NOLOCK) ON AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = WS5.WS5_CAT01 AND AY0.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		" + RetSqlName("ZTE") + " ZTE  (NOLOCK) " + CRLF 
+cQuery += "		INNER JOIN " + RetSqlName("ACU") + " ACU (NOLOCK) ON ACU.ACU_FILIAL = '" + xFilial("ACU") + "' AND ACU.ACU_COD = ZTE.ZTE_CATEGO AND ACU.D_E_L_E_T_ = '' " + CRLF
 cQuery += " WHERE " + CRLF
-cQuery += " 	WS7.WS7_FILIAL = '" + xFilial("WS7") + "' AND " + CRLF
-cQuery += " 	WS7.WS7_ENVECO = '1' AND " + CRLF
-cQuery += " 	WS7.D_E_L_E_T_ = '' " + CRLF
-cQuery += " ORDER BY WS7.WS7_COD,WS7.WS7_ITEM "
+cQuery += "		ZTE.ZTE_FILIAL = '" + xFilial("ZTE") + "' AND " + CRLF
+cQuery += "		ZTE.ZTE_XINTLV = '1' AND " + CRLF
+cQuery += "		ZTE.D_E_L_E_T_ = '' "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 count To nToReg  
