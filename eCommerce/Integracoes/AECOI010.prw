@@ -11,13 +11,11 @@ Static cDirImp	:= "/ecommerce/"
 
 /**************************************************************************************************
 {Protheus.doc} AECOI010
-
-@description	Rotina realiza a integração de clientes.
-
-@type   		Function 
-@author			Robson Oliveira
-@version   		1.00
-@since     		17/02/2016
+	@description	Rotina realiza a integração de clientes.
+	@type   		Function 
+	@author			Robson Oliveira
+	@version   		1.00
+	@since     		17/02/2016
 **************************************************************************************************/
 User Function AECOI010()
 	

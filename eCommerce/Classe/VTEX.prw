@@ -2,7 +2,7 @@
 
 /*************************************************************************************************/
 /*/{Protheus.doc} VTEX
-    @description Classe responsavel pelas integra√ß√µes VTEX
+    @description Classe responsavel pelas integraÁıes VTEX
     @author Bernard M Margarido
     @since 01/06/2023
     @version version
@@ -31,6 +31,23 @@ Class VTEX
 	Data nVerbose	    As Integer
 	Data nBugs		    As Integer
 	Data nState	        As Integer
+
+    Method New() Constructor
+    Method GetSSLCache()
+    Method Category()
+    Method Brand()
+    Method GroupEspecification()
+    Method Especification()
+    Method FieldEspecification()
+    Method ValueEspecification()
+    Method Product()
+    Method ProductSpecification()
+    Method Sku()
+    Method SkuSpecification()
+    Method Prices()
+    Method Stocks()
+    Method Orders()
+    Method Invoice()
 
 EndClass
 
@@ -71,7 +88,7 @@ Return Nil
 
 /****************************************************************************************/
 /*/{Protheus.doc} GetSSLCache
-    @description Define o uso em memoria da configura√ß√£o SSL para integra√ß√µes SIGEP
+    @description Define o uso em memoria da configuraÁ„o SSL para integraÁıes SIGEP
     @author Bernard M. Margarido
     @since 06/12/2019
     @version 1.0
@@ -82,7 +99,7 @@ Method GetSSLCache() Class VTEX
 Local _lRet 	:= .F.
 
 //-------------------------------------+
-// Utiliza configura√ß√µes SSL via Cache |
+// Utiliza configuraÁıes SSL via Cache |
 //-------------------------------------+
 If HTTPSSLClient( Self:nSSL2, Self:nSSL3, Self:nTLS1, Self:cPassword, Self:cCertPath, Self:cKeyPath, Self:nHSM, .F. , Self:nVerbose, Self:nBugs, Self:nState)
 	_lRet := .T.
@@ -112,7 +129,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -149,7 +166,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -173,7 +190,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -193,7 +210,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -226,7 +243,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -263,7 +280,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -287,7 +304,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -307,7 +324,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -319,14 +336,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} EspecificationGroup
+/*/{Protheus.doc} GroupEspecification
     @description Metodo - Realiza o envio dos grupos especificos
     @author Bernard M Margarido
     @since 13/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method EspecificationGroup() Class VTEX
+Method GroupEspecification() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -340,7 +357,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -373,7 +390,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -397,7 +414,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -417,7 +434,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -431,7 +448,7 @@ Return _lRet
 
 /***************************************************************************************************/
 /*/{Protheus.doc} Especification
-    @description M√©todo - realiza o envio dos campos especificos e-Commerce
+    @description MÈtodo - realiza o envio dos campos especificos e-Commerce
     @author Bernard M Margarido
     @since 14/06/2023
     @version version
@@ -451,7 +468,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -484,7 +501,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -508,7 +525,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -528,7 +545,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -541,14 +558,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} EspecificationField
-    @description M√©todo - realiza o envio dos campos especificos e-Commerce
+/*/{Protheus.doc} FieldEspecification
+    @description MÈtodo - realiza o envio dos campos especificos e-Commerce
     @author Bernard M Margarido
     @since 14/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method EspecificationField() Class VTEX
+Method FieldEspecification() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -562,7 +579,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -595,7 +612,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -619,7 +636,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -639,7 +656,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -652,14 +669,14 @@ FreeObj(_oJSonRet)
 Return _lRet 
 
 /***************************************************************************************************/
-/*/{Protheus.doc} EspecificationValue
-    @description M√©todo - realiza o envio dos valores dos campos especificos e-Commerce
+/*/{Protheus.doc} ValueEspecification
+    @description MÈtodo - realiza o envio dos valores dos campos especificos e-Commerce
     @author Bernard M Margarido
     @since 14/06/2023
     @version version
 /*/
 /***************************************************************************************************/
-Method EspecificationValue() Class VTEX
+Method ValueEspecification() Class VTEX
 Local _aHeadOut     := {}
 
 Local _lRet         := .T.    
@@ -673,7 +690,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -706,7 +723,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -730,7 +747,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -750,7 +767,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -764,7 +781,7 @@ Return _lRet
 
 /***************************************************************************************************/
 /*/{Protheus.doc} Product
-    @description Metodo - realiza o envio e atualiza√ß√£o dos produtos eCommerce
+    @description Metodo - realiza o envio e atualizaÁ„o dos produtos eCommerce
     @author Bernard M margarido
     @since 07/06/2023
     @version version
@@ -784,7 +801,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -817,7 +834,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -841,7 +858,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -861,7 +878,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -895,7 +912,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -928,7 +945,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -952,7 +969,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -972,7 +989,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1005,7 +1022,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -1038,7 +1055,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1062,7 +1079,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1082,7 +1099,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1115,7 +1132,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -1148,7 +1165,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1172,7 +1189,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1192,7 +1209,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1205,7 +1222,7 @@ Return _lRet
 
 /***************************************************************************************************/
 /*/{Protheus.doc} Prices
-    @description Metodo - Realiza ao envio da atualiza√ß√£o de pre√ßos dos produtos 
+    @description Metodo - Realiza ao envio da atualizaÁ„o de preÁos dos produtos 
     @author Bernard M Margarido 
     @since 18/06/2023
     @version version
@@ -1225,7 +1242,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -1258,7 +1275,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1282,7 +1299,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1302,7 +1319,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1315,7 +1332,7 @@ Return _lRet
 
 /***************************************************************************************************/
 /*/{Protheus.doc} Stocks
-    @description Metodo - Realiza a atualiza√ß√£o de saldos para o e-Commerce
+    @description Metodo - Realiza a atualizaÁ„o de saldos para o e-Commerce
     @author Bernard M Margarido
     @since 21/06/2023
     @version version
@@ -1337,7 +1354,7 @@ Local _oFwRest      := Nil
 ::GetSSLCache()
 
 //----------------+
-// Header conex√£o |
+// Header conex„o |
 //----------------+
 aAdd(_aHeadOut, "Content-Type: application/json")
 aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
@@ -1370,7 +1387,7 @@ If Self:cMetodo == "GET"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError     := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError     := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1394,7 +1411,7 @@ ElseIf Self:cMetodo == "POST"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1414,7 +1431,7 @@ ElseIf Self:cMetodo == "PUT"
 
             Self:cError     := _oJSonRet["Message"]
         Else 
-            Self:cError    := "N√£o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+            Self:cError    := "N„o foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
         _lRet   := .F.
     EndIf 
@@ -1424,3 +1441,29 @@ EndIf
 FreeObj(_oFwRest)
 FreeObj(_oJSonRet)        
 Return _lRet
+
+/***************************************************************************************************/
+/*/{Protheus.doc} Orders
+    @description Metodo - Realiza a baixa dos pedidos e-Commerce
+    @author Bernard M Margarido
+    @since 21/06/2023
+    @version version
+    @param param_name, param_type, param_descr
+    @return return_var, return_type, return_description
+/*/
+/***************************************************************************************************/
+Method Orders() Class VTEX 
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} Invoice
+    @description Metodo - Realiza o envio da nota fiscal para o eCommerce
+    @author Bernard M Margarido
+    @since 21/06/2023
+    @version version
+    @param param_name, param_type, param_descr
+    @return return_var, return_type, return_description
+/*/
+/***************************************************************************************************/
+Method Invoice() Class VTEX 
+Return _lRet 

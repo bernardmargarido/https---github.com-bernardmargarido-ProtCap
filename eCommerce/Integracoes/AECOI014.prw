@@ -181,7 +181,7 @@ _oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
 _oVTEX:cJSon		:= _cRest
 _oVTEX:cID			:= cValToChar(_nIdVTex)
 
-If _oVTEX:GrupoEspecifico()
+If _oVTEX:GroupEspecification()
 
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
