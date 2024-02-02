@@ -11,22 +11,22 @@
 #DEFINE CRLF CHR(13) + CHR(10)
 
 /************************************************************************************/
-/*/{Protheus.doc} ECLOJ013
-    @description Grupos Especificos
+/*/{Protheus.doc} ECLOJ014
+    @description Campos Especificos
     @author Bernard M. Margarido
     @since 21/01/2024
     @version undefined
     @type function
 /*/
 /************************************************************************************/
-User Function ECLOJ013()
+User Function ECLOJ014()
 Private _oBrowse	:= Nil
 
 Private _nOldLen	 	:= SetVarNameLen(255) 
 
 _oBrowse := FWMBrowse():New()
-_oBrowse:SetAlias("ZTI")
-_oBrowse:SetDescription('Grupos Especificos.')
+_oBrowse:SetAlias("ZTE")
+_oBrowse:SetDescription('Campos Especificos.')
 _oBrowse:Activate()
 
 SetVarNameLen(_nOldLen)
@@ -43,32 +43,31 @@ Return Nil
 /*/
 /************************************************************************************/
 Static Function ModelDef()
-Local _oStrZTI  := FWFormStruct(1,"ZTI")
+Local _oStrZTE  := FWFormStruct(1,"ZTE")
 Local _oModel   := Nil 
 
 //-----------------+
 // Gatilho Produto | 
 //-----------------+
-_oStrZTI:AddTrigger( 	'ZTI_CATEG' 	/*cIdField*/ ,;
-					 	'ZTI_DESCAT'	/*cTargetIdField*/ ,;  
-					 	{ || .T. }      /*bPre*/ ,;
-					 	{ ||  ECLOJ013G("ZTI_CATEG","ZTI_DESCAT") })
-
+_oStrZTE:AddTrigger( 	'ZTE_GRUPO' 	/*cIdField*/ ,;
+					 	'ZTE_IDGRUP'	/*cTargetIdField*/ ,;  
+					 	{ || .T. } /*bPre*/ ,;
+					 	{ || ECLOJ014G("ZTE_GRUPO","ZTE_IDGRUP") } /*bSetValue*/ )
 
 //----------------------------------+
 // Cria o Objeto do Modelo de Dados |
 //----------------------------------+
-_oModel	:= MPFormModel():New("ZTI_00")
+_oModel	:= MPFormModel():New("ZTE_00")
 
 //-----------------------------------------------+
 // Adiciona ao modelo o componente de formulário |
 //-----------------------------------------------+
-_oModel:AddFields("ZTI_MASTER",,_oStrZTI)
+_oModel:AddFields("ZTE_MASTER",,_oStrZTE)
 
 //---------------------+
 // Cria Chave Primaria |
 //---------------------+
-_oModel:SetPrimaryKey( {"ZTI_FILIAL","ZTI_CODIGO"} )
+_oModel:SetPrimaryKey( {"ZTE_FILIAL","ZTE_COD"} )
 
 
 Return _oModel
@@ -85,32 +84,32 @@ Return _oModel
 Static Function ViewDef() 
 Local _oView
 Local _oModel
-Local _oStrViewZTI	:= FWFormStruct(2 ,"ZTI" )
+Local _oStrViewZTE	:= FWFormStruct(2 ,"ZTE" )
 
 //----------------------------------------------------------------------------+
 //³Cria um objeto de Modelo de dados baseado no ModelDef() do fonte informado |
 //----------------------------------------------------------------------------+
-_oModel := FWLoadModel("ECLOJ013") 
+_oModel := FWLoadModel("ECLOJ014") 
 _oView	:= FWFormView():New()
 
 _oView:SetModel(_oModel)
-_oView:SetDescription('Grupos Especificos.')
+_oView:SetDescription('Campos Especificos.')
 
 //---------------------+
 // View das estruturas |
 //---------------------+
-_oView:AddField('ZTI_FORM' 	, _oStrViewZTI , 'ZTI_MASTER' )
+_oView:AddField('ZTE_FORM' 	, _oStrViewZTE , 'ZTE_MASTER' )
 
 
 _oView:CreateHorizontalBox( 'SUPERIOR_A1'    		, 100 ,,, /*'PASTAS'*/, /*'ABA01'*/ )
 _oView:CreateVerticalBox( 'ESQ_S1'      ,100 , 'SUPERIOR_A1' )
 
-_oView:SetOwnerView('ZTI_FORM'	,'ESQ_S1')
+_oView:SetOwnerView('ZTE_FORM'	,'ESQ_S1')
 
 Return _oView
 
 /************************************************************************************/
-/*/{Protheus.doc} ECLOJ013G
+/*/{Protheus.doc} ECLOJ014G
     @description Realiza gatilho dos campos em tela
     @type  Static Function
     @author Bernard M Margarido
@@ -118,28 +117,28 @@ Return _oView
     @version version
 /*/
 /************************************************************************************/
-Static Function ECLOJ013G(_cCpoOri,_cCpoAtu)
+Static Function ECLOJ014G(_cCpoOri,_cCpoAtu)
 Local _oModel   := FWModelActive()
-Local _oModelZTI:= _oModel:GetModel("ZTI_MASTER")
+Local _oModelZTE:= _oModel:GetModel("ZTE_MASTER")
 
 Local _cOrigem  := ""    
 Local _cResult  := ""
 
-Local _nTDesc   := TamSx3("ZTI_DESCAT")[1]
+//Padr( Posicione("ZTI",1,xFilial("ZTI") + FwFldGet('ZTE_GRUPO'),'ZTE_IDGRUP'), TamSx3("ZTE_IDGRUP")[1] ) 
 
-dbSelectArea("ACU")
-ACU->( dbSetOrder(1) )
+dbSelectArea("ZTI")
+ZTI->( dbSetOrder(1) )
 
 //---------------------------+
 // Realiza pesquisa do campo |
 //---------------------------+
-_cOrigem        := _oModelZTI:GetValue(_cCpoOri)
+_cOrigem        := _oModelZTE:GetValue(_cCpoOri)
 
-If ACU->(MsSeek(xFilial("ACU") + _cOrigem) )
-    _cResult := SubStr(ACU->ACU_DESC,1,_nTDesc)
+If ZTI->(MsSeek(xFilial("ZTI") + _cOrigem) )
+    _cResult := ZTI->ZTI_IDVTX
 EndIf 
 
-_oModelZTI:LoadValue( _cCpoAtu , _cResult )
+_oModelZTE:LoadValue( _cCpoAtu , _cResult )
 
 Return _cResult
 
@@ -152,4 +151,4 @@ Return _cResult
 /*/
 /************************************************************************************/
 Static Function MenuDef()
-Return FWMVCMenu( "ECLOJ013" )
+Return FWMVCMenu( "ECLOJ014" )
