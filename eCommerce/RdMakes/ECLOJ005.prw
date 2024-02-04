@@ -251,10 +251,15 @@ Return _oView
 /**************************************************************************************/
 User Function ECLOJ05A(_cLinha,_cColuna)
 Local _oView 	    := FWViewActive()
+Local _oViewGRD     := _oView:GetViewStruct("GRD_GRADE")
+
+Local _aFields      := _oViewGRD:GetFields()
+
+Local _nX           := 0
+
 //Local _oModel	    := FWModelActive()
 
 //Local _oStrMdl      := Nil 
-Local _oStrView	    := Nil 
 
 Local _lRet         := .T.    
 
@@ -272,8 +277,12 @@ EndIf
 // Cria grade com as novas informações da Grade |
 //----------------------------------------------+
 If _lRet 
-    _oStrView   := _oView:GetViewStruct('GRD_GRADE')
-    _oStrView	:= ECLOJ05STR(_cAliasGRD,2)
+
+    For _nX := 1 To Len(_aFields)
+        _oViewGRD:RemoveField(_aFields[_nX][1])
+    Next _nX 
+   
+    _oViewGRD	:= ECLOJ05STR(_cAliasGRD,2)
 
     If _oView <> Nil 
         _oView:Refresh()

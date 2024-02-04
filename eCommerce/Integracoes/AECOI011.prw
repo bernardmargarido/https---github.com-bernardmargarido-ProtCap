@@ -23,8 +23,8 @@
 #DEFINE IDENDE 14
 #DEFINE CONTAT 15
 
-Static cCodInt	:= "011"
-Static cDescInt	:= "PEDIDOVENDA"
+Static cCodInt	:= "XTA"
+Static cDescInt	:= "orders"
 Static cDirImp	:= "/ecommerce/"
 
 Static nTamCnpj	:= TamSx3("A1_CGC")[1]
@@ -59,151 +59,69 @@ Static _nTEst	:= TamSx3("A1_EST")[1]
 /*/
 /**************************************************************************************************/
 User Function AECOI011()
-	Local _aArea		:= GetArea()
-
-	Private cThread		:= Alltrim(Str(ThreadId()))
-	Private cStaLog		:= "0"
-	Private cArqLog		:= ""	
-
-	Private nQtdInt		:= 0
-
-	Private cHrIni		:= Time()
-	Private dDtaInt		:= Date()
-
-	Private aMsgErro	:= {}
-	Private aOrderId	:= {}	
-
-	Private _lJob		:= IIF(Isincallstack("U_ECLOJM03"),.T.,.F.)
-	Private _lMultLj	:= GetNewPar("EC_MULTLOJ",.F.)
-
-	Private _oProcess 	:= Nil
-
-	//----------------------------------+
-	// Grava Log inicio das Integrações | 
-	//----------------------------------+
-	u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
-
-	//------------------------------+
-	// Inicializa Log de Integracao |
-	//------------------------------+
-	MakeDir(cDirImp)
-	cArqLog := cDirImp + "PEDIDOVENDA" + cEmpAnt + cFilAnt + ".LOG"
-	ConOut("")	
-	LogExec(Replicate("-",80))
-	LogExec("INICIA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DATE()) + " AS " + TIME())
-
-	//----------------------------+
-	// Inicia processo de Pedidos |
-	//----------------------------+
-	
-	If _lMultLj
-		If _lJob
-			AECOMULT11()
-		Else 
-			_oProcess:= MsNewProcess():New( {|| AECOMULT11()},"Aguarde...","Consultando Pedidos." )
-			_oProcess:Activate()
-		EndIf 
-
-	Else 
-		If _lJob
-			AECOINT11()
-		Else
-			Processa({|| AECOINT11() },"Aguarde...","Consultando Pedidos.")
-		EndIf	
-
-		//-------------------------------+
-		// Inicia gravação / atualização |
-		//-------------------------------+
-		If Len(aOrderId) > 0 
-			If _lJob
-				AEcoI11PvC()
-			Else
-				Processa({|| AEcoI11PvC() },"Aguarde...","Gravando/Atualizando Novos Pedidos.")
-			EndIf	
-		EndIf
-
-	EndIf 
-
-	LogExec("FINALIZA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DATE()) + " AS " + TIME())
-	LogExec(Replicate("-",80))
-	ConOut("")
-
-	//----------------------------------+
-	// Envia e-Mail com o Logs de Erros |
-	//----------------------------------+
-	If Len(aMsgErro) > 0
-		cStaLog := "1"
-		u_AEcoMail(cCodInt,cDescInt,aMsgErro)
-	EndIf
-
-	//----------------------------------+
-	// Grava Log inicio das Integrações |
-	//----------------------------------+
-	u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)
-
-	RestArea(_aArea)	
-Return .T.
-
-/*****************************************************************************************/
-/*/{Protheus.doc} AECOMULT09
-	@description Multi Lojas e-Commerce
-	@author Bernard M. Margarido
-	@since 17/05/2018
-	@version 1.0
-	@type function
-/*/
-/*****************************************************************************************/
-Static Function AECOMULT11()
 Local _aArea		:= GetArea()
 
-//-----------------+
-// Lojas eCommerce |
-//-----------------+
-dbSelectArea("XTC")
-XTC->( dbSetOrder(1) ) 
-XTC->( dbGoTop() )
+Private cThread		:= Alltrim(Str(ThreadId()))
+Private cStaLog		:= "0"
+Private cArqLog		:= ""	
 
-If !_lJob
-	_oProcess:SetRegua1( XTC->( RecCount()))
-EndIf 
+Private nQtdInt		:= 0
 
-While XTC->( !Eof() )
+Private cHrIni		:= Time()
+Private dDtaInt		:= Date()
 
-	If !_lJob
-		_oProcess:IncRegua1("Loja eCommerce " + RTrim(XTC->XTC_DESC) )
-	EndIf 
+Private aMsgErro	:= {}
+Private aOrderId	:= {}	
 
-	LogExec("Loja eCommerce " + RTrim(XTC->XTC_DESC))
+Private _lJob		:= IIF(Isincallstack("U_ECLOJM03"),.T.,.F.)
+Private _lMultLj	:= GetNewPar("EC_MULTLOJ",.T.)
 
-	//----------------------+
-	// Somente lojas ativas |
-	//----------------------+
-	aOrderId := {}			
-	If XTC->XTC_STATUS == "1"
+Private _oProcess 	:= Nil
 
-		//--------------------------------+
-		// Envia as categorias multi loja |
-		//--------------------------------+
-		AECOINT11(XTC->XTC_CODIGO,XTC->XTC_URL2,XTC->XTC_APPKEY,XTC->XTC_APPTOK)
+//------------------------------+
+// Inicializa Log de Integracao |
+//------------------------------+
+MakeDir(cDirImp)
+cArqLog := cDirImp + "PEDIDOVENDA" + cEmpAnt + cFilAnt + ".LOG"
+ConOut("")	
+LogExec(Replicate("-",80))
+LogExec("INICIA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DATE()) + " AS " + TIME())
 
-		//-------------------------------+
-		// Inicia gravação / atualização |
-		//-------------------------------+
-		If Len(aOrderId) > 0 
-			If _lJob
-				AEcoI11PvC(XTC->XTC_CODIGO,XTC->XTC_URL2,XTC->XTC_APPKEY,XTC->XTC_APPTOK)
-			Else
-				Processa({|| AEcoI11PvC(XTC->XTC_CODIGO,XTC->XTC_URL2,XTC->XTC_APPKEY,XTC->XTC_APPTOK) },"Aguarde...","Gravando/Atualizando Novos Pedidos.")
-			EndIf	
-		EndIf
+//----------------------------+
+// Inicia processo de Pedidos |
+//----------------------------+
+If _lJob
+	AECOINT11()
+Else
+	_oProcess:= MsNewProcess():New( {|| AECOINT11()},"Aguarde...","Consultando Pedidos." )
+	_oProcess:Activate()
+EndIf	
 
-	EndIf
-	
-	XTC->( dbSkip() )
-	
-EndDo
+//-------------------------------+
+// Inicia gravação / atualização |
+//-------------------------------+
+If Len(aOrderId) > 0 
+	If _lJob
+		AEcoI11PvC()
+	Else
+		_oProcess:= MsNewProcess():New( {|| AEcoI11PvC()},"Aguarde...","Gravando/Atualizando Novos Pedidos.")
+		_oProcess:Activate()
+	EndIf	
+EndIf
 
-RestArea(_aArea)
+LogExec("FINALIZA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DATE()) + " AS " + TIME())
+LogExec(Replicate("-",80))
+ConOut("")
+
+//----------------------------------+
+// Envia e-Mail com o Logs de Erros |
+//----------------------------------+
+If Len(aMsgErro) > 0
+	cStaLog := "1"
+	u_AEcoMail(cCodInt,cDescInt,aMsgErro)
+EndIf
+
+RestArea(_aArea)	
 Return .T.
 
 /**************************************************************************************************/
@@ -214,87 +132,73 @@ Return .T.
 	@since     		10/02/2016
 /*/
 /**************************************************************************************************/
-Static Function AECOINT11(_cLojaID,_cUrl,_cAppKey,_cAppToken)
-Local aArea			:= GetArea()
-Local aHeadOut  	:= {}
+Static Function AECOINT11()
+Local _cError			:= ""
 
-Local cUrl			:= ""
-Local cAppKey		:= ""
-Local cAppToken		:= ""
-Local cXmlHead 	 	:= ""
-Local cUrlParms		:= ""     
-Local cOrderBy		:= ""
+Local _nX				:= 0
+Local _nTPages 			:= 0 
+Local _nPage 			:= 1
 
-Local nTimeOut		:= 240
-Local nList			:= 0
+Local _oJSon   			:= Nil 
 
-Local oRestRet   	:= Nil 
+//---------------------+
+// Consulta dados VTEX |
+//---------------------+
+If AEcoI11X(_nPage,@_cError,@_oJSon)
+	//---------------------------+
+	// Valida se retornou Objeto |
+	//---------------------------+
+	If ValType(_oJSon) == "O" 
 
-Default _cLojaID	:= ""
-Default _cUrl		:= ""
-Default _cAppKey	:= ""
-Default _cAppToken	:= ""
+		_nTPages := _oJSon:paging:pages
 
-cUrl				:= RTrim(IIF(Empty(_cUrl), GetNewPar("EC_URLVTEX"), _cUrl))
-cAppKey				:= RTrim(IIF(Empty(_cAppKey), GetNewPar("EC_APPVTEX"), _cAppKey))
-cAppToken			:= RTrim(IIF(Empty(_cAppToken), GetNewPar("EC_APTVTEX"), _cAppToken))
+		If !_lJob
+			_oProcess:SetRegua1(_nTPages)
+		EndIf
 
-aAdd(aHeadOut,"Content-Type: application/json" )
-aAdd(aHeadOut,"X-VTEX-API-AppKey:" + cAppKey )
-aAdd(aHeadOut,"X-VTEX-API-AppToken:" + cAppToken ) 
+		While _nTPages >= _nPage 
 
-cUrlParms := "ready-for-handling"
-cOrderBy  := "orderBy=creationDate,asc"
-//cUrlParms := "payment-pending"
-//cUrlParms := "canceled,invoiced" //handling,payment-pending,
+			LogExec('INTEGRANDDO PEDIDOS PAGINA ' + cValToChar(_nPage) + ' DE ' + cValToChar(_nTPages) + ' .')
+			
+			If !_lJob
+				_oProcess:IncRegua1("Integrando pedidos pagina " + cValToChar(_nPage) + " de " + cValToChar(_nTPages) + " ." )
+			EndIf 
 
-cHtmlPage := HttpGet(cUrl + "/api/oms/pvt/orders?f_status=" + cUrlParms + "&" + cOrderBy , /*cUrlParms*/, nTimeOut, aHeadOut, @cXmlHead)
-
-If !_lJob
-	ProcRegua(-1)
-EndIf	
-//--------------------------+
-// Valida Status de retorno |
-//--------------------------+
-If HTTPGetStatus() == 200
-
-	//------------------------------------+
-	// Realiza o Parse para a String Rest |
-	//------------------------------------+
-	If FWJsonDeserialize(cHtmlPage,@oRestRet)
-	
-		//---------------------------+
-		// Valida se retornou Objeto |
-		//---------------------------+
-		If ValType(oRestRet) == "O" 
-		
 			//---------------------------------------------+
 			// Valida se existe pedidos a serem integrados |
 			//---------------------------------------------+
-			If ValType(oRestRet:List) == "A" .And. Len(oRestRet:List) > 0
-			
-				For nList := 1 To Len(oRestRet:List)
+			If ValType(_oJSon:List) == "A" .And. Len(_oJSon:List) > 0
+
+				_oProcess:SetRegua2( Len(_oJSon:List) )
+				For _nX := 1 To Len(_oJSon:List)
 
 					If !_lJob
-						IncProc('Validando novos pedidos VTEX')
+						_oProcess:IncRegua2("Validando pedido VTEX " + RTrim(_oJSon:List[_nX]:OrderId))
 					EndIf	
 					
 					LogExec('VALIDANDO NOVOS PEDIDOS VTEX ')
 
-					aAdd(aOrderId,oRestRet:List[nList]:OrderId)
-				Next nList
+					aAdd(aOrderId,_oJSon:List[_nX]:OrderId)
+				Next _nX
+
 			Else
 				If !_lJob
 					Aviso('e-Commerce','Nao existem novos pedidos a serem integrados',{"Ok"})	
 				EndIf	
 				LogExec('NAO EXISTEM NOVOS PEDIDOS A SEREM INTEGRADOS')
 			EndIf
-		EndIf
-	Else
-		If !_lJob
-			Aviso('e-Commerce','Nao existem novos pedidos a serem integrados',{"Ok"})	
-		EndIf	
-		LogExec('NAO EXISTEM NOVOS PEDIDOS A SEREM INTEGRADOS')
+
+			_nPage++
+			FreeObj(_oJSon)
+
+			If !AEcoI11X(_nPage,@cError,@_oJSon)
+				If !_lJob
+					Aviso('e-Commerce','Não foi possivel realizar a comunicação com o eCommerce.',{"Ok"})	
+				EndIf	
+				LogExec('ERRO DE COMUNICACAO COM O ECOMMERCE.')
+			EndIf 	
+
+		EndDo 
 	EndIf
 Else
 	If !_lJob
@@ -302,8 +206,6 @@ Else
 	EndIf	
 	LogExec('NAO EXISTEM NOVOS PEDIDOS A SEREM INTEGRADOS')
 EndIf
-
-//aAdd(aOrderId,"1140012439983-01")
 
 RestArea(aArea)
 Return Nil
@@ -317,83 +219,59 @@ Return Nil
 	@type function
 /*/
 /********************************************************************************************/
-Static Function AEcoI11PvC(_cLojaID,_cUrl,_cAppKey,_cAppToken)
-Local aArea			:= GetArea()
-Local cUrl			:= ""
-Local cAppKey		:= ""
-Local cAppToken		:= ""
+Static Function AEcoI11PvC()
+Local _aArea		:= GetArea()
 
-Local nTimeOut		:= 240
-Local nPed			:= 0
+Local _nX			:= 0
 
-Local aHeadPv	  	:= {}
 Local aRet			:= {.T.,"",""}
 Local aEndRes		:= {}
 Local aEndCob		:= {}
 Local aEndEnt		:= {}
 
-Local cXmlRest 	 	:= ""
+Local oRestPv   	:= Nil
+Local _oVTEX 		:= VTEX():New()
 
-Local oRestPv   	:= Nil 
-
-Default _cLojaID	:= ""
-Default _cUrl		:= ""
-Default _cAppKey	:= ""
-Default _cAppToken	:= ""
-
-cUrl				:= RTrim(IIF(Empty(_cUrl), GetNewPar("EC_URLVTEX"), _cUrl))
-cAppKey				:= RTrim(IIF(Empty(_cAppKey), GetNewPar("EC_APPVTEX"), _cAppKey))
-cAppToken			:= RTrim(IIF(Empty(_cAppToken), GetNewPar("EC_APTVTEX"), _cAppToken))
-
-aAdd(aHeadPv,"Content-Type: application/json" )
-aAdd(aHeadPv,"X-VTEX-API-AppKey:" + cAppKey )
-aAdd(aHeadPv,"X-VTEX-API-AppToken:" + cAppToken ) 
 
 If !_lJob
-	ProcRegua(Len(aOrderId))
+	_oProcess:SetRegua1( Len(aOrderId) )
 EndIf	
 
-For nPed := 1 To Len(aOrderId)
-                     
-	cHtmlPv := HttpGet(cUrl + "/api/oms/pvt/orders/" + aOrderId[nPed] , /*cUrlParms*/, nTimeOut, aHeadPv, @cXmlRest)
-
+For _nX := 1 To Len(aOrderId)
+    	
 	If !_lJob	
-		IncProc(' Processando OrderId ' + aOrderId[nPed] )
+		_oProcess:IncRegua1('Processando OrderId ' + aOrderId[_nX] )
 	EndIf	
 
-	LogExec(' PROCESSANDO ORDERID ' + aOrderId[nPed] )
+	LogExec(' PROCESSANDO ORDERID ' + aOrderId[_nX] )
 
 	//--------------------------------------------------+
 	// Valida se obteve sucesso no retorno da consulta. |
 	//--------------------------------------------------+
-	If HTTPGetStatus() == 200
-	
+	_oVTEX:cID		:= aOrderId[_nX]
+	_oVTEX:cMetodo	:= "GET"
+	If _oVTEX:CompleteOrders()
+		
 		//------------------------------------+
 		// Realiza o Parse para a String Rest |
 		//------------------------------------+
-		FWJsonDeserialize(cHtmlPv,@oRestPv)
+		FWJsonDeserialize(_oVTEX:cJSonRet,@oRestPv)
 		
 		If ValType(oRestPv) == "O"
 			
 			//---------------------------------+
 			// Grava/Atualiza dados do Cliente |
 			//---------------------------------+
-			aRet 	:= EcGrvCli(oRestPv:ClientProfileData,oRestPv:ShippingData,_cLojaID,_cUrl,_cAppKey,_cAppToken,@aEndRes,@aEndCob,@aEndEnt)
+			aRet 	:= EcGrvCli(oRestPv:ClientProfileData,oRestPv:ShippingData,@aEndRes,@aEndCob,@aEndEnt)
 			
 			//-----------------------+
 			// Grava Pedido de Venda |
 			//-----------------------+ 
+			/*
 			If aRet[1]
-				aRet := EcGrvPed(oRestPv,aEndRes,aEndCob,aEndEnt,aOrderId[nPed],_cLojaID)
+				aRet := EcGrvPed(oRestPv,aEndRes,aEndCob,aEndEnt,aOrderId[_nX])
 			EndIf        
-			
-	     	//---------------------------------+
-			// Envia a Confirmacao da Reserva  |
-			//---------------------------------+	
-		    //	If aRet[1]
-		    //		u_EcConfRes(aOrderId[nPed])
-		    //	EndIf
-						            
+			*/						            
             If !aRet[1]
 				aAdd(aMsgErro,{aRet[2],aRet[3]})            
             EndIf
@@ -413,15 +291,15 @@ For nPed := 1 To Len(aOrderId)
 		EndIf
 	Else
 		If !_lJob	
-			Aviso('e-Commerce','Erro na requisição de pedidos ' + Alltrim(HTTPGetStatus()),{"Ok"})	
+			Aviso('e-Commerce','Erro na requisição de pedidos ' + RTrim(_oVTEX:cError),{"Ok"})	
 		EndIf	
-		LogExec('ERRO NA REQUISIÇÃO DE PEDIDOS ' + Alltrim(HTTPGetStatus()))	
+		LogExec('ERRO NA REQUISIÇÃO DE PEDIDOS ' + RTrim(_oVTEX:cError))	
 	EndIf
 		
-Next nPed
+Next _nX
 
-RestArea(aArea)
-Return aRet
+RestArea(_aArea)
+Return aRet[1]
 
 /************************************************************************************/
 /*/{Protheus.doc} EcGrvCli
@@ -432,49 +310,78 @@ Return aRet
 	@type function
 /*/
 /************************************************************************************/
-Static Function EcGrvCli(oDadosCli,oDadosEnd,_cLojaID,_cUrl,_cAppKey,_cAppToken,aEndRes,aEndCob,aEndEnt)
-Local aArea		:= GetArea()
-Local aRet		:= {.T.,"",""}
+Static Function EcGrvCli(oDadosCli,oDadosEnd,aEndRes,aEndCob,aEndEnt)
+Local aArea				:= GetArea()
+Local aRet				:= {.T.,"",""}
+Local _aErro			:= {}
 
-Local cCnpj		:= ""
-Local cCodCli	:= ""
-Local cLoja		:= ""
-Local cNomeCli	:= ""
-Local cTpPess	:= ""   
-Local cTipoCli	:= ""
-Local cContrib	:= ""
-Local cContato	:= "" 
-Local cInscE	:= ""
-Local cEnd		:= ""
-Local cNumEnd	:= ""
-Local cBairro	:= ""
-Local cMun		:= ""
-Local cCep		:= ""
-Local cEst		:= ""
-Local cCodMun	:= ""
-Local cEndC		:= ""
-Local cNumEndC	:= ""
-Local cBairroC	:= ""
-Local cMunC		:= ""
-Local cCepC		:= ""
-Local cEstC		:= ""
-Local cEndE		:= ""
-Local cNumEndE	:= ""
-Local cBairroE	:= ""
-Local cMunE		:= ""
-Local cCepE		:= ""
-Local cEstE		:= "" 
-Local _cEMailEc	:= ""
-Local _cCMunDef	:= GetNewPar("EC_CMUNDE","99999")
+Local cCnpj				:= ""
+Local cCodCli			:= ""
+Local cLoja				:= ""
+Local cNomeCli			:= ""
+Local cTpPess			:= ""   
+Local cTipoCli			:= ""
+Local cContrib			:= ""
+Local cContato			:= "" 
+Local cInscE			:= ""
+Local cEnd				:= ""
+Local cNumEnd			:= ""
+Local cBairro			:= ""
+Local cMun				:= ""
+Local cCep				:= ""
+Local cEst				:= ""
+Local cCodMun			:= ""
+Local cEndC				:= ""
+Local cNumEndC			:= ""
+Local cBairroC			:= ""
+Local cMunC				:= ""
+Local cCepC				:= ""
+Local cEstC				:= ""
+Local cEndE				:= ""
+Local cNumEndE			:= ""
+Local cBairroE			:= ""
+Local cMunE				:= ""
+Local cCepE				:= ""
+Local cEstE				:= "" 
+Local _cEndCob			:= ""
+Local _cMunCob 			:= ""
+Local _cBairroC 		:= ""
+Local _cEndEnt			:= ""
+Local _cMunEnt 			:= ""
+Local _cBairroE 		:= ""
+Local _cEMailEc			:= ""
+Local _cEndFat			:= ""
+Local _cMunFat 			:= ""
+Local _cBairroF			:= ""
+Local _cLinha			:= ""
+Local _cCompEnd 		:= ""
+Local _cCompEnt 		:= ""
+Local _cProfVtex 		:= ""
+Local _cCMunDef			:= GetNewPar("EC_CMUNDE","99999")
 
-Local aCliente  := {} 
+Local aCliente  		:= {} 
 
-Local nOpcA		:= 0
+Local _nTLoja 			:= TamSx3("A1_LOJA")[1]
+Local _nTEndC 			:= TamSx3("A1_ENDCOB")[1]
+Local _nTMunC 			:= TamSx3("A1_MUNCOB")[1]
+Local _nTBairC			:= TamSx3("A1_BAIRROC")[1] 
+Local _nTEndE 			:= TamSx3("A1_ENDENT")[1]
+Local _nTMunE 			:= TamSx3("A1_MUNE")[1]
+Local _nTBairE			:= TamSx3("A1_BAIRROE")[1]
+Local _nTEndF			:= TamSx3("A1_END")[1]
+Local _nTMunF			:= TamSx3("A1_MUN")[1]
+Local _nTBairF			:= TamSx3("A1_BAIRRO")[1]
+Local _nTNome			:= TamSx3("A1_NOME")[1]
+Local _nTReduz			:= TamSx3("A1_NREDUZ")[1]
+Local _nX 				:= 0
+Local nOpcA				:= 0
 
-Local lEcCliCpo	:= ExistBlock("ECADDCPO")
-Local _lAtvPut	:= .F.
+Local lEcCliCpo			:= ExistBlock("ECADDCPO")
 
-Private lMsErroAuto := .F.
+Private lMsErroAuto 	:= .F.
+Private lMsHelpAuto 	:= .T.
+Private lAutoErrNoFile 	:= .T.
+Private l030Auto        := .T.
 
 //---------------------+
 // Cnpj/Cpf do cliente |
@@ -501,7 +408,7 @@ If SA1->( dbSeek(xFilial("SA1") + cCnpj ) )
 	LogExec("INICIA ATUALIZACAO DO CLIENTE " + cCodCli + "-" + cLoja + "-" + Alltrim(SA1->A1_NREDUZ)  )
 Else
 	cCodCli := GetSxeNum("SA1","A1_COD")
-	cLoja	:= "01"
+	cLoja	:= StrZero(_nTLoja,"0")
 	SA1->( dbSetOrder(1) )
 	While SA1->( dbSeek(xFilial("SA1") + PadR(cCodCli,nTCodCli) + cLoja ) )
 		ConfirmSx8()
@@ -511,36 +418,37 @@ Else
 	LogExec("INICIA INCLUSAO DO CLIENTE " + cCodCli + "-" + cLoja  )
 EndIf
 
+//----------------------+
+// Consulta Master Data |
+//----------------------+
+_cProfVtex := oDadosCli:userProfileId
+If !Empty(_cProfVtex)
+	aEcoI011MdV(_cProfVtex,cCnpj,@_cEMailEc)
+EndIf
+
 //--------------------------+
 // Dados passados pela Vtex |
 //--------------------------+ 
 If oDadosCli:IsCorporate
-	cNomeCli	:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:CorporateName),.T.))	, SA1->A1_NOME 		) 
-	cNReduz		:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:TradeName),.T.))		, SA1->A1_NREDUZ	)
+	cNomeCli	:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:CorporateName),.T.))											, SA1->A1_NOME 		) 
+	cNReduz		:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:TradeName),.T.))												, SA1->A1_NREDUZ	)
 	cContato	:= IIF(nOpcA == 3,	u_ECACENTO(DecodeUtf8(oDadosCli:FirstName),.T.) + " " + u_ECACENTO(DecodeUtf8(oDadosCli:LastName),.T.)	, SA1->A1_CONTATO	)	
-	cDdd01		:= IIF(nOpcA == 3,	SubStr(oDadosCli:CorporatePhone,5,2)							, SA1->A1_DDD		)
-	cTel01		:= IIF(nOpcA == 3,	StrTran(SubStr(oDadosCli:CorporatePhone,8,nTamTel)," ","")		, SA1->A1_TEL		)
-	cInscE		:= IIF(nOpcA == 3,	Upper(oDadosCli:StateInscription)								, SA1->A1_INSCR		)
-	cContrib	:= IIF(nOpcA == 3,	IIF(Alltrim(cInscE) == "ISENTO","2","1")						, SA1->A1_CONTRIB	)
+	cDdd01		:= IIF(nOpcA == 3,	SubStr(oDadosCli:CorporatePhone,5,2)																	, SA1->A1_DDD		)
+	cTel01		:= IIF(nOpcA == 3,	StrTran(SubStr(oDadosCli:CorporatePhone,8,nTamTel)," ","")												, SA1->A1_TEL		)
+	cInscE		:= IIF(nOpcA == 3,	IIF(ValType(oDadosCli:StateInscription) <> "U",Upper(oDadosCli:StateInscription),"ISENTO")				, SA1->A1_INSCR		)
+	cContrib	:= IIF(nOpcA == 3,	IIF(Alltrim(cInscE) == "ISENTO","2","1")																, SA1->A1_CONTRIB	)
+	cNomeCli	:= PadR(cNomeCli,_nTNome)
 Else	
-	
 	cNomeCli	:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:FirstName),.T.)) + " " + Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:LastName),.T.))	, SA1->A1_NOME 		)
 	cNReduz		:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:FirstName),.T.)) + " " + Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:LastName),.T.))	, SA1->A1_NREDUZ	)
 	cDdd01		:= IIF(nOpcA == 3,	SubStr(oDadosCli:Phone,4,2)										, SA1->A1_DDD		)
 	cTel01		:= IIF(nOpcA == 3,	SubStr(oDadosCli:Phone,6,nTamTel) 								, SA1->A1_TEL		)
 	cContrib	:= IIF(nOpcA == 3,	"2"																, SA1->A1_CONTRIB	)
-	cNomeCli	:= Alltrim(cNomeCli)
-	cNReduz		:= Alltrim(cNReduz)
+	cNomeCli	:= PadR(cNomeCli,_nTNome)
+	cNReduz		:= PadR(cNReduz,_nTReduz)
 EndIf
 
 cEmail			:= IIF(nOpcA == 3,	Alltrim(oDadosCli:eMail)										, SA1->A1_EMAIL		)
-
-//----------------------+
-// Consulta Master Data |
-//----------------------+
-If !Empty(oDadosCli:userProfileId)
-	aEcoI011MdV(oDadosCli:userProfileId,cCnpj,_cUrl,_cAppKey,_cAppToken,@_cEMailEc)
-EndIf
 
 //----------------+
 // Dados Endereço |
@@ -561,6 +469,7 @@ If Len(aEndRes) > 0
 	cCep		:= aEndRes[CEP]
 	cEst		:= aEndRes[ESTADO]
 	cCodMun		:= aEndRes[IBGE]
+	_cCompEnd	:= ""
 ElseIf Len(aEndEnt) > 0		
 	cEnd		:= aEndEnt[ENDERE]
 	cNumEnd		:= aEndEnt[NUMERO]
@@ -569,6 +478,7 @@ ElseIf Len(aEndEnt) > 0
 	cCep		:= aEndEnt[CEP]
 	cEst		:= aEndEnt[ESTADO]
 	cCodMun		:= aEndEnt[IBGE]
+	_cCompEnd	:= ""
 EndIf
 
 //----------------------+
@@ -600,6 +510,7 @@ If Len(aEndEnt) > 0
 	cMunE		:= aEndEnt[MUNICI]
 	cCepE		:= aEndEnt[CEP]
 	cEstE		:= aEndEnt[ESTADO]
+	_cCompEnt	:= ""
 ElseIf Len(aEndRes) > 0
 	cEndE		:= aEndRes[ENDERE]
 	cNumEndE	:= aEndRes[NUMERO]
@@ -607,6 +518,7 @@ ElseIf Len(aEndRes) > 0
 	cMunE		:= aEndRes[MUNICI]
 	cCepE		:= aEndRes[CEP]
 	cEstE		:= aEndRes[ESTADO]
+	_cCompEnt	:= ""
 EndIf
 
 //--------------------------------------+
@@ -619,33 +531,50 @@ aAdd(aCliente ,	{"A1_PESSOA"	,	cTpPess									,	Nil	})
 aAdd(aCliente ,	{"A1_NOME"		,	cNomeCli								,	Nil	})
 aAdd(aCliente ,	{"A1_NREDUZ"	,	cNReduz									,	Nil	})
 
+_cEndFat	:= PadR(cEnd + ", " + cNumEnd,_nTEndF)
+_cMunFat 	:= PadR(cMun,_nTMunF)
+_cBairroF 	:= PadR(cBairro,_nTBairF)
+
 If nOpcA == 3
-	aAdd(aCliente ,	{"A1_END"		,	cEnd + ", " + cNumEnd					,	Nil	})
+	aAdd(aCliente ,	{"A1_END"		,	_cEndFat								,	Nil	})
 	aAdd(aCliente ,	{"A1_EST"		,	cEst									,	Nil	})
 	aAdd(aCliente ,	{"A1_COD_MUN"	,	cCodMun									,	Nil	})
-	aAdd(aCliente ,	{"A1_MUN"		,	cMun									,	Nil	})
-	aAdd(aCliente ,	{"A1_BAIRRO"	,	cBairro									,	Nil	})
+	aAdd(aCliente ,	{"A1_MUN"		,	_cMunFat								,	Nil	})
+	aAdd(aCliente ,	{"A1_BAIRRO"	,	_cBairroF								,	Nil	})
 	aAdd(aCliente ,	{"A1_CEP"		,	cCep									,	Nil	})
 EndIf	
 
-aAdd(aCliente ,	{"A1_ENDCOB"	,	cEndC + ", " + cNumEndC					,	Nil	})
+_cEndCob	:= PadR(cEndC + ", " + cNumEndC,_nTEndC)
+_cMunCob 	:= PadR(cMunC,_nTMunC)
+_cBairroC 	:= PadR(cBairroC,_nTBairC)
+
+_cEndEnt	:= PadR(cEndE + ", " + cNumEndE,_nTEndE)
+_cMunEnt 	:= PadR(cMunE,_nTMunE)
+_cBairroE 	:= PadR(cBairroE,_nTBairE)
+
+aAdd(aCliente ,	{"A1_ENDCOB"	,	_cEndCob								,	Nil	})
 aAdd(aCliente ,	{"A1_ESTC"		,	cEstC									,	Nil	})
-aAdd(aCliente ,	{"A1_MUNC"		,	cMunC									,	Nil	})
-aAdd(aCliente ,	{"A1_BAIRROC"	,	cBairroC								,	Nil	})
+aAdd(aCliente ,	{"A1_MUNC"		,	_cMunCob								,	Nil	})
+aAdd(aCliente ,	{"A1_BAIRROC"	,	_cBairroC								,	Nil	})
 aAdd(aCliente ,	{"A1_CEPC"		,	cCepC									,	Nil	})  
-aAdd(aCliente ,	{"A1_ENDENT"	,	cEndE + ", " + cNumEndE					,	Nil	})
+aAdd(aCliente ,	{"A1_ENDENT"	,	_cEndEnt								,	Nil	})
 aAdd(aCliente ,	{"A1_ESTE"		,	cEstE									,	Nil	})
-aAdd(aCliente ,	{"A1_MUNE"		,	cMunE									,	Nil	})
-aAdd(aCliente ,	{"A1_BAIRROE"	,	cBairroE								,	Nil	})
+aAdd(aCliente ,	{"A1_MUNE"		,	_cMunEnt								,	Nil	})
+aAdd(aCliente ,	{"A1_BAIRROE"	,	_cBairroE								,	Nil	})
 aAdd(aCliente ,	{"A1_CEPE"		,	cCepE									,	Nil	})
+aAdd(aCliente ,	{"A1_COMPENT"	,	_cCompEnt								,	Nil	})
+aAdd(aCliente ,	{"A1_XENDCOM"	,	_cEndFat								,	Nil	})
+aAdd(aCliente ,	{"A1_XBAIRRC"	,	_cBairroF								,	Nil	})
+aAdd(aCliente ,	{"A1_XMUNCOM"	,	_cMunFat								,	Nil	})
+aAdd(aCliente ,	{"A1_XESTCOM"	,	cEst									,	Nil	})
+aAdd(aCliente ,	{"A1_XCEPCOM"	,	cCep									,	Nil	})
 aAdd(aCliente ,	{"A1_TIPO"		,	cTipoCli								,	Nil	})
 aAdd(aCliente ,	{"A1_DDD"		,	cDdd01									,	Nil	})
 aAdd(aCliente ,	{"A1_TEL"		,	cTel01									,	Nil	})
 aAdd(aCliente ,	{"A1_PAIS"		,	"105"									,	Nil	})
 aAdd(aCliente ,	{"A1_CGC"		,	cCnpj									,	Nil	})
-aAdd(aCliente ,	{"A1_EMAIL"		,	cEmail									,	Nil	})
+aAdd(aCliente ,	{"A1_EMAIL"		,	_cEMailEc								,	Nil	})
 aAdd(aCliente ,	{"A1_DTNASC"	,	dDataBase								,	Nil	})
-//aAdd(aCliente ,	{"A1_CLIENTE"	,	"S"										,	Nil	})
 aAdd(aCliente ,	{"A1_CONTRIB"	,	cContrib								,	Nil	})  
 aAdd(aCliente ,	{"A1_CONTATO"	,	cContato								,	Nil	})  
 
@@ -680,6 +609,9 @@ EndIf
 //----------------------------------------------+
 aAdd(aCliente ,	{"A1_RISCO"		, "A"													,	Nil	})
 aAdd(aCliente ,	{"A1_CODPAIS"	, "01058"												,	Nil	})
+aAdd(aCliente ,	{"A1_MAILFIN"	, _cEMailEc												,	Nil	})
+aAdd(aCliente ,	{"A1_XEMAILV"	, _cEMailEc												,	Nil	})
+aAdd(aCliente ,	{"A1_XMDPROF"	, _cProfVtex											,	Nil	})
 
 //----------------------------------------------------------+
 // Ponto de Entrada utilizado para acrescentar novos campos |
@@ -696,21 +628,20 @@ aCliente := FWVetByDic(aCliente, "SA1")
 If Len(aCliente) > 0 
  
 	lMsErroAuto := .F.
+		
+	//--------------------------------------------+
+	// Realiza a gravação/atualização de clientes |
+	//--------------------------------------------+
+	dbSelectArea("SA1")
+	SA1->( dbGoTop() )
 	
-	
-	//--------------------------------+
-	// Desativa historico de clientes |
-	//--------------------------------+
-	_lAtvPut := .F.
-	If GetMv("MV_HISTTAB")
-		PutMv("MV_HISTTAB",.F.)
-		_lAtvPut := .T.
-	EndIf
-
-	//-------------------+
-	// ExecAuto Cliente. |
-	//-------------------+
-	MsExecAuto({|x,y| Mata030(x,y)}, aCliente, nOpcA)
+	If MA030IsMVC()
+		SetFunName('CRMA980')
+		MSExecAuto( { |x, y| CRMA980(x,y) },  aCliente, nOpcA )
+	Else
+		SetFunName('MATA030')
+		MsExecAuto({|x,y| Mata030(x,y)}, aCliente, nOpcA)
+	EndIf 
 	
 	LogExec("PROCESSANDO MANUTENCAO DO CLIENTE " + cCodCli + "-" + cLoja  )
 	
@@ -720,6 +651,37 @@ If Len(aCliente) > 0
 	If lMsErroAuto
 	
 		RollBackSx8()
+
+		_cLinha	 := ""	
+		cMsgErro := ""
+
+		_aErro	 := {}
+		_aErro 	 := GetAutoGrLog()
+
+		 For _nX := 1 To Len(_aErro)
+            _cLinha := _aErro[_nX]
+			_cLinha  := StrTran( _cLinha, Chr(13), " " )
+			_cLinha  := StrTran( _cLinha, Chr(10), " " )
+
+			If SubStr( _cLinha, 1, 4 ) == 'HELP'
+				cMsgErro += _cLinha + "|"
+			EndIf
+
+			If SubStr( _cLinha, 1, 6 ) == 'TABELA'
+				cMsgErro += _cLinha + "|"
+			EndIf
+
+			If SubStr( _cLinha, 1, 5 ) == 'AJUDA'
+				cMsgErro += _cLinha + " | "
+			EndIf
+
+			If At("< -- Invalido", _aErro[_nX] ) > 0
+				cMsgErro += _aErro[_nX]  + " | "
+			EndIf
+
+		Next nX
+
+		/*
 		MakeDir("\erros\")
 		cSA1Log := "SA1" + cCodCli + cLoja + DToS(dDataBase) + Left(Time(),2) + SubStr(Time(),4,2) + Right(Time(),2) + ".LOG"
 		MostraErro("\erros\",cSA1Log)
@@ -751,7 +713,8 @@ If Len(aCliente) > 0
 			EndDo
 			FT_FUSE()
 		EndIf  
-		
+		*/
+
 		//---------------------+
 		// Variavel de retorno |
 		//---------------------+
@@ -779,13 +742,20 @@ If Len(aCliente) > 0
 		If Rtrim(cCodMun) == RTrim(_cCMunDef)
 			u_AEcMailC(cCodInt,cDescInt,cCnpj,cNomeCli)
 		EndIf
+		
 		//--------------------+
 		// Desloqueia Cliente |
 		//--------------------+
-		RecLock("SA1",.F.)
-			SA1->A1_MSBLQL := "2"
-		SA1->( MsUnLock() )
-		
+		dbSelectArea("SA1")
+		SA1->( dbSetOrder(1) )
+		If SA1->( dbSeek(xFilial("SA1") + cCodCli + cLoja ))
+			RecLock("SA1",.F.)
+				SA1->A1_MSBLQL	:= "2"
+				SA1->A1_XDTALT	:= dDatabase
+				SA1->A1_XHRALT	:= Time()
+			SA1->( MsUnLock() )
+		EndIf
+
 		//---------------------+
 		// Variavel de retorno |
 		//---------------------+
@@ -799,13 +769,11 @@ If Len(aCliente) > 0
 		LogExec("CLIENTE " + Iif(nOpcA == 3,"INCLUIDO","ALTERADO") + " COM SUCESSO " + cCodCli + "-" + cLoja  )					
 		
 	EndIf
-
-	//--------------------------------+
-	// Desativa historico de clientes |
-	//--------------------------------+
-	If _lAtvPut
-		PutMv("MV_HISTTAB",.T.)
-	EndIf
+	
+	//-----------------------------------+
+	// Retira Lock de todos os registros |
+	//-----------------------------------+
+	MsUnLockAll()
 
 EndIf
 
@@ -1049,19 +1017,15 @@ Return cIbge
 /*/
 /**************************************************************************************************/
 Static Function aEcoI011MdV(_cProfileID,cCnpj,_cUrl,_cAppKey,_cAppToken,_cEMailEc)
-Local _oVTex	:= Zendesk():New()
-Local _oJSon	:= Nil 
+Local _oVTex	:= MasterData():New()
+Local _oJSon	:= JSonObject():New() 
 
 _oVTex:cIDCliente 	:= _cProfileID
-_oVTex:cDocument  	:= cCnpj
-_oVTex:cURLVtex  	:= RTrim(_cUrl)
-_oVTex:cAppKey  	:= RTrim(_cAppKey)
-_oVTex:cAppToken  	:= RTrim(_cAppToken)
 _cEMailEc			:= ""
 If _oVTex:Clientes()
 	If ValType(_oVTex:cJson) <> "U"
-		_oJSon := xFromJson(_oVTex:cJson)
-		_cEMailEc := _oJSon[#"email"]
+		_oJSon:FromJson(_oVTex:cJson)
+		_cEMailEc := _oJSon["email"]
 	EndIf 
 Else 
 	_cEMailEc := ""
@@ -1193,8 +1157,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	Local nJuros 		:= 0
 
 	Local lUsaVend		:= GetNewPar("EC_USAVEND",.F.)
-	Local _lReserva		:= GetNewPar("EC_USARESR",.F.)	
-
+		
 	Local dDtaEmiss		:= Nil
 	
 	Private nPesoBruto	:= 0
@@ -1340,10 +1303,12 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	//------------------------------+					
 	// Efetua a gravação da Reserva |
 	//------------------------------+
-	If aRet[1] .And. _lReserva
+	/*
+	If aRet[1]
 		aRet := AEcoGrvRes(cOrderId,cPedCodCli,cNumOrc,cCodCli,cLojaCli,cVendedor,nDesconto,dDtaEmiss,oRestPv:Items,oRestPv:ShippingData,oRestPv)
 	EndIf
-
+	*/
+	
 	If!aRet[1]
 		RestArea(aArea)
 		Return aRet
@@ -1415,7 +1380,6 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 	Local cTesEco	:= GetNewPar("EC_TESECO")
 	Local cLocal	:= GetNewPar("EC_ARMVEND")
 	Local cProduto	:= ""
-	Local cPrdTest	:= GetNewPar("EC_PRDTEST","TESTEECOMM")
 	Local cItem		:= "01"
 	Local cCodKit	:= "kit"
 		
@@ -1458,8 +1422,6 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 		Else
 			cProduto	:= oItems[nPrd]:RefId
 		EndIf
-		
-		cProduto 		:= cPrdTest 
 
 		LogExec("ITEM " + cItem + " PRODUTO " + cProduto )
 				
@@ -1704,7 +1666,6 @@ Local lGratis	:= .F.
 Local cTpOper	:= GetNewPar("EC_TPOPEREC")
 Local cTesEco	:= GetNewPar("EC_TESECO")
 Local cLocal	:= GetNewPar("EC_ARMVEND")
-Local cPrdTest	:= GetNewPar("EC_PRDTEST","TESTEECOMM")
 Local cProduto	:= ""
 
 Local nPrd		:= 0
@@ -1741,10 +1702,6 @@ For nPrd := 1 To Len(oItKit)
 		cProduto	:= PadR(oItKit[nPrd]:RefId,nTamProd) 
 	EndIf
 	
-	If Empty(cProduto)
-		cProduto := cPrdTest 
-	EndIf 
-
 	LogExec("ITEM " + cItem + " PRODUTO KIT " + cProduto )
 	
 	//----------------+
@@ -2033,6 +1990,7 @@ Local _cClient		:= "ECOMM"
 Local cCodKit		:= "kit"
 Local cLocal		:= GetNewPar("EC_ARMVEND")
 
+Local _nTCodRes 	:= TamSx3("C0_DOCRES")[1]
 Local nQtdItem		:= 0
 Local _nSaldoSb2	:= 0
 Local nPrd			:= 0
@@ -2042,6 +2000,7 @@ Local dDtVldRserv	:= GetNewPar("EC_DTVLDRE","01/01/2049")
 Local _lGerou		:= .F.
 Local lGift			:= .F.
 Local lBrinde		:= .F.
+Local _lInclui		:= .F.
 
 LogExec("EFETUANDO A RESERVA DO PEDIDO " + cOrderId )
 
@@ -2122,9 +2081,14 @@ For nPrd := 1 To Len(oItems)
 		//--------------------------+
 		// Valida se existe reserva |
 		//--------------------------+
-		dbSelectArea("SC0")
-		SC0->( dbSetOrder(3) )
-		If !SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,nTPedCli) + cProduto) )
+		_lInclui := .F.
+		If !SC0->( dbSeek(xFilial("SC0") + _cCodRes +  cProduto + cLocal) )
+			_lInclui := .T.
+		ElseIf nQtdItem <> SC0->C0_QUANT
+			_lInclui := .T.
+		EndIf 
+
+		If _lInclui
 
 			//----------------------------------------+	
 			// Valida se produto tem armzem de venda  |
@@ -2149,8 +2113,6 @@ For nPrd := 1 To Len(oItems)
 				EndIf	
 			RestArea(_aAreaSB2)
 
-			
-
 			//------------------------------+
 			// Inicia a gravação da reserva |
 			//------------------------------+
@@ -2171,23 +2133,24 @@ For nPrd := 1 To Len(oItems)
 				//-----------------------+
 				// Posiciona Pre Empenho |
 				//-----------------------+
-				SC0->( dbSetOrder(3) )
-				SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,nTPedCli) + cProduto))
-					
-				//---------------------------------------------+
-				// Validas e Reserva foi realizada com sucesso |
-				//---------------------------------------------+
-				If ( SC0->C0_PRODUTO == Padr(RTrim(cProduto),nTamProd) ) .And. ( cPedCodCli $ SC0->C0_OBS ) .And. ( SC0->C0_NUM == _cCodRes )
-					RecLock("SC0",.F.)
-						SC0->C0_QUANT  -= nQtdItem
-						SC0->C0_QTDPED += nQtdItem
-						SC0->C0_VALIDA := IIF(ValType(dDtVldRserv) == "C",cTod(dDtVldRserv),dDtVldRserv)
-					SC0->(MsUnLock())
+				SC0->( dbSetOrder(4) )
+				If SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,_nTCodRes) ))
+					While SC0->( !Eof() .And. xFilial("SC0") + cTipo + PadR(cPedCodCli,_nTCodRes) == SC0->C0_FILIAL + SC0->C0_TIPO + SC0->C0_DOCRES )
+						//---------------------------------------------+
+						// Validas e Reserva foi realizada com sucesso |
+						//---------------------------------------------+
+						If ( RTrim(SC0->C0_PRODUTO) == RTrim(cProduto) ) .And. ( cPedCodCli $ SC0->C0_OBS ) .And. ( SC0->C0_NUM == _cCodRes )
+							RecLock("SC0",.F.)
+								SC0->C0_QUANT  -= nQtdItem
+								SC0->C0_QTDPED += nQtdItem
+								SC0->C0_VALIDA := IIF(ValType(dDtVldRserv) == "C",cTod(dDtVldRserv),dDtVldRserv)
+							SC0->(MsUnLock())
 
-					LogExec("RESERVA " + _cCodRes + " EFETUADA COM SUCESSO.")
-
+							LogExec("RESERVA " + _cCodRes + " EFETUADA COM SUCESSO.")
+						EndIf 
+						SC0->( dbSkip() )
+					EndDo 
 				Else
-					
 					//-----------------------------------+
 					// Desarma Transacao em caso de erro |
 					//-----------------------------------+
@@ -2239,9 +2202,11 @@ Local cTipo		:= "LJ"
 Local _cClient	:= "ECOMM"
 Local cLocal	:= GetNewPar("EC_ARMVEND")
 
+Local _nTCodRes 	:= TamSx3("C0_DOCRES")[1]
 Local nQtdItem	:= 0
 Local nX		:= 0
 
+Local _lInclui	:= .F.
 		
 LogExec("EFETUANDO A RESERVA DOS PRODUTOS KIT PEDIDO " + cOrderId)
 
@@ -2298,8 +2263,15 @@ For nX := 1 To Len(oItKit)
 	// Valida se existe reserva |
 	//--------------------------+
 	dbSelectArea("SC0")
-	SC0->( dbSetOrder(3) )
-	If !SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,nTPedCli) + cProduto) )
+	SC0->( dbSetOrder(1) )
+	_lInclui := .F.
+	If !SC0->( dbSeek(xFilial("SC0") + _cCodRes +  cProduto + cLocal) )
+		_lInclui := .T.
+	ElseIf nQtdItem <> SC0->C0_QUANT
+		_lInclui := .T.
+	EndIf 
+
+	If _lInclui
 
 		//----------------------------------------+	
 		// Valida se produto tem armzem de venda  |
@@ -2346,21 +2318,23 @@ For nX := 1 To Len(oItKit)
 			//-----------------------+
 			// Posiciona Pre Empenho |
 			//-----------------------+
-			SC0->( dbSetOrder(3) )
-			SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,nTPedCli) + cProduto))
-				
-			//---------------------------------------------+
-			// Validas e Reserva foi realizada com sucesso |
-			//---------------------------------------------+
-			If ( SC0->C0_PRODUTO == Padr(RTrim(cProduto),nTamProd) ) .And. ( cPedCodCli $ SC0->C0_OBS ) .And. ( SC0->C0_NUM == _cCodRes )
-				RecLock("SC0",.F.)
-					SC0->C0_QUANT  -= nQtdItem
-					SC0->C0_QTDPED += nQtdItem
-					SC0->C0_VALIDA := IIF(ValType(dDtVldRserv) == "C",cTod(dDtVldRserv),dDtVldRserv) 
-				SC0->(MsUnLock())
+			SC0->( dbSetOrder(4) )
+			If SC0->( dbSeek(xFilial("SC0") + cTipo + PadR(cPedCodCli,_nTCodRes) ))
+				While SC0->( !Eof() .And. xFilial("SC0") + cTipo + PadR(cPedCodCli,_nTCodRes) == SC0->C0_FILIAL + SC0->C0_TIPO + SC0->C0_DOCRES )
+						//---------------------------------------------+
+						// Validas e Reserva foi realizada com sucesso |
+						//---------------------------------------------+
+						If ( RTrim(SC0->C0_PRODUTO) == RTrim(cProduto) ) .And. ( cPedCodCli $ SC0->C0_OBS ) .And. ( SC0->C0_NUM == _cCodRes )
+							RecLock("SC0",.F.)
+								SC0->C0_QUANT  -= nQtdItem
+								SC0->C0_QTDPED += nQtdItem
+								SC0->C0_VALIDA := IIF(ValType(dDtVldRserv) == "C",cTod(dDtVldRserv),dDtVldRserv)
+							SC0->(MsUnLock())
 
-				LogExec("RESERVA " + _cCodRes + " EFETUADA COM SUCESSO.")
-
+							LogExec("RESERVA " + _cCodRes + " EFETUADA COM SUCESSO.")
+						EndIf 
+						SC0->( dbSkip() )
+					EndDo 
 			Else
 				LogExec("ERRO AO GERAR RESERVA " + _cCodRes )
 			EndIf
@@ -2609,6 +2583,10 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 		
 		If oPayMent:Transactions[nTran]:IsActive
 			
+			If cCodAfili $ "DSP/DPC" .And. ValType(oPayMent:Transactions[nTran]:transactionId) == "U"
+				Loop
+			EndIf 
+
 			For nPay := 1 To Len(oPayMent:Transactions[nTran]:Payments)
 				
 				//If ValType(oPayMent:Transactions[nTran]:Payments[nPay]:id) <> "U"
@@ -2619,6 +2597,14 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//---------------------+
 					// Codigo da Operadora |
 					//---------------------+
+					cTipo 		:= ""
+					cFormPG 	:= ""
+					cSemNsu 	:= ""
+					cCodAuto	:= ""
+					cNsuId		:= ""
+					cTID		:= ""
+					cNumCart	:= ""
+
 					cOpera 		:= PadL(oPayMent:Transactions[nTran]:Payments[nPay]:PayMentSystem,nTamOper,"0")
 					nQtdParc	:= oPayMent:Transactions[nTran]:Payments[nPay]:InstallMents	
 					nVlrTotal	:= RetPrcUni(oPayMent:Transactions[nTran]:Payments[nPay]:Value)
@@ -2800,15 +2786,15 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 	//---------------------+
 	// Valida se tem juros |
 	//---------------------+
-	//If nJuros > 0 .And. cCodAfili $ "MGZ"
+	If nJuros > 0 .And. cCodAfili $ "MGZ"
 		dbSelectArea("WSA")
 		WSA->( dbSetOrder(2) )
 		If WSA->( dbSeek(xFilial("WSA") + cOrderId) )
 			RecLock("WSA",.F.)
-				WSA->WSA_CONDPG := cCondPg
+				WSA->WSA_DESPES := nJuros
 			WSA->( MsUnLock() )
 		EndIf 
-	//EndIf 
+	EndIf 
 
 	//----------+
 	// Grava SE1|
@@ -2879,7 +2865,7 @@ Static Function AEcoSe4(cOrderId,cTipo,nQtdParc)
 
 		cCodigo := "PIX"	
 		cDescri	:= "PIX"
-		cCondPg	:= GetNewPar("EC_PIXVENC","00")
+		cCondPg	:= GetNewPar("EC_PIXVENC","30")
 		cTpCond := "1"
 
 	EndIf	
@@ -3307,11 +3293,14 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	cLojaCli	:= sA1->A1_LOJA
 	cVendedor	:= ""
 	nDesconto	:= 0
+	/*
 	aRet := AEcoGrvRes(cOrderId,cOrdPvCli,cNumOrc,cCodCli,cLojaCli,cVendedor,nDesconto,dDtaEmiss,oRestPv:Items,oRestPv:ShippingData,oRestPv)
 	If !aRet[1]
 		RestArea(aArea)
 		Return aRet
 	EndIf
+	*/
+	
 	//---------------------+
 	// Posiciona Orçamento |
 	//---------------------+
@@ -3534,11 +3523,14 @@ Return .T.
 
 /*********************************************************************************************************/
 /*/{Protheus.doc} AEcoBxTit
-	@description	Realiza a baixa dos titulos do cartão 
-	@author			Bernard M.Margarido
-	@version   		1.00
-	@since     		10/02/2016
-	@return			aRet		- Array aRet[1] - Logico aRet[2] - Codigo Erro aRet[3] - Descricao do Erro  
+
+@description	Realiza a baixa dos titulos do cartão 
+
+@author			Bernard M.Margarido
+@version   		1.00
+@since     		10/02/2016
+
+@return			aRet		- Array aRet[1] - Logico aRet[2] - Codigo Erro aRet[3] - Descricao do Erro  
 /*/
 /********************************************************************************************************/
 Static Function AEcoBxTit(cNumTit)
@@ -3768,7 +3760,7 @@ Static Function AEcoI11IP(cIdTran,cCodAfili,cCodTransp,cIdPost,_cIdServ)
 If Empty(cIdPost)
 	AEcoI11TR(cIdTran,@cCodTransp,@_cIdServ)
 Else
-	cCodTransp	:= GetNewPar("EC_TRANSP","000001")
+	cCodTransp	:= GetNewPar("EC_TRANSP","EC0001")
 EndIf	
 
 Return .T. 
@@ -3790,13 +3782,12 @@ Local cIdPost	:= ""
 
 cQuery := " SELECT " + CRLF  
 cQuery += "		COD_TRANSP, " + CRLF  
-cQuery += "		IDSER " + CRLF  
+cQuery += "		ZZ0_IDSER " + CRLF  
 cQuery += " FROM " + CRLF  
 cQuery += " ( " + CRLF  
-/*
 cQuery += "		SELECT " + CRLF  
 cQuery += "			ZZ7.ZZ7_TRANSP COD_TRANSP, " + CRLF
-cQuery += "			'' IDSER " + CRLF
+cQuery += "			COALESCE(ZZ0.ZZ0_IDSER,'') ZZ0_IDSER " + CRLF
 cQuery += "		FROM " + CRLF
 cQuery += "			" + RetSqlName("ZZ7") + " ZZ7 " + CRLF  
 cQuery += "			LEFT JOIN " + RetSqlName("ZZ0") + " ZZ0 ON ZZ0.ZZ0_FILIAL = '" + xFilial("ZZ0") + "' AND ZZ0.ZZ0_CODECO = ZZ7.ZZ7_TRANSP AND ZZ0.D_E_L_E_T_ = '' " + CRLF 
@@ -3804,18 +3795,19 @@ cQuery += "		WHERE " + CRLF
 cQuery += "			ZZ7.ZZ7_FILIAL = '" + xFilial("ZZ7") + "' AND " + CRLF 
 cQuery += "			UPPER(ZZ7.ZZ7_IDECOM) = '" + Upper(cIdTran) + "' AND " + CRLF
 cQuery += "			ZZ7.D_E_L_E_T_ = '' "  + CRLF  
+/*
 cQuery += "		UNION ALL " + CRLF  
-*/
 cQuery += "		SELECT " + CRLF  
 cQuery += "			A4.A4_COD COD_TRANSP, " + CRLF
-cQuery += "			'' IDSER " + CRLF
+cQuery += "			COALESCE(ZZ0.ZZ0_IDSER,'') ZZ0_IDSER " + CRLF
 cQuery += "		FROM " + CRLF
 cQuery += "			" + RetSqlName("SA4") + " A4 " + CRLF  
-//cQuery += "			LEFT JOIN " + RetSqlName("ZZ0") + " ZZ0 ON ZZ0.ZZ0_FILIAL = '" + xFilial("ZZ0") + "' AND UPPER(ZZ0.ZZ0_CODECO) = '" + Upper(cIdTran) + "' AND ZZ0.D_E_L_E_T_ = '' " + CRLF 
+cQuery += "			LEFT JOIN " + RetSqlName("ZZ0") + " ZZ0 ON ZZ0.ZZ0_FILIAL = '" + xFilial("ZZ0") + "' AND UPPER(ZZ0.ZZ0_CODECO) = '" + Upper(cIdTran) + "' AND ZZ0.D_E_L_E_T_ = '' " + CRLF 
 cQuery += "		WHERE " + CRLF 
 cQuery += "			A4.A4_FILIAL = '" + xFilial("SA4") + "' AND " + CRLF 
 cQuery += "			UPPER(A4.A4_ECSERVI) = '" + Upper(cIdTran) + "' AND " + CRLF
 cQuery += "			A4.D_E_L_E_T_ = '' " + CRLF
+*/
 cQuery += " ) TRANSP " 
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
@@ -3829,7 +3821,7 @@ If (cAlias)->( Eof() )
 EndIf
 
 cCodTransp	:= (cAlias)->COD_TRANSP
-_cIdServ	:= (cAlias)->IDSER
+_cIdServ	:= (cAlias)->ZZ0_IDSER
 
 (cAlias)->( dbCloseArea() )
 
@@ -4140,8 +4132,10 @@ Return Nil
 Static Function AEcoVldAga(_cIdEnd)
 Local _aArea 	:= GetArea()
 
-Local _cAlias	:= GetNextAlias()
+Local _cAlias	:= ""
 Local _cQuery	:= ""
+
+Local _nTID 	:= TamSx3("AGA_XIDEND")[1]
 
 Local _lRet		:= .T.
 
@@ -4151,18 +4145,67 @@ _cQuery	+= " FROM " + CRLF
 _cQuery	+= "	" + RetSqlName("AGA") + " AGA " + CRLF 
 _cQuery	+= " WHERE " + CRLF
 _cQuery	+= "	AGA.AGA_FILIAL = '" + xFilial("AGA") + "' AND " + CRLF 
-_cQuery	+= "	AGA.AGA_XIDEND = '" + _cIdEnd + "' AND " + CRLF
+_cQuery	+= "	AGA.AGA_XIDEND = '" + PadR(_cIdEnd,_nTID) + "' AND " + CRLF
 _cQuery	+= "	AGA.D_E_L_E_T_ = '' "
 
-dbUseArea(.T.,"TOPCONN",TcGenQry(,,_cQuery),_cAlias,.T.,.T.)
+_cAlias := MPSysOpenQuery(_cQuery)
 
-If !Empty((_cAlias)->AGA_CODIGO)
-	_lRet := .F.
-EndIf
+_lRet := IIF(Empty((_cAlias)->AGA_CODIGO), .T., .F.)
 
 (_cAlias)->( dbCloseArea() )
 
 RestArea(_aArea)
+Return _lRet 
+
+/*******************************************************************************************/
+/*/{Protheus.doc} AEcoI11X
+	@description Realiza a consulta dos pedidos VTEX
+	@type  Static Function
+	@author Bernard M Margarido
+	@since 18/10/2023
+	@version version
+/*/
+/*******************************************************************************************/
+Static Function AEcoI11X(_nPage,_cError,_oJson)
+Local _cJSon		:= ""
+Local _cParams		:= ""     
+Local _cOrderBy		:= ""
+Local _cPerPage 	:= ""
+Local _cPage 		:= ""
+Local _cQryParam 	:= ""
+
+Local _oVTEX		:= VTEX():New()
+
+//------------------------+
+// Parametros de pesquisa |
+//------------------------+
+_cQryParam 	:= "?f_status=ready-for-handling"
+_cOrderBy  	:= "&orderBy=creationDate,asc"
+_cPerPage  	:= "&per_page=100"
+_cPage	  	:= "&page=" + cValToChar(_nPage) + "	
+_cParams 	:= _cQryParam + _cOrderBy + _cPerPage + _cPage
+
+//---------+
+// Timeout |
+//---------+
+_oVTEX:cParam	:= _cParams
+_oVTEX:cMetodo	:= "GET"
+
+If _oVTEX:OrderBatches()
+	If ValType(_oVTEX:cJSonRet) == "U"
+		_cJSon := _oVTEX:cJSonRet
+		If !FWJsonDeserialize(_cJSon,@_oJson)
+			_lRet := .F.
+		EndIf 
+	Else 
+		_cError:= _oVTEX:cError
+		_lRet  := .F.
+	EndIf 
+Else 
+	_cError:= _oVTEX:cError
+	_lRet := .F.
+EndIF 
+
 Return _lRet 
 
 /*******************************************************************************************/

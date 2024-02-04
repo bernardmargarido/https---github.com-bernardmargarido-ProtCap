@@ -31,9 +31,10 @@ Private _cCodTab:= GetNewPar("EC_TABECO")
 Private _cFilEst:= GetNewPar("EC_FILEST")
 Private _cLocal := FormatIn(GetNewPar("EC_ARMAZEM"),"/")
 
-Private _lAY1   := .F.
-Private _lAY2   := .F.
-Private _lWS5   := .F.
+Private _lACU   := .F.
+Private _lZTD   := .F.
+Private _lZTI   := .F.
+Private _lZTE   := .F.
 Private _lSB4   := .F.
 Private _lSB1   := .F.
 Private _lSB2   := .F.
@@ -69,16 +70,17 @@ _oDlg := MsDialog():New(000, 000, 375, 615,"Monitor Integrações",,,,,,,,,.T.)
     //----------------------------------------+
     _oGroup01 := TGroup():New(002,001,080,300,"Integração - Protheus X e-Commerce",_oPanel,,,.T.)
 
-    @ 030,010 Button "01 ) Categoria"				Size 92,12 When _lAY1  Action ( U_AECOI001() 	, Eval(_bFlagEco) ) Pixel
-    @ 030,110 Button "02 ) Marcas"					Size 92,12 When _lAY2  Action ( U_AECOI002()	, Eval(_bFlagEco) ) Pixel
-    @ 030,210 Button "02 ) Grupos Especiais"    	Size 92,12 When _lWS5  Action ( U_AECOI002()	, Eval(_bFlagEco) ) Pixel
+    @ 030,010 Button "01 ) Categoria"				Size 92,12 When _lACU  Action ( U_AECOI001() 	, Eval(_bFlagEco) ) Pixel
+    @ 030,110 Button "02 ) Marcas"					Size 92,12 When _lZTD  Action ( U_AECOI002()	, Eval(_bFlagEco) ) Pixel
+    @ 030,210 Button "03 ) Grupos Especificos"    	Size 92,12 When _lZTI  Action ( U_AECOI014()	, Eval(_bFlagEco) ) Pixel
 
-    @ 045,010 Button "03 ) Produto"			        Size 92,12 When _lSB4  Action ( U_AECOI003() 	, Eval(_bFlagEco) ) Pixel
-	@ 045,110 Button "04 ) Produto Sku"		        Size 92,12 When _lSB1  Action ( U_AECOI004() 	, Eval(_bFlagEco) ) Pixel
-    @ 045,210 Button "05 ) Atualiza Preço" 			Size 92,12 When _lDA1  Action ( U_AECOI009()	, Eval(_bFlagEco) ) Pixel
-
-	@ 060,010 Button "06 ) Atualiza Estoque" 		Size 92,12 When _lSB2  Action ( U_AECOI008() 	, Eval(_bFlagEco) ) Pixel
-	//@ 060,110 Button "07 ) Ativa Prod. X Sku"		Size 92,12 When _lATV  Action ( U_AECOI012()	, Eval(_bFlagEco) ) Pixel
+    @ 045,010 Button "04 ) Campos Especificos"      Size 92,12 When _lZTE  Action ( U_AECOI015() 	, Eval(_bFlagEco) ) Pixel
+    @ 045,110 Button "05 ) Produtos "		        Size 92,12 When _lSB4  Action ( U_AECOI003() 	, Eval(_bFlagEco) ) Pixel
+	@ 045,210 Button "06 ) SKU's"   		        Size 92,12 When _lSB1  Action ( U_AECOI004() 	, Eval(_bFlagEco) ) Pixel
+    
+	@ 060,010 Button "07 ) Atualiza Estoque" 		Size 92,12 When _lSB2  Action ( U_AECOI008() 	, Eval(_bFlagEco) ) Pixel
+    @ 060,110 Button "08 ) Atualiza Preço" 			Size 92,12 When _lDA1  Action ( U_AECOI009()	, Eval(_bFlagEco) ) Pixel
+	//@ 060,110 Button "09 ) Ativa Prod. X Sku"		Size 92,12 When _lATV  Action ( U_AECOI012()	, Eval(_bFlagEco) ) Pixel
 
     //----------------------------------------+
     // Grupo integrações eCommerce X Protheus |
@@ -107,11 +109,15 @@ Local _cQuery  := ""
 //--------------------+  
 // Restaura variaveis |
 //--------------------+
-_lAY1   := .F.
-_lAY2   := .F.
+_lACU   := .F.
+_lZTD   := .F.
+_lZTI   := .F.
+_lZTE   := .F.
 _lSB4   := .F.
 _lSB1   := .F.
-_lWS5   := .F.
+_lSB2   := .F.
+_lDA1   := .F.
+_lATV   := .F.
 
 //------------------------+
 // regua de processamento |
@@ -126,12 +132,13 @@ IncProc("Categorias... ")
 _cQuery := "	SELECT " + CRLF
 _cQuery += "		COUNT(*) TOTAL " + CRLF
 _cQuery += "	FROM " + CRLF 
-_cQuery += "		 " + RetSqlName("AY1") + " AY1 " + CRLF
-_cQuery += "		INNER JOIN " + RetSqlName("AY0") + " AY0 ON AY0.AY0_CODIGO = AY1.AY1_SUBCAT AND AY0.AY0_ENVECO = '1' AND AY0.D_E_L_E_T_ = '' " + CRLF
-_cQuery += "	WHERE " + CRLF
-_cQuery += "		AY1.D_E_L_E_T_ = ''  
+_cQuery += "		 " + RetSqlName("ACU") + " ACU (NOLOCK)  " + CRLF
+_cQuery += " WHERE " + CRLF
+_cQuery += "		ACU.ACU_FILIAL = '" + xFilial("ACU") + "' AND " + CRLF
+_cQuery += "		ACU.ACU_XINTLV = '1' AND " + CRLF
+_cQuery += "		ACU.D_E_L_E_T_ = '' " + CRLF
 
-_lAY1   := EcLoj011Qry(_cQuery)
+_lACU   := EcLoj011Qry(_cQuery)
 
 //--------+
 // Marcas |
@@ -141,30 +148,45 @@ IncProc("Marcas...")
 _cQuery := "	SELECT " + CRLF
 _cQuery += "		COUNT(*) TOTAL " + CRLF
 _cQuery += "	FROM " + CRLF
-_cQuery += "		" + RetSqlName("AY2") + " AY2 " + CRLF
+_cQuery += "		" + RetSqlName("ZTD") + " ZTD (NOLOCK) " + CRLF
 _cQuery += "	WHERE " + CRLF
-_cQuery += "		AY2.AY2_FILIAL = '" + xFilial("AY2") + "' AND " + CRLF
-_cQuery += "		AY2.AY2_ENVECO = '1' AND " + CRLF 
-_cQuery += "		AY2.D_E_L_E_T_ = '' " 
+_cQuery += "		ZTD.ZTD_FILIAL = '" + xFilial("ZTD") + "' AND " + CRLF 
+_cQuery += "		ZTD.ZTD_INTLV = '1' AND " + CRLF 
+_cQuery += "		ZTD.D_E_L_E_T_ = '' "
 
-_lAY2   := EcLoj011Qry(_cQuery)
+_lZTD   := EcLoj011Qry(_cQuery)
 
 //-----------------------------+
 // Grupo de Campos especificos |
 //-----------------------------+
-IncProc("Grupo de campos especificos...")
+IncProc("Grupo especificos...")
 
 _cQuery := " SELECT " + CRLF
 _cQuery += "    COUNT(*) TOTAL " + CRLF
 _cQuery += " FROM " + CRLF
-_cQuery += "    " + RetSqlName("WS5") + " WS5 (NOLOCK) " + CRLF
-_cQuery += "	INNER JOIN " + RetSqlName("AY0") + " AY0 (NOLOCK) ON AY0.AY0_FILIAL = '" + xFilial("AY0") + "' AND AY0.AY0_CODIGO = WS5.WS5_CAT01 AND AY0.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "    " + RetSqlName("ZTI") + " ZTI (NOLOCK) " + CRLF
 _cQuery += " WHERE " + CRLF
-_cQuery += "    WS5.WS5_FILIAL = '" + xFilial("WS5") + "' AND " + CRLF
-_cQuery += "	WS5.WS5_ENVECO = '1' AND " + CRLF
-_cQuery += "	WS5.D_E_L_E_T_ = '' "
+_cQuery += "	ZTI_FILIAL = '" + xFilial("ZTI") + "' AND " + CRLF
+_cQuery += "	ZTI_INTLV = '1' AND " + CRLF
+_cQuery += "	ZTI.D_E_L_E_T_ = '' "
 
-_lWS5   := EcLoj011Qry(_cQuery)
+_lZTI   := EcLoj011Qry(_cQuery)
+
+//--------------------+
+// Campos especificos |
+//--------------------+
+IncProc("Campos especificos...")
+
+_cQuery := " SELECT " + CRLF
+_cQuery += "    COUNT(*) TOTAL " + CRLF
+_cQuery += " FROM " + CRLF
+_cQuery += "    " + RetSqlName("ZTE") + " ZTE (NOLOCK) " + CRLF
+_cQuery += " WHERE " + CRLF
+_cQuery += "	ZTE.ZTE_FILIAL = '" + xFilial("ZTE") + "' AND " + CRLF
+_cQuery += "	ZTE.ZTE_XINTLV = '1' AND " + CRLF
+_cQuery += "	ZTE.D_E_L_E_T_ = '' "
+
+_lZTE   := EcLoj011Qry(_cQuery)
 
 //--------------+
 // Produtos Pai |
@@ -172,15 +194,28 @@ _lWS5   := EcLoj011Qry(_cQuery)
 IncProc("Produto Pai... ")
 
 _cQuery := " SELECT " + CRLF
-_cQuery += "	COUNT(*) TOTAL " + CRLF
+_cQuery += "    TOTAL " + CRLF
 _cQuery += " FROM " + CRLF
-_cQuery += "	" + RetSqlName("SB5") + " B5 " + CRLF
-_cQuery += " WHERE " + CRLF
-_cQuery += "	B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-_cQuery += "	B5.B5_XENVECO = '1' AND " + CRLF
-_cQuery += "	B5.B5_XENVSKU = '1' AND " + CRLF
-_cQuery += "	B5.B5_XUSAECO = 'S' AND " + CRLF
-_cQuery += "	B5.D_E_L_E_T_ = ''"
+_cQuery += " ( " + CRLF
+_cQuery += "    SELECT " + CRLF
+_cQuery += "    	COUNT(*) TOTAL " + CRLF
+_cQuery += "    FROM " + CRLF
+_cQuery += "    	" + RetSqlName("SB4") + " B4 (NOLOCK) " + CRLF
+_cQuery += "    WHERE " + CRLF
+_cQuery += "    	B4.B4_FILIAL = '" + xFilial("SB4") + "' AND " + CRLF
+_cQuery += "    	B4.B4_XINTLV  = '1' AND " + CRLF
+_cQuery += "    	B4.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	UNION ALL " + CRLF
+_cQuery += "    SELECT " + CRLF
+_cQuery += "    	COUNT(*) TOTAL " + CRLF
+_cQuery += "    FROM " + CRLF
+_cQuery += "    	" + RetSqlName("SB1") + " B1 (NOLOCK) " + CRLF
+_cQuery += "    WHERE " + CRLF
+_cQuery += "		B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+_cQuery += "		B1.B1_GRADE IN('','N') AND " + CRLF
+_cQuery += "		B1.B1_XINTLV = '1' AND " + CRLF
+_cQuery += "		B1.D_E_L_E_T_ = '' " + CRLF
+_cQuery += ") PRODUTOS_PAI "
 
 _lSB4   := EcLoj011Qry(_cQuery)
 
@@ -193,16 +228,11 @@ IncProc("SKU ...")
 _cQuery := " SELECT " + CRLF
 _cQuery += "    COUNT(*) TOTAL " + CRLF
 _cQuery += " FROM " + CRLF 
-_cQuery += "    " + RetSqlName("SB5") + " B5 " + CRLF   
-_cQuery += "    INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B5.B5_COD AND B1.B1_MSBLQL <> '1' AND B1.D_E_L_E_T_ = '' " + CRLF
-_cQuery += "	INNER JOIN " + RetSqlName("AY2") + " AY2 ON AY2.AY2_FILIAL = '" + xFilial("AY2") + "' AND AY2.AY2_CODIGO = B5.B5_XCODMAR AND AY2.D_E_L_E_T_ = '' " + CRLF
-_cQuery += "	LEFT OUTER JOIN " + RetSqlName("DA1") + " DA1 ON DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND DA1.DA1_CODTAB = '" + _cCodTab + "' AND DA1.DA1_CODPRO = B1.B1_COD AND DA1.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "    " + RetSqlName("SB1") + " B1 " + CRLF   
 _cQuery += " WHERE " + CRLF
-_cQuery += "	B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-_cQuery += "	B5.B5_XUSAECO = 'S' AND " + CRLF
-_cQuery += "	B5.B5_XENVECO = '2' AND " + CRLF
-_cQuery += "	B5.B5_XENVSKU = '1' AND " + CRLF
-_cQuery += "	B5.D_E_L_E_T_ = ' ' "
+_cQuery += "	B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+_cQuery += "	B1.B1_XINTLV = '1' AND " + CRLF
+_cQuery += "	B1.D_E_L_E_T_ = '' " + CRLF	
 
 _lSB1   := EcLoj011Qry(_cQuery)
 
@@ -215,8 +245,7 @@ _cQuery := " SELECT " + CRLF
 _cQuery += "    COUNT(*) TOTAL " + CRLF
 _cQuery += " FROM " + CRLF
 _cQuery += "	" + RetSqlName("SB2") + " B2 " + CRLF
-_cQuery += "	INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B2.B2_COD AND B1.B1_MSBLQL <> '1' AND B1.D_E_L_E_T_ = '' " + CRLF 
-_cQuery += "	INNER JOIN " + RetSqlName("SB5") + " B5 ON B5.B5_FILIAL = '" + xFilial("SB5") + "' AND B5.B5_COD = B2.B2_COD AND B5.B5_XENVECO = '2' AND B5.B5_XENVSKU = '2' AND B5.B5_XUSAECO = 'S' AND B5.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B2.B2_COD AND B1.B1_MSBLQL <> '1' AND B1.B1_XINTLV = '2' AND B1.B1_XIDSKU > 0 AND B1.D_E_L_E_T_ = '' " + CRLF 
 _cQuery += " WHERE " + CRLF
 _cQuery += "	B2.B2_FILIAL = '" + _cFilEst  + "' AND " + CRLF 
 _cQuery += "	B2.B2_LOCAL IN " + _cLocal + " AND " + CRLF
@@ -229,7 +258,7 @@ _lSB2   := EcLoj011Qry(_cQuery)
 // Preços Pai |
 //------------+
 IncProc("Verificando Preços Produtos ")
-
+/*
 _cQuery := "	SELECT " + CRLF
 _cQuery += "		COUNT(*) TOTAL " + CRLF
 _cQuery += "	FROM " + CRLF
@@ -244,7 +273,7 @@ _cQuery += "		DA1.DA1_XENVEC = '1' AND " + CRLF
 _cQuery += "		DA1.D_E_L_E_T_ = '' "
 
 _lDA1   := EcLoj011Qry(_cQuery)
-
+*/
 Return Nil
 
 /************************************************************************************/

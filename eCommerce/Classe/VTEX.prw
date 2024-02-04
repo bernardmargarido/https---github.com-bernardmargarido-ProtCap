@@ -18,12 +18,14 @@ Class VTEX
     Data cJSonRet       As String
     Data cError         As String
     Data cID            As String
+    Data cParam         As String
     Data cWarehouse     As String 
     Data cPassword	    As String 
 	Data cCertPath	    As String 
 	Data cKeyPath	    As String 
 	Data cCACertPath    As String 
     
+    Data nType          As Integer
     Data nSSL2		    As Integer
 	Data nSSL3		    As Integer
 	Data nTLS1		    As Integer
@@ -46,7 +48,9 @@ Class VTEX
     Method SkuSpecification()
     Method Prices()
     Method Stocks()
-    Method Orders()
+    Method OrderBatches()
+    Method CompleteOrders()
+    
     Method Invoice()
 
 EndClass
@@ -69,6 +73,7 @@ Method New() Class VTEX
     Self:cJSon      := ""
     Self:cJSonRet   := ""
     Self:cID        := ""
+    Self:cParam     := ""
     Self:cWarehouse := ""
     Self:cError     := ""
     Self:cPassword	:= ""
@@ -76,6 +81,7 @@ Method New() Class VTEX
 	Self:cKeyPath	:= "" 
 	Self:cCACertPath:= ""
 
+    Self:nType      := 0 
     Self:nSSL2		:= 0
 	Self:nSSL3		:= 0
 	Self:nTLS1		:= 3
@@ -1443,8 +1449,8 @@ FreeObj(_oJSonRet)
 Return _lRet
 
 /***************************************************************************************************/
-/*/{Protheus.doc} Orders
-    @description Metodo - Realiza a baixa dos pedidos e-Commerce
+/*/{Protheus.doc} OrderBatches
+    @description Metodo - Consulta lotes de pedidos 
     @author Bernard M Margarido
     @since 21/06/2023
     @version version
@@ -1452,7 +1458,116 @@ Return _lRet
     @return return_var, return_type, return_description
 /*/
 /***************************************************************************************************/
-Method Orders() Class VTEX 
+Method OrderBatches() Class VTEX 
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(Self:cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    _oFwRest:SetPath("/api/oms/pvt/orders?" + RTrim(Self:cParam))    
+     If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+EndIf 
+
+Return _lRet 
+
+/***************************************************************************************************/
+/*/{Protheus.doc} CompleteOrders
+    @description Metodo - Consulta pedido completo
+    @author Bernard M Margarido
+    @since 21/06/2023
+    @version version
+    @param param_name, param_type, param_descr
+    @return return_var, return_type, return_description
+/*/
+/***************************************************************************************************/
+Method CompleteOrders() Class VTEX 
+Local _aHeadOut     := {}
+
+Local _lRet         := .T.    
+
+Local _oJSonRet     := Nil 
+Local _oFwRest      := Nil 
+
+//---------------+
+// Usa cache SSL |
+//---------------+
+::GetSSLCache()
+
+//----------------+
+// Header conexão |
+//----------------+
+aAdd(_aHeadOut, "Content-Type: application/json")
+aAdd(_aHeadOut, "X-VTEX-API-AppKey: " + Self:cAppKey)
+aAdd(_aHeadOut, "X-VTEX-API-AppToken: " + Self:cAppToken)
+
+//----------------------------------+
+// Instancia classe de conexao REST |
+//----------------------------------+
+_oFwRest := FWRest():New(Self:cUrl)
+
+//--------------------+
+// Timeout de conexao |
+//--------------------+
+_oFwRest:nTimeOut := 600
+
+If Self:cMetodo == "GET"
+    _oFwRest:SetPath("/api/oms/pvt/orders/" + RTrim(Self:cID))    
+     If _oFwRest:Get(_aHeadOut)
+        Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        _lRet           := .T.
+    Else
+        If ValType(_oFwRest:GetResult()) <> "U"
+            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+            _oJSonRet       := JSonObject():New()
+            _oJSonRet:FromJson(Self:cJSonRet)
+
+            Self:cError     := _oJSonRet["Message"]
+        Else 
+            Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
+        EndIf
+        _lRet   := .F.
+    EndIf 
+EndIf 
+
 Return _lRet 
 
 /***************************************************************************************************/
