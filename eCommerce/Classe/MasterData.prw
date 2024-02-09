@@ -106,22 +106,23 @@ If _oRest:Get(aHeadOut)
         _cRest := _oRest:GetResult()
     EndIf 
     
-    _oVtex := xFromJson(_cRest)
+    _oVtex := JSonObject():New()
+    _oVtex:FromJson(_cRest)
     If ValType(_oVtex) <> "U"
-        If ValType(_oVtex) == "A" .And. Len(_oVtex) > 0
+        If ValType(_oVtex) == "J" .And. Len(_oVtex) > 0
             For _nX := 1 To Len(_oVtex)
-                _cEMail       := IIF(ValType(_oVtex[_nX][#"email"]) <> "U", _oVtex[_nX][#"email"] ,"")
-                _cFirstName   := IIF(ValType(_oVtex[_nX][#"firstName"]) <> "U", _oVtex[_nX][#"firstName"] ,"")
-                _cLastName    := IIF(ValType(_oVtex[_nX][#"lastName"]) <> "U", _oVtex[_nX][#"lastName"] ,"")
-                _cDocument    := IIF(ValType(_oVtex[_nX][#"document"]) <> "U",_oVtex[_nX][#"document"], ::cDocument)
-                _cUserID      := IIF(ValType(_oVtex[_nX][#"userId"]) <> "U", _oVtex[_nX][#"userId"] ,"")
+                _cEMail       := IIF(ValType(_oVtex[_nX]["email"]) <> "U", _oVtex[_nX]["email"] ,"")
+                _cFirstName   := IIF(ValType(_oVtex[_nX]["firstName"]) <> "U", _oVtex[_nX]["firstName"] ,"")
+                _cLastName    := IIF(ValType(_oVtex[_nX]["lastName"]) <> "U", _oVtex[_nX]["lastName"] ,"")
+                _cDocument    := IIF(ValType(_oVtex[_nX]["document"]) <> "U",_oVtex[_nX]["document"], ::cDocument)
+                _cUserID      := IIF(ValType(_oVtex[_nX]["userId"]) <> "U", _oVtex[_nX]["userId"] ,"")
                 //-----------------------+
                 // Monta JSon de retorno |
                 //-----------------------+
                 ::cJson     := JSonRetCli(_cEMail,_cFirstName,_cLastName,_cDocument,_cUserID,.T.)
                 ::nCodeHttp := SUCESS
             Next _nX 
-        ElseIf ValType(_oVtex) == "A" .And. Len(_oVtex) == 0
+        ElseIf ValType(_oVtex) == "J" .And. Len(_oVtex) == 0
             ::cJson     := JSonRetCli(_cEMail,_cFirstName,_cLastName,_cDocument,_cUserID,.F.)
             _lRet       := .F.
             ::nCodeHttp := NOTFOUND
@@ -148,7 +149,7 @@ Local _cJSon    := ""
 
 Local _nTCGC    := TamSx3("A1_CGC")[1]
 
-Local _oJSon    := Nil 
+Local _oJSon    := Nil
 
 If _lOk
     //-------------------------------------+
@@ -157,42 +158,44 @@ If _lOk
     dbSelectArea("SA1")
     SA1->( dbSetOrder(3) )
     If SA1->( dbSeek(xFilial("SA1") + PadR(_cDocument,_nTCGC)))
-        _oJSon := Array(#)
-        _oJSon[#"id_vtex"]      := _cUserID
-        _oJSon[#"codigo"]       := RTrim(SA1->A1_COD)
-        _oJSon[#"loja"]         := RTrim(SA1->A1_LOJA)
-        _oJSon[#"nome"]         := RTrim(_cFirstName) + " " + RTrim(_cLastName)
-        _oJSon[#"documento"]    := RTrim(SA1->A1_CGC)
-        _oJSon[#"tipo"]         := RTrim(SA1->A1_PESSOA)
-        _oJSon[#"email"]        := RTrim(_cEMail)
-        _oJSon[#"enderecos"]    := {}
-        aAdd(_oJSon[#"enderecos"],Array(#))
-        _oAdress    := aTail(_oJSon[#"enderecos"])
-        _oAdress[#"tipo"]       := "Residencial"
-        _oAdress[#"endereco"]   := RTrim(SA1->A1_END)
-        _oAdress[#"bairro"]     := RTrim(SA1->A1_BAIRRO)
-        _oAdress[#"municipio"]  := RTrim(SA1->A1_MUN)
-        _oAdress[#"uf"]         := RTrim(SA1->A1_EST)
-        _oAdress[#"cep"]        := Transform(RTrim(SA1->A1_CEP),PesqPict("SA1","A1_CEP"))
-        _oAdress[#"complemento"]:= RTrim(SA1->A1_COMPLEM)
+        _oJSon                  := JSonObject():New()
+        _oJSon["id_vtex"]       := _cUserID
+        _oJSon["codigo"]        := RTrim(SA1->A1_COD)
+        _oJSon["loja"]          := RTrim(SA1->A1_LOJA)
+        _oJSon["nome"]          := RTrim(_cFirstName) + " " + RTrim(_cLastName)
+        _oJSon["documento"]     := RTrim(SA1->A1_CGC)
+        _oJSon["tipo"]          := RTrim(SA1->A1_PESSOA)
+        _oJSon["email"]         := RTrim(_cEMail)
+        _oJSon["enderecos"]     := {}
+
+        _oAdress                := JSonObject():New()
+        _oAdress["tipo"]        := "Residencial"
+        _oAdress["endereco"]    := RTrim(SA1->A1_END)
+        _oAdress["bairro"]      := RTrim(SA1->A1_BAIRRO)
+        _oAdress["municipio"]   := RTrim(SA1->A1_MUN)
+        _oAdress["uf"]          := RTrim(SA1->A1_EST)
+        _oAdress["cep"]         := Transform(RTrim(SA1->A1_CEP),PesqPict("SA1","A1_CEP"))
+        _oAdress["complemento"] := RTrim(SA1->A1_COMPLEM)
+        aAdd(_oJSon["enderecos"],_oAdress)
     Else 
-        _oJSon := Array(#)
-        _oJSon[#"id_vtex"]      := _cUserID
-        _oJSon[#"codigo"]       := Nil
-        _oJSon[#"loja"]         := Nil 
-        _oJSon[#"nome"]         := RTrim(_cFirstName) + " " + RTrim(_cLastName)
-        _oJSon[#"documento"]    := RTrim(_cDocument)
-        _oJSon[#"tipo"]         := Nil 
-        _oJSon[#"email"]        := RTrim(_cEMail)
+        _oJSon := JSonObject():New()
+        _oJSon["id_vtex"]      := _cUserID
+        _oJSon["codigo"]       := Nil
+        _oJSon["loja"]         := Nil 
+        _oJSon["nome"]         := RTrim(_cFirstName) + " " + RTrim(_cLastName)
+        _oJSon["documento"]    := RTrim(_cDocument)
+        _oJSon["tipo"]         := Nil 
+        _oJSon["email"]        := RTrim(_cEMail)
     EndIf 
 Else 
-    _oJSon := Array(#)
+    _oJSon                      := JSonObject():New()
     _oJSon[#"error"]            := "Cliente não localizado"
 EndIf 
+
 //---------------------------------+
 // Converte objeto em arquivo JSON |
 //---------------------------------+
-_cJSon := EncodeUTF8(xToJson(_oJSon))
+_cJSon := EncodeUTF8(_oJSon:ToJson(_oJSon))
 
 RestArea(_aArea)
 Return _cJson

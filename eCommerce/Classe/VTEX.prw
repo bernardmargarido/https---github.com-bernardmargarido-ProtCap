@@ -1553,6 +1553,9 @@ If Self:cMetodo == "GET"
     _oFwRest:SetPath("/api/oms/pvt/orders/" + RTrim(Self:cID))    
      If _oFwRest:Get(_aHeadOut)
         Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
+        If ValType(Self:cJSonRet) == "U"
+            Self:cJSonRet	:= _oFwRest:GetResult()
+        EndIf 
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"

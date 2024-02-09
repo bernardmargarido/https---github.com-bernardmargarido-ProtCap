@@ -41,12 +41,12 @@ Static nTamNatur:= TamSx3("E1_NATUREZ")[1]
 Static nTamTipo	:= TamSx3("E1_TIPO")[1]
 Static nTamParc	:= TamSx3("E1_PARCELA")[1]
 Static nTamTitu	:= TamSx3("E1_NUM")[1]
-Static nTamOrder:= TamSx3("WSA_NUMECO")[1]
-Static nTPedCli	:= TamSx3("WSA_NUMECL")[1]
-Static nTItemL2	:= TamSx3("WSB_ITEM")[1]
-Static nDecIt	:= TamSx3("WSB_VLRITE")[2]
-Static nTamStat	:= TamSx3("WS1_DESCVT")[1]
-Static nTamOper	:= TamSx3("WS4_CODIGO")[1]
+Static nTamOrder:= TamSx3("XTA_NUMECO")[1]
+Static nTPedCli	:= TamSx3("XTA_NUMECL")[1]
+Static nTItemL2	:= TamSx3("XTB_ITEM")[1]
+Static nDecIt	:= TamSx3("XTB_VLRITE")[2]
+Static nTamStat	:= TamSx3("ZTC_CODIGO")[1]
+Static nTamOper	:= TamSx3("ZTB_CODADM")[1]
 Static _nTEst	:= TamSx3("A1_EST")[1]
 
 /**************************************************************************************************/
@@ -133,6 +133,8 @@ Return .T.
 /*/
 /**************************************************************************************************/
 Static Function AECOINT11()
+Local _aArea 			:= GetArea()
+
 Local _cError			:= ""
 
 Local _nX				:= 0
@@ -191,13 +193,13 @@ If AEcoI11X(_nPage,@_cError,@_oJSon)
 			_nPage++
 			FreeObj(_oJSon)
 
-			If !AEcoI11X(_nPage,@cError,@_oJSon)
+			If !AEcoI11X(_nPage,@_cError,@_oJSon) .And. _nTPages >= _nPage
 				If !_lJob
 					Aviso('e-Commerce','Não foi possivel realizar a comunicação com o eCommerce.',{"Ok"})	
 				EndIf	
 				LogExec('ERRO DE COMUNICACAO COM O ECOMMERCE.')
+				Exit
 			EndIf 	
-
 		EndDo 
 	EndIf
 Else
@@ -207,7 +209,7 @@ Else
 	LogExec('NAO EXISTEM NOVOS PEDIDOS A SEREM INTEGRADOS')
 EndIf
 
-RestArea(aArea)
+RestArea(_aArea)
 Return Nil
 
 /********************************************************************************************/
@@ -267,11 +269,10 @@ For _nX := 1 To Len(aOrderId)
 			//-----------------------+
 			// Grava Pedido de Venda |
 			//-----------------------+ 
-			/*
 			If aRet[1]
 				aRet := EcGrvPed(oRestPv,aEndRes,aEndCob,aEndEnt,aOrderId[_nX])
 			EndIf        
-			*/						            
+
             If !aRet[1]
 				aAdd(aMsgErro,{aRet[2],aRet[3]})            
             EndIf
@@ -363,7 +364,7 @@ Local aCliente  		:= {}
 
 Local _nTLoja 			:= TamSx3("A1_LOJA")[1]
 Local _nTEndC 			:= TamSx3("A1_ENDCOB")[1]
-Local _nTMunC 			:= TamSx3("A1_MUNCOB")[1]
+Local _nTMunC 			:= TamSx3("A1_MUNC")[1]
 Local _nTBairC			:= TamSx3("A1_BAIRROC")[1] 
 Local _nTEndE 			:= TamSx3("A1_ENDENT")[1]
 Local _nTMunE 			:= TamSx3("A1_MUNE")[1]
@@ -408,7 +409,7 @@ If SA1->( dbSeek(xFilial("SA1") + cCnpj ) )
 	LogExec("INICIA ATUALIZACAO DO CLIENTE " + cCodCli + "-" + cLoja + "-" + Alltrim(SA1->A1_NREDUZ)  )
 Else
 	cCodCli := GetSxeNum("SA1","A1_COD")
-	cLoja	:= StrZero(_nTLoja,"0")
+	cLoja	:= StrZero(0,_nTLoja)
 	SA1->( dbSetOrder(1) )
 	While SA1->( dbSeek(xFilial("SA1") + PadR(cCodCli,nTCodCli) + cLoja ) )
 		ConfirmSx8()
@@ -469,7 +470,7 @@ If Len(aEndRes) > 0
 	cCep		:= aEndRes[CEP]
 	cEst		:= aEndRes[ESTADO]
 	cCodMun		:= aEndRes[IBGE]
-	_cCompEnd	:= ""
+	_cCompEnd	:= aEndRes[COMPLE]
 ElseIf Len(aEndEnt) > 0		
 	cEnd		:= aEndEnt[ENDERE]
 	cNumEnd		:= aEndEnt[NUMERO]
@@ -478,7 +479,7 @@ ElseIf Len(aEndEnt) > 0
 	cCep		:= aEndEnt[CEP]
 	cEst		:= aEndEnt[ESTADO]
 	cCodMun		:= aEndEnt[IBGE]
-	_cCompEnd	:= ""
+	_cCompEnd	:= aEndEnt[COMPLE]
 EndIf
 
 //----------------------+
@@ -510,7 +511,7 @@ If Len(aEndEnt) > 0
 	cMunE		:= aEndEnt[MUNICI]
 	cCepE		:= aEndEnt[CEP]
 	cEstE		:= aEndEnt[ESTADO]
-	_cCompEnt	:= ""
+	_cCompEnt	:= aEndEnt[COMPLE]
 ElseIf Len(aEndRes) > 0
 	cEndE		:= aEndRes[ENDERE]
 	cNumEndE	:= aEndRes[NUMERO]
@@ -518,7 +519,7 @@ ElseIf Len(aEndRes) > 0
 	cMunE		:= aEndRes[MUNICI]
 	cCepE		:= aEndRes[CEP]
 	cEstE		:= aEndRes[ESTADO]
-	_cCompEnt	:= ""
+	_cCompEnt	:= aEndRes[COMPLE]
 EndIf
 
 //--------------------------------------+
@@ -743,19 +744,6 @@ If Len(aCliente) > 0
 			u_AEcMailC(cCodInt,cDescInt,cCnpj,cNomeCli)
 		EndIf
 		
-		//--------------------+
-		// Desloqueia Cliente |
-		//--------------------+
-		dbSelectArea("SA1")
-		SA1->( dbSetOrder(1) )
-		If SA1->( dbSeek(xFilial("SA1") + cCodCli + cLoja ))
-			RecLock("SA1",.F.)
-				SA1->A1_MSBLQL	:= "2"
-				SA1->A1_XDTALT	:= dDatabase
-				SA1->A1_XHRALT	:= Time()
-			SA1->( MsUnLock() )
-		EndIf
-
 		//---------------------+
 		// Variavel de retorno |
 		//---------------------+
@@ -1016,7 +1004,7 @@ Return cIbge
 	@since 16/08/2020
 /*/
 /**************************************************************************************************/
-Static Function aEcoI011MdV(_cProfileID,cCnpj,_cUrl,_cAppKey,_cAppToken,_cEMailEc)
+Static Function aEcoI011MdV(_cProfileID,cCnpj,_cEMailEc)
 Local _oVTex	:= MasterData():New()
 Local _oJSon	:= JSonObject():New() 
 
@@ -1050,25 +1038,23 @@ Static Function EcGrvPed(oRestPv,aEndRes,aEndCob,aEndEnt,cOrderId,_cLojaID)
 
 	Local cNumOrc	:= ""
 	Local cNumPv	:= ""
-	
-	Local lLiberPv	:= GetNewPar("EC_LIBPVAU",.F.)
-		
+
 	LogExec("VERIFICANDO ORDERID " + cOrderId)
 
 	//--------------------------------------+
 	// Valida se pedido ja esta no Protheus |
 	//--------------------------------------+
-	dbSelectArea("WSA")
-	WSA->( dbSetOrder(2) )
-	If WSA->( dbSeek(xFilial("WSA") + PadR(cOrderId,nTamOrder)) )
+	dbSelectArea("XTA")
+	XTA->( dbSetOrder(2) )
+	If XTA->( dbSeek(xFilial("XTA") + PadR(cOrderId,nTamOrder)) )
 		//------------------------------------+
 		// Atualiza Status do Pedido eCommerce|
 		//------------------------------------+
-		cNumOrc		:= WSA->WSA_NUM
-		cOrdPvCli	:= WSA->WSA_NUMECL
-		cNumDoc		:= WSA->WSA_DOC
-		cNumSer		:= WSA->WSA_SERIE
-		cNumPv		:= WSA->WSA_PEDRES
+		cNumOrc		:= XTA->XTA_NUM
+		cOrdPvCli	:= XTA->XTA_NUMECL
+		cNumDoc		:= XTA->XTA_DOC
+		cNumSer		:= XTA->XTA_SERIE
+		cNumPv		:= XTA->XTA_PEDRES
 		
 		aRet 		:= AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRestPv)
 
@@ -1083,26 +1069,7 @@ Static Function EcGrvPed(oRestPv,aEndRes,aEndCob,aEndEnt,cOrderId,_cLojaID)
 				DisarmTransaction()
 			Endif
 		End Transaction
-		
-		//-----------------------+
-		// Grava pedido de venda |
-		//-----------------------+
-		If aRet[1] .And. lLiberPv
-			dbSelectArea("WSA")
-			WSA->( dbSetOrder(2) )
-			If WSA->( dbSeek(xFilial("WSA") + cOrderId) )
-				//------------------------------------+
-				// Atualiza Status do Pedido eCommerce|
-				//------------------------------------+
-				cNumOrc		:= WSA->WSA_NUM
-				cOrdPvCli	:= WSA->WSA_NUMECL
-				cNumDoc		:= WSA->WSA_DOC
-				cNumSer		:= WSA->WSA_SERIE
-				cNumPv		:= WSA->WSA_PEDRES
-				aRet 		:= AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRestPv)
-			EndIf	
-		EndIf
-		
+
 	EndIf
 
 	RestArea(aArea)
@@ -1171,7 +1138,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 		cCnpj := PadR(oRestPv:ClientProfileData:Document,nTamCnpj)
 	EndIf	
 	
-	cNomeCli:= Alltrim(oRestPv:ClientProfileData:FirstName + " " +  oRestPv:ClientProfileData:LastName )	
+	cNomeCli:= RTrim(oRestPv:ClientProfileData:FirstName + " " +  oRestPv:ClientProfileData:LastName )	
 
 	//-----------------------------------------------+
 	// Valida se cliente esta cadastrado no Protheus |
@@ -1240,14 +1207,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	//-------------------------+
 	// Valida o Id de Postagem |
 	//-------------------------+
-	If cCodAfili == "MRC"
-		cCodTransp 	:= ""
-		cIdPost		:= ""
-	ElseIf At("Shopee",oRestPv:marketplaceOrderId) > 0 
-		AEcoI11IP("15b6ccb",cCodAfili,@cCodTransp,@cIdPost,@_cIdServ)
-	ElseIf cCodAfili == "CRF"
-		AEcoI11IP("11fcd86",cCodAfili,@cCodTransp,@cIdPost,@_cIdServ)	
-	ElseIf ValType(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId) <> "U"
+	If ValType(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId) <> "U"
 		AEcoI11IP(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId,cCodAfili,@cCodTransp,@cIdPost,@_cIdServ)
 	ElseIf ValType(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:courierName) ==  "vtex:fob_1"
 		cCodTransp 	:= ""
@@ -1270,14 +1230,14 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	//---------------------+
 	// Numero do Orcamento |
 	//---------------------+
-	cNumOrc := GetSxeNum("WSA","WSA_NUM")
+	cNumOrc := GetSxeNum("XTA","XTA_NUM")
 
-	dbSelectArea("WSA")
-	WSA->( dbSetOrder(1) )
+	dbSelectArea("XTA")
+	XTA->( dbSetOrder(1) )
 
-	While WSA->( dbSeek(xFilial("WSA") + cNumOrc) )
+	While XTA->( dbSeek(xFilial("XTA") + cNumOrc) )
 		ConfirmSx8()
-		cNumOrc := GetSxeNum("WSA","WSA_NUM","",1)
+		cNumOrc := GetSxeNum("XTA","XTA_NUM","",1)
 	EndDo	 
 
 	LogExec("INCLUINDO PEDIDO PROTHEUS " + cNumOrc + " CLIENTE " + cNomeCli )
@@ -1354,13 +1314,10 @@ Return aRet
 
 /**************************************************************************************************/
 /*/{Protheus.doc} AEcoGrvIt
-
-@description	Grava os Itens do Pedido e-Commerce
-
-@author			Bernard M.Margarido
-@version   		1.00
-@since     		10/02/2016
-
+	@description	Grava os Itens do Pedido e-Commerce
+	@author			Bernard M.Margarido
+	@version   		1.00
+	@since     		10/02/2016
 /*/			
 /**************************************************************************************************/
 Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nPesoBruto,dDtaEmiss,oItems,oTransp,oRestPv)
@@ -1406,7 +1363,7 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 	//--------------+
 	dbSelectArea("SB1")
 	dbSelectArea("SF4")
-	dbSelectArea("WSB")
+	dbSelectArea("XTB")
 
 	//------------------------+
 	// Inicia Funções Fiscais |
@@ -1503,8 +1460,6 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 					nVlrTotIt:= nQtdItem * nValor		
 					nPerDItem:= Round(( nVlrDesc / nVlrTotIt ) * 100,2)
 				EndIf	
-
-
 			EndIf
 			
 			//-----------------+
@@ -1515,9 +1470,9 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 			//------------------------+
 			// Utiliza Tes do Produto |
 			//------------------------+
-			//If !Empty(SB1->B1_TS)
-			//	cTesEco := SB1->B1_TS 
-			//EndIf
+			If !Empty(SB1->B1_TS)
+				cTesEco := SB1->B1_TS 
+			EndIf
 			
 			//-----------------+
 			// Tes Inteligente |
@@ -1570,57 +1525,57 @@ Static Function AEcoGrvIt(cOrderId,cNumOrc,cCliente,cLoja,cVendedor,nDesconto,nP
 			//-----------------+
 			lGrava := .T.
 	
-			WSB->( dbSetOrder(1) )
-			If WSB->( dbSeek(xFilial("WSB") + cNumOrc + cItem + cProduto) )
+			XTB->( dbSetOrder(1) )
+			If XTB->( dbSeek(xFilial("XTB") + cNumOrc + cItem + cProduto) )
 				lGrava := .F.
 			EndIf	
 	
-			RecLock("WSB",lGrava)
-				WSB->WSB_FILIAL 	:= xFilial("WSB")
-				WSB->WSB_NUM		:= cNumOrc 
-				WSB->WSB_PRODUT		:= cProduto
-				WSB->WSB_ITEM		:= cItem
-				WSB->WSB_DESCRI		:= SB1->B1_DESC
-				WSB->WSB_QUANT		:= nQtdItem
-				WSB->WSB_VRUNIT		:= nVlrFinal
-				WSB->WSB_VLRITE		:= Round(nQtdItem * nVlrFinal,nDecIt)
-				WSB->WSB_LOCAL		:= cLocal
-				WSB->WSB_UM			:= SB1->B1_UM
-				WSB->WSB_DESC		:= nPerDItem
-				WSB->WSB_VALDES		:= IIF(nVlrDesc > 0,nVlrDesc,Round( nValor * (nPerDItem /100 ),2))
-				WSB->WSB_TES		:= cTesEco
-				WSB->WSB_CF			:= SF4->F4_CF
-				WSB->WSB_VALIPI		:= MaFisRet(nPrd,"IT_VALIPI") 
-				WSB->WSB_VALICM		:= MaFisRet(nPrd,"IT_VALICM")
-				WSB->WSB_VALISS		:= MaFisRet(nPrd,"IT_VALISS")
-				WSB->WSB_BASEIC		:= MaFisRet(nPrd,"IT_BASEICM")
-				WSB->WSB_STATUS		:= ""
-				WSB->WSB_EMISSA		:= cTod(dDtaEmiss)
-				WSB->WSB_PRCTAB		:= nValor
-				WSB->WSB_GRADE		:= "N"
-				WSB->WSB_VEND		:= cVendedor
-				WSB->WSB_VALFRE		:= 0
-				WSB->WSB_SEGURO		:= 0
-				WSB->WSB_DESPES		:= 0
-				WSB->WSB_ICMSRE		:= MaFisRet(nPrd,"IT_VALSOL")
-				WSB->WSB_BRICMS		:= MaFisRet(nPrd,"IT_BASESOL")
-				WSB->WSB_VALPIS		:= MaFisRet(nPrd,"IT_VALPIS")
-				WSB->WSB_VALCOF		:= MaFisRet(nPrd,"IT_VALCOF")
-				WSB->WSB_VALCSL		:= MaFisRet(nPrd,"IT_VALCSL")
-				WSB->WSB_VALPS2		:= MaFisRet(nPrd,"IT_VALPS2")
-				WSB->WSB_VALCF2		:= MaFisRet(nPrd,"IT_VALCF2")
-				WSB->WSB_BASEPS		:= MaFisRet(nPrd,"IT_BASEPS2")
-				WSB->WSB_BASECF		:= MaFisRet(nPrd,"IT_BASECF2")
-				WSB->WSB_ALIQPS		:= MaFisRet(nPrd,"IT_ALIQPS2")
-				WSB->WSB_ALIQCF		:= MaFisRet(nPrd,"IT_ALIQCF2")
-				WSB->WSB_SEGUM		:= SB1->B1_SEGUM
-				WSB->WSB_PEDRES		:= ""
-				WSB->WSB_FDTENT		:= dDtaEntr
-				WSB->WSB_PRODTP		:= ""
-				WSB->WSB_PRZENT		:= nPrzEntr
-				WSB->WSB_STATIT		:= "" 
-				WSB->WSB_DESTAT		:= ""
-			WSB->( MsUnLock() )
+			RecLock("XTB",lGrava)
+				XTB->XTB_FILIAL 	:= xFilial("XTB")
+				XTB->XTB_NUM		:= cNumOrc 
+				XTB->XTB_PRODUT		:= cProduto
+				XTB->XTB_ITEM		:= cItem
+				XTB->XTB_DESCRI		:= SB1->B1_DESC
+				XTB->XTB_QUANT		:= nQtdItem
+				XTB->XTB_VRUNIT		:= nVlrFinal
+				XTB->XTB_VLRITE		:= Round(nQtdItem * nVlrFinal,nDecIt)
+				XTB->XTB_LOCAL		:= cLocal
+				XTB->XTB_UM			:= SB1->B1_UM
+				XTB->XTB_DESC		:= nPerDItem
+				XTB->XTB_VALDES		:= IIF(nVlrDesc > 0,nVlrDesc,Round( nValor * (nPerDItem /100 ),2))
+				XTB->XTB_TES		:= cTesEco
+				XTB->XTB_CF			:= SF4->F4_CF
+				XTB->XTB_VALIPI		:= MaFisRet(nPrd,"IT_VALIPI") 
+				XTB->XTB_VALICM		:= MaFisRet(nPrd,"IT_VALICM")
+				XTB->XTB_VALISS		:= MaFisRet(nPrd,"IT_VALISS")
+				XTB->XTB_BASEIC		:= MaFisRet(nPrd,"IT_BASEICM")
+				XTB->XTB_STATUS		:= ""
+				XTB->XTB_EMISSA		:= cTod(dDtaEmiss)
+				XTB->XTB_PRCTAB		:= nValor
+				XTB->XTB_GRADE		:= "N"
+				XTB->XTB_VEND		:= cVendedor
+				XTB->XTB_VALFRE		:= 0
+				XTB->XTB_SEGURO		:= 0
+				XTB->XTB_DESPES		:= 0
+				XTB->XTB_ICMSRE		:= MaFisRet(nPrd,"IT_VALSOL")
+				XTB->XTB_BRICMS		:= MaFisRet(nPrd,"IT_BASESOL")
+				XTB->XTB_VALPIS		:= MaFisRet(nPrd,"IT_VALPIS")
+				XTB->XTB_VALCOF		:= MaFisRet(nPrd,"IT_VALCOF")
+				XTB->XTB_VALCSL		:= MaFisRet(nPrd,"IT_VALCSL")
+				XTB->XTB_VALPS2		:= MaFisRet(nPrd,"IT_VALPS2")
+				XTB->XTB_VALCF2		:= MaFisRet(nPrd,"IT_VALCF2")
+				XTB->XTB_BASEPS		:= MaFisRet(nPrd,"IT_BASEPS2")
+				XTB->XTB_BASECF		:= MaFisRet(nPrd,"IT_BASECF2")
+				XTB->XTB_ALIQPS		:= MaFisRet(nPrd,"IT_ALIQPS2")
+				XTB->XTB_ALIQCF		:= MaFisRet(nPrd,"IT_ALIQCF2")
+				XTB->XTB_SEGUM		:= SB1->B1_SEGUM
+				XTB->XTB_PEDRES		:= ""
+				XTB->XTB_FDTENT		:= dDtaEntr
+				XTB->XTB_PRODTP		:= ""
+				XTB->XTB_PRZENT		:= nPrzEntr
+				XTB->XTB_STATIT		:= "" 
+				XTB->XTB_DESTAT		:= ""
+			XTB->( MsUnLock() )
 			
 			//------------------------+
 			// Codigo do Proximo Item |
@@ -1688,7 +1643,7 @@ LogExec("GRAVANDO ITENS DO PRODUTO KIT " + cCodKit )
 //--------------+
 dbSelectArea("SB1")
 dbSelectArea("SF4")
-dbSelectArea("WSB")
+dbSelectArea("XTB")
 
 For nPrd := 1 To Len(oItKit)
 	
@@ -1813,58 +1768,58 @@ For nPrd := 1 To Len(oItKit)
 	//-----------------+
 	lGrava := .T.
 	
-	WSB->( dbSetOrder(1) )
-	If WSB->( dbSeek(xFilial("WSB") + cNumOrc + cItem + cProduto) )
+	XTB->( dbSetOrder(1) )
+	If XTB->( dbSeek(xFilial("XTB") + cNumOrc + cItem + cProduto) )
 		lGrava := .F.
 	EndIf	
 	
-	RecLock("WSB",lGrava)
-		WSB->WSB_FILIAL 	:= xFilial("WSB")
-		WSB->WSB_NUM		:= cNumOrc 
-		WSB->WSB_PRODUT		:= cProduto
-		WSB->WSB_ITEM		:= cItem
-		WSB->WSB_DESCRI		:= SB1->B1_DESC
-		WSB->WSB_QUANT		:= nQtdItem
-		WSB->WSB_VRUNIT		:= nVlrFinal
-		WSB->WSB_VLRITE		:= Round(nQtdItem * nVlrFinal,nDecIt)
-		WSB->WSB_LOCAL		:= cLocal
-		WSB->WSB_UM			:= SB1->B1_UM
-		WSB->WSB_DESC		:= IIF(nPerDItem < 100, nPerDItem, 0)
-		WSB->WSB_VALDES		:= IIF(nPerDItem < 100, Round( nValor * (nPerDItem /100 ),2), 0)
-		WSB->WSB_TES		:= cTesEco
-		WSB->WSB_CF			:= SF4->F4_CF
-		WSB->WSB_VALIPI		:= MaFisRet(nPrd,"IT_VALIPI") 
-		WSB->WSB_VALICM		:= MaFisRet(nPrd,"IT_VALICM")
-		WSB->WSB_VALISS		:= MaFisRet(nPrd,"IT_VALISS")
-		WSB->WSB_BASEIC		:= MaFisRet(nPrd,"IT_BASEICM")
-		WSB->WSB_STATUS		:= ""
-		WSB->WSB_EMISSA		:= cTod(dDtaEmiss)
-		WSB->WSB_PRCTAB		:= nValor
-		WSB->WSB_GRADE		:= "N"
-		WSB->WSB_VEND		:= cVendedor
-		WSB->WSB_VALFRE		:= 0
-		WSB->WSB_SEGURO		:= 0
-		WSB->WSB_DESPES		:= 0
-		WSB->WSB_ICMSRE		:= MaFisRet(nPrd,"IT_VALSOL")
-		WSB->WSB_BRICMS		:= MaFisRet(nPrd,"IT_BASESOL")
-		WSB->WSB_VALPIS		:= MaFisRet(nPrd,"IT_VALPIS")
-		WSB->WSB_VALCOF		:= MaFisRet(nPrd,"IT_VALCOF")
-		WSB->WSB_VALCSL		:= MaFisRet(nPrd,"IT_VALCSL")
-		WSB->WSB_VALPS2		:= MaFisRet(nPrd,"IT_VALPS2")
-		WSB->WSB_VALCF2		:= MaFisRet(nPrd,"IT_VALCF2")
-		WSB->WSB_BASEPS		:= MaFisRet(nPrd,"IT_BASEPS2")
-		WSB->WSB_BASECF		:= MaFisRet(nPrd,"IT_BASECF2")
-		WSB->WSB_ALIQPS		:= MaFisRet(nPrd,"IT_ALIQPS2")
-		WSB->WSB_ALIQCF		:= MaFisRet(nPrd,"IT_ALIQCF2")
-		WSB->WSB_SEGUM		:= SB1->B1_SEGUM
-		WSB->WSB_PEDRES		:= ""
-		WSB->WSB_FDTENT		:= dDtaEntr
-		WSB->WSB_PRODTP		:= ""
-		WSB->WSB_PRZENT		:= nPrzEntr
-		WSB->WSB_STATIT		:= "" 
-		WSB->WSB_DESTAT		:= ""
-		WSB->WSB_KIT		:= cRefKit
-	WSB->( MsUnLock() )
+	RecLock("XTB",lGrava)
+		XTB->XTB_FILIAL 	:= xFilial("XTB")
+		XTB->XTB_NUM		:= cNumOrc 
+		XTB->XTB_PRODUT		:= cProduto
+		XTB->XTB_ITEM		:= cItem
+		XTB->XTB_DESCRI		:= SB1->B1_DESC
+		XTB->XTB_QUANT		:= nQtdItem
+		XTB->XTB_VRUNIT		:= nVlrFinal
+		XTB->XTB_VLRITE		:= Round(nQtdItem * nVlrFinal,nDecIt)
+		XTB->XTB_LOCAL		:= cLocal
+		XTB->XTB_UM			:= SB1->B1_UM
+		XTB->XTB_DESC		:= IIF(nPerDItem < 100, nPerDItem, 0)
+		XTB->XTB_VALDES		:= IIF(nPerDItem < 100, Round( nValor * (nPerDItem /100 ),2), 0)
+		XTB->XTB_TES		:= cTesEco
+		XTB->XTB_CF			:= SF4->F4_CF
+		XTB->XTB_VALIPI		:= MaFisRet(nPrd,"IT_VALIPI") 
+		XTB->XTB_VALICM		:= MaFisRet(nPrd,"IT_VALICM")
+		XTB->XTB_VALISS		:= MaFisRet(nPrd,"IT_VALISS")
+		XTB->XTB_BASEIC		:= MaFisRet(nPrd,"IT_BASEICM")
+		XTB->XTB_STATUS		:= ""
+		XTB->XTB_EMISSA		:= cTod(dDtaEmiss)
+		XTB->XTB_PRCTAB		:= nValor
+		XTB->XTB_GRADE		:= "N"
+		XTB->XTB_VEND		:= cVendedor
+		XTB->XTB_VALFRE		:= 0
+		XTB->XTB_SEGURO		:= 0
+		XTB->XTB_DESPES		:= 0
+		XTB->XTB_ICMSRE		:= MaFisRet(nPrd,"IT_VALSOL")
+		XTB->XTB_BRICMS		:= MaFisRet(nPrd,"IT_BASESOL")
+		XTB->XTB_VALPIS		:= MaFisRet(nPrd,"IT_VALPIS")
+		XTB->XTB_VALCOF		:= MaFisRet(nPrd,"IT_VALCOF")
+		XTB->XTB_VALCSL		:= MaFisRet(nPrd,"IT_VALCSL")
+		XTB->XTB_VALPS2		:= MaFisRet(nPrd,"IT_VALPS2")
+		XTB->XTB_VALCF2		:= MaFisRet(nPrd,"IT_VALCF2")
+		XTB->XTB_BASEPS		:= MaFisRet(nPrd,"IT_BASEPS2")
+		XTB->XTB_BASECF		:= MaFisRet(nPrd,"IT_BASECF2")
+		XTB->XTB_ALIQPS		:= MaFisRet(nPrd,"IT_ALIQPS2")
+		XTB->XTB_ALIQCF		:= MaFisRet(nPrd,"IT_ALIQCF2")
+		XTB->XTB_SEGUM		:= SB1->B1_SEGUM
+		XTB->XTB_PEDRES		:= ""
+		XTB->XTB_FDTENT		:= dDtaEntr
+		XTB->XTB_PRODTP		:= ""
+		XTB->XTB_PRZENT		:= nPrzEntr
+		XTB->XTB_STATIT		:= "" 
+		XTB->XTB_DESTAT		:= ""
+		XTB->XTB_KIT		:= cRefKit
+	XTB->( MsUnLock() )
 	
 	//------------------------+
 	// Codigo do Proximo Item |
@@ -1899,19 +1854,19 @@ Local nValDesc	:= 0
 Local nPDesc	:= 0	
 
 
-dbSelectArea("WSB")
-WSB->( dbSetOrder(2) )
-WSB->( dbSeek(xFilial("WSB") + cNumOrc + cItem) )
+dbSelectArea("XTB")
+XTB->( dbSetOrder(2) )
+XTB->( dbSeek(xFilial("XTB") + cNumOrc + cItem) )
 
 //----------------------+
 // Grava valores atuais |
 //----------------------+
-nPrcVen := WSB->WSB_VRUNIT
-nPrcTab	:= WSB->WSB_PRCTAB
-nQtdVen := WSB->WSB_QUANT
-nVlrTot	:= WSB->WSB_VLRITE
-nValDesc:= WSB->WSB_VALDES
-nPDesc	:= WSB->WSB_DESC
+nPrcVen := XTB->XTB_VRUNIT
+nPrcTab	:= XTB->XTB_PRCTAB
+nQtdVen := XTB->XTB_QUANT
+nVlrTot	:= XTB->XTB_VLRITE
+nValDesc:= XTB->XTB_VALDES
+nPDesc	:= XTB->XTB_DESC
 
 //-------------------------+
 // Calula os novos valores |
@@ -1925,12 +1880,12 @@ nPrcVen		:= Round(nVlrTot / nQtdVen ,2)
 //------------------------------------+
 // Atualiza informações no orçamentos |
 //------------------------------------+
-RecLock("WSB",.F.)
-	WSB->WSB_VRUNIT		:= nPrcVen
-	WSB->WSB_VLRITE		:= nVlrTot
-	WSB->WSB_VALDES		:= nValDesc
-	WSB->WSB_DESC		:= nPDesc
-WSB->( MsUnLock() )
+RecLock("XTB",.F.)
+	XTB->XTB_VRUNIT		:= nPrcVen
+	XTB->XTB_VLRITE		:= nVlrTot
+	XTB->XTB_VALDES		:= nValDesc
+	XTB->XTB_DESC		:= nPDesc
+XTB->( MsUnLock() )
 
 RestArea(aArea)
 Return .T.
@@ -1950,18 +1905,18 @@ Local _cQuery 	:= ""
 Local _cAlias 	:= ""
 
 _cQuery := " SELECT " + CRLF
-_cQuery += "	B5.B5_COD, " + CRLF
-_cQuery += "	B5.B5_XIDSKU " + CRLF
+_cQuery += "	B1.B1_COD, " + CRLF
+_cQuery += "	B1.B1_XIDSKU " + CRLF
 _cQuery += " FROM " + CRLF
-_cQuery += "	" + RetSqlName("SB5") + " B5 " + CRLF
+_cQuery += "	" + RetSqlName("SB1") + " B1 " + CRLF
 _cQuery += " WHERE " + CRLF
-_cQuery += "	B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF
-_cQuery += "	B5.B5_XIDSKU = " + _cProductId  + " AND " + CRLF
-_cQuery += "	B5.D_E_L_E_T_ = '' "
+_cQuery += "	B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+_cQuery += "	B1.B1_XIDSKU = " + _cProductId  + " AND " + CRLF
+_cQuery += "	B1.D_E_L_E_T_ = '' "
 
 _cAlias := MPSysOpenQuery(_cQuery)
 
-cProduto:= (_cAlias)->B5_COD
+cProduto:= (_cAlias)->B1_COD
 
 (_cAlias)->( dbCloseArea() )
 
@@ -2009,7 +1964,7 @@ LogExec("EFETUANDO A RESERVA DO PEDIDO " + cOrderId )
 //--------------+
 dbSelectArea("SC0")
 dbSelectArea("SB1")
-dbSelectArea("WSB")
+dbSelectArea("XTB")
 
 _cCodRes	:= GetSxeNum("SC0","C0_NUM")
 SC0->(dbSetOrder(1) )
@@ -2215,7 +2170,7 @@ LogExec("EFETUANDO A RESERVA DOS PRODUTOS KIT PEDIDO " + cOrderId)
 //--------------+
 dbSelectArea("SC0")
 dbSelectArea("SB1")
-dbSelectArea("WSB")
+dbSelectArea("XTB")
 
 _cCodRes	:= GetSxeNum("SC0","C0_NUM")
 SC0->(dbSetOrder(1) )
@@ -2378,7 +2333,6 @@ Static Function AEcoGrvCab(	cNumOrc,cOrderId,cCodCli,cLojaCli,cTipoCli,cVendedor
 	Local lGrava		:= .T.	
 
 	Local cEspecie		:= GetNewPar("EC_ESPECIE","EMBALAGEM")
-	Local cTransViz		:= GetNewPar("EC_TRANVIZ","067/077/087")
 	Local cTpFrete		:= ""
 	Local cCondPag		:= GetNewPar("EC_CONDPAG","001")
 	Local nDiasOrc		:= GetNewPar("EC_DIASORC",15)
@@ -2386,18 +2340,18 @@ Static Function AEcoGrvCab(	cNumOrc,cOrderId,cCodCli,cLojaCli,cTipoCli,cVendedor
 	//------------------------------+
 	// Grava Cabeçalho do Orçamento |
 	//------------------------------+
-	dbSelectArea("WSA")
-	WSA->( dbSetOrder(1) )
-	If WSA->( dbSeek(xFilial("WSA") + cNumOrc ) )
+	dbSelectArea("XTA")
+	XTA->( dbSetOrder(1) )
+	If XTA->( dbSeek(xFilial("XTA") + cNumOrc ) )
 		lGrava := .F.
 	EndIf							
 
 	//---------------------------+
 	// Posiciona Status do Pedido|
 	//---------------------------+
-	dbSelectArea("WS1")
-	WS1->( dbSetOrder(2) )
-	If !WS1->( dbSeek(xFilial("WS1") + Padr(Alltrim(cPedStatus),nTamStat)) )
+	dbSelectArea("ZTC")
+	ZTC->( dbSetOrder(3) )
+	If !ZTC->( dbSeek(xFilial("ZTC") + Padr(Alltrim(cPedStatus),nTamStat)) )
 		LogExec("STATUS " + Capital(cPedStatus) + " NAO LOCALIZADO PARA O PEDIDO ORDERID " + cOrderId + " FAVOR CADASTRAR O STATUS E IMPORTAR O PEDIDO NOVAMENTE.")
 		aRet[1] := .F.
 		aRet[2] := cOrderId
@@ -2410,8 +2364,6 @@ Static Function AEcoGrvCab(	cNumOrc,cOrderId,cCodCli,cLojaCli,cTipoCli,cVendedor
 	// Valida Tipo de Frete |
 	//----------------------+
 	If SubStr(Alltrim(cOrderId),1,3) == "MRC"
-		cTpFrete := "0"
-	ElseIf Empty(cIdPost) .And. Alltrim(cCodTransp) $ cTransViz 
 		cTpFrete := "0"
 	ElseIf !Empty(cIdPost)
 		If nVlrFrete > 0
@@ -2436,92 +2388,93 @@ Static Function AEcoGrvCab(	cNumOrc,cOrderId,cCodCli,cLojaCli,cTipoCli,cVendedor
 	//------------------------------+
 	// Atualiza endereço de entrega |
 	//------------------------------+
+	/*
 	aEcoI011Entr(	cCodCli,cLojaCli,cNomDest,;
 					cEndDest,cNumDest,cBaiDest,;
 					cCepDest,cMunDest,cEstDest,cEndComp )
-
-	RecLock("WSA",lGrava)
-		WSA->WSA_FILIAL		:= xFilial("WSA")
-		WSA->WSA_NUM		:= cNumOrc
-		WSA->WSA_VEND		:= cVendedor
-		WSA->WSA_COMIS		:= 0
-		WSA->WSA_CLIENT		:= cCodCli
-		WSA->WSA_LOJA		:= cLojaCli
-		WSA->WSA_TIPOCL		:= cTipoCli	
-		WSA->WSA_VLRTOT		:= MaFisRet(,"NF_VALMERC")
-		WSA->WSA_DESCON		:= nDesconto
-		WSA->WSA_VLRLIQ		:= MaFisRet(,"NF_VALMERC")
-		WSA->WSA_DTLIM		:= DaySum(cTod(dDtaEmiss),nDiasOrc)
-		WSA->WSA_VALBRU		:= MaFisRet(,"NF_VALMERC") //MaFisRet(,"NF_TOTAL") 
-		WSA->WSA_VALMER		:= MaFisRet(,"NF_VALMERC") //MaFisRet(,"NF_VALMERC")
-		WSA->WSA_DESCNF		:= 0
-		WSA->WSA_DINHEI		:= 0
-		WSA->WSA_CHEQUE		:= 0
-		WSA->WSA_CARTAO		:= 0
-		WSA->WSA_CONVEN		:= 0
-		WSA->WSA_VALES		:= 0
-		WSA->WSA_FINANC		:= 0
-		WSA->WSA_OUTROS		:= 0
-		WSA->WSA_PARCEL		:= nQtdParc 	
-		WSA->WSA_VALICM		:= MaFisRet(,"NF_VALICM")
-		WSA->WSA_VALIPI		:= MaFisRet(,"NF_VALIPI")
-		WSA->WSA_VALISS		:= MaFisRet(,"NF_VALISS")
-		WSA->WSA_CONDPG		:= cCondPag
-		WSA->WSA_FORMPG		:= ""
-		WSA->WSA_CREDIT		:= 0
-		WSA->WSA_EMISSA		:= cTod(dDtaEmiss)
-		WSA->WSA_FATOR		:= 0
-		WSA->WSA_AUTORI		:= ""
-		WSA->WSA_NSUTEF		:= ""
-		WSA->WSA_VLRDEB		:= 0
-		WSA->WSA_HORA		:= SubStr(StrTran(cHoraEmis,":",""),1,4)
-		WSA->WSA_TXMOED		:= 0
-		WSA->WSA_ENDENT		:= Upper(Alltrim(cEndDest)) + " ," + cNumDest
-		WSA->WSA_ENDNUM		:= cNumDest
-		WSA->WSA_TPFRET		:= cTpFrete
-		WSA->WSA_BAIRRE		:= Upper(Alltrim(cBaiDest))
-		WSA->WSA_CEPE		:= cCepDest
-		WSA->WSA_MUNE		:= Upper(Alltrim(cMunDest))	
-		WSA->WSA_ESTE		:= Upper(cEstDest)	
-		WSA->WSA_FRETE		:= nVlrFrete
-		WSA->WSA_SEGURO		:= 0
-		WSA->WSA_DESPES		:= 0
-		WSA->WSA_PLIQUI		:= nPesoBruto
-		WSA->WSA_PBRUTO		:= nPesoBruto
-		WSA->WSA_VOLUME		:= 1 
-		WSA->WSA_TRANSP		:= cCodTransp
-		WSA->WSA_ESPECI		:= cEspecie
-		WSA->WSA_MOEDA		:= 0
-		WSA->WSA_BRICMS		:= MaFisRet(,"NF_BASESOL" ) 
-		WSA->WSA_ICMSRE		:= MaFisRet(,"NF_VALSOL" )
-		WSA->WSA_ABTOPC		:= 0
-		WSA->WSA_VALPIS		:= MaFisRet(,'NF_VALPIS')
-		WSA->WSA_VALCOF		:= MaFisRet(,'NF_VALCOF')
-		WSA->WSA_VALCSL		:= MaFisRet(,'NF_VALCSL')
-		WSA->WSA_CGCCLI		:= ""
-		WSA->WSA_VALIRR		:= 0
-		WSA->WSA_NUMECO		:= cOrderId
-		WSA->WSA_NUMECL		:= cPedCodCli
-		WSA->WSA_OBSECO		:= cObsPedido
-		WSA->WSA_MTCANC		:= cMotCancel
-		WSA->WSA_CODSTA		:= WS1->WS1_CODIGO
-		WSA->WSA_DESTAT		:= Alltrim(WS1->WS1_DESCRI)
-		WSA->WSA_TRACKI		:= ""
-		WSA->WSA_VLBXPV		:= "1" 
-		WSA->WSA_NOMDES		:= cNomDest
-		WSA->WSA_DDDCEL		:= cDddCel
-		WSA->WSA_DDD01 		:= cDdd1
-		WSA->WSA_CELULA		:= cCelular
-		WSA->WSA_TEL01 		:= cTel01
-		WSA->WSA_COMPLE		:= cEndComp
-		WSA->WSA_REFEN		:= cEndRef 
-		WSA->WSA_IDENDE		:= cIdEnd
-		WSA->WSA_SERPOS		:= _cIdServ
-		If WSA->( FieldPos("WSA_IDLOJA") > 0 )
-			WSA->WSA_IDLOJA		:= _cLojaID
-			WSA->WSA_DESLOJ		:= _cDescLoja
+	*/
+	RecLock("XTA",lGrava)
+		XTA->XTA_FILIAL		:= xFilial("XTA")
+		XTA->XTA_NUM		:= cNumOrc
+		XTA->XTA_VEND		:= cVendedor
+		XTA->XTA_COMIS		:= 0
+		XTA->XTA_CLIENT		:= cCodCli
+		XTA->XTA_LOJA		:= cLojaCli
+		XTA->XTA_TIPOCL		:= cTipoCli	
+		XTA->XTA_VLRTOT		:= MaFisRet(,"NF_VALMERC")
+		XTA->XTA_DESCON		:= nDesconto
+		XTA->XTA_VLRLIQ		:= MaFisRet(,"NF_VALMERC")
+		XTA->XTA_DTLIM		:= DaySum(cTod(dDtaEmiss),nDiasOrc)
+		XTA->XTA_VALBRU		:= MaFisRet(,"NF_VALMERC") //MaFisRet(,"NF_TOTAL") 
+		XTA->XTA_VALMER		:= MaFisRet(,"NF_VALMERC") //MaFisRet(,"NF_VALMERC")
+		XTA->XTA_DESCNF		:= 0
+		XTA->XTA_DINHEI		:= 0
+		XTA->XTA_CHEQUE		:= 0
+		XTA->XTA_CARTAO		:= 0
+		XTA->XTA_CONVEN		:= 0
+		XTA->XTA_VALES		:= 0
+		XTA->XTA_FINANC		:= 0
+		XTA->XTA_OUTROS		:= 0
+		XTA->XTA_PARCEL		:= nQtdParc 	
+		XTA->XTA_VALICM		:= MaFisRet(,"NF_VALICM")
+		XTA->XTA_VALIPI		:= MaFisRet(,"NF_VALIPI")
+		XTA->XTA_VALISS		:= MaFisRet(,"NF_VALISS")
+		XTA->XTA_CONDPG		:= cCondPag
+		XTA->XTA_FORMPG		:= ""
+		XTA->XTA_CREDIT		:= 0
+		XTA->XTA_EMISSA		:= cTod(dDtaEmiss)
+		XTA->XTA_FATOR		:= 0
+		XTA->XTA_AUTORI		:= ""
+		XTA->XTA_NSUTEF		:= ""
+		XTA->XTA_VLRDEB		:= 0
+		XTA->XTA_HORA		:= SubStr(StrTran(cHoraEmis,":",""),1,4)
+		XTA->XTA_TXMOED		:= 0
+		XTA->XTA_ENDENT		:= Upper(Alltrim(cEndDest)) + " ," + cNumDest
+		XTA->XTA_ENDNUM		:= cNumDest
+		XTA->XTA_TPFRET		:= cTpFrete
+		XTA->XTA_BAIRRE		:= Upper(Alltrim(cBaiDest))
+		XTA->XTA_CEPE		:= cCepDest
+		XTA->XTA_MUNE		:= Upper(Alltrim(cMunDest))	
+		XTA->XTA_ESTE		:= Upper(cEstDest)	
+		XTA->XTA_FRETE		:= nVlrFrete
+		XTA->XTA_SEGURO		:= 0
+		XTA->XTA_DESPES		:= 0
+		XTA->XTA_PLIQUI		:= nPesoBruto
+		XTA->XTA_PBRUTO		:= nPesoBruto
+		XTA->XTA_VOLUME		:= 1 
+		XTA->XTA_TRANSP		:= cCodTransp
+		XTA->XTA_ESPECI		:= cEspecie
+		XTA->XTA_MOEDA		:= 0
+		XTA->XTA_BRICMS		:= MaFisRet(,"NF_BASESOL" ) 
+		XTA->XTA_ICMSRE		:= MaFisRet(,"NF_VALSOL" )
+		XTA->XTA_ABTOPC		:= 0
+		XTA->XTA_VALPIS		:= MaFisRet(,'NF_VALPIS')
+		XTA->XTA_VALCOF		:= MaFisRet(,'NF_VALCOF')
+		XTA->XTA_VALCSL		:= MaFisRet(,'NF_VALCSL')
+		XTA->XTA_CGCCLI		:= ""
+		XTA->XTA_VALIRR		:= 0
+		XTA->XTA_NUMECO		:= cOrderId
+		XTA->XTA_NUMECL		:= cPedCodCli
+		XTA->XTA_OBSECO		:= cObsPedido
+		XTA->XTA_MTCANC		:= cMotCancel
+		XTA->XTA_CODSTA		:= ZTC->ZTC_ORDEM
+		XTA->XTA_DESTAT		:= RTrim(ZTC->ZTC_DESCV3)
+		XTA->XTA_TRACKI		:= ""
+		XTA->XTA_VLBXPV		:= "1" 
+		XTA->XTA_NOMDES		:= cNomDest
+		XTA->XTA_DDDCEL		:= cDddCel
+		XTA->XTA_DDD01 		:= cDdd1
+		XTA->XTA_CELULA		:= cCelular
+		XTA->XTA_TEL01 		:= cTel01
+		XTA->XTA_COMPLE		:= cEndComp
+		XTA->XTA_REFEN		:= cEndRef 
+		XTA->XTA_IDENDE		:= cIdEnd
+		XTA->XTA_SERPOS		:= _cIdServ
+		If XTA->( FieldPos("XTA_IDLOJA") > 0 )
+			XTA->XTA_IDLOJA		:= _cLojaID
+			XTA->XTA_DESLOJ		:= _cDescLoja
 		EndIf 
-	WSA->( MsUnLock() )	
+	XTA->( MsUnLock() )	
 			
 	RestArea(aArea)
 Return aRet
@@ -2734,8 +2687,8 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 						EndIf
 					EndIf
 					
-					dbSelectArea("WSC")
-					WSC->( dbSetOrder(1) )
+					dbSelectArea("XTC")
+					XTC->( dbSetOrder(1) )
 				
 					For nParc := 1 To Len(aVencTo)
 												
@@ -2754,28 +2707,28 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 							dDtaVencto	:= aVencTo[nParc][1]
 						EndIf
 						
-						RecLock("WSC",.T.)				
-							WSC->WSC_FILIAL	:= xFilial("WSC")
-							WSC->WSC_NUM    	:= cNumOrc
-							WSC->WSC_NUMECO		:= cOrderId
-							WSC->WSC_NUMECL		:= cPedCodCli
-							WSC->WSC_DATA   	:= dDtaVencto
-							WSC->WSC_VALOR  	:= nVlrParc		
-							WSC->WSC_FORMA  	:= cTipo
-							WSC->WSC_FORMPG		:= cFormPG
-							WSC->WSC_ADMINI		:= IIF(Empty(cCodAdm),cOpera,cCodAdm)
-							WSC->WSC_NUMCAR		:= cNumCart
-							WSC->WSC_OBS    	:= cRetMsg
-							WSC->WSC_DATATE		:= dTos(cTod(dDtaEmiss))
-							WSC->WSC_HORATE		:= StrTran(cHoraEmis,":","")
-							WSC->WSC_DOCTEF 	:= cCodAuto
-							WSC->WSC_AUTORI		:= cCodAuto
-							WSC->WSC_NSUTEF 	:= cNsuId
-							WSC->WSC_MOEDA  	:= 1
-							WSC->WSC_PARCTE		:= cPrefixo  
-							WSC->WSC_ITEM   	:= cParcela    
-							WSC->WSC_TID		:= cTID
-						WSC->( MsunLock() )
+						RecLock("XTC",.T.)				
+							XTC->XTC_FILIAL	:= xFilial("XTC")
+							XTC->XTC_NUM    	:= cNumOrc
+							XTC->XTC_NUMECO		:= cOrderId
+							XTC->XTC_NUMECL		:= cPedCodCli
+							XTC->XTC_DATA   	:= dDtaVencto
+							XTC->XTC_VALOR  	:= nVlrParc		
+							XTC->XTC_FORMA  	:= cTipo
+							XTC->XTC_FORMPG		:= cFormPG
+							XTC->XTC_ADMINI		:= IIF(Empty(cCodAdm),cOpera,cCodAdm)
+							XTC->XTC_NUMCAR		:= cNumCart
+							XTC->XTC_OBS    	:= cRetMsg
+							XTC->XTC_DATATE		:= dTos(cTod(dDtaEmiss))
+							XTC->XTC_HORATE		:= StrTran(cHoraEmis,":","")
+							XTC->XTC_DOCTEF 	:= cCodAuto
+							XTC->XTC_AUTORI		:= cCodAuto
+							XTC->XTC_NSUTEF 	:= cNsuId
+							XTC->XTC_MOEDA  	:= 1
+							XTC->XTC_PARCTE		:= cPrefixo  
+							XTC->XTC_ITEM   	:= cParcela    
+							XTC->XTC_TID		:= cTID
+						XTC->( MsunLock() )
 																
 					Next nParc
 				//EndIf 
@@ -2787,12 +2740,12 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 	// Valida se tem juros |
 	//---------------------+
 	If nJuros > 0 .And. cCodAfili $ "MGZ"
-		dbSelectArea("WSA")
-		WSA->( dbSetOrder(2) )
-		If WSA->( dbSeek(xFilial("WSA") + cOrderId) )
-			RecLock("WSA",.F.)
-				WSA->WSA_DESPES := nJuros
-			WSA->( MsUnLock() )
+		dbSelectArea("XTA")
+		XTA->( dbSetOrder(2) )
+		If XTA->( dbSeek(xFilial("XTA") + cOrderId) )
+			RecLock("XTA",.F.)
+				XTA->XTA_DESPES := nJuros
+			XTA->( MsUnLock() )
 		EndIf 
 	EndIf 
 
@@ -3027,23 +2980,11 @@ RestArea(aArea)
 Return aRet
 
 /**************************************************************************************************/
-
 /*/{Protheus.doc} AEcoGrvSe1
-
-@description	Gera contas a receber
-
-@author			Bernard M.Margarido
-@version   		1.00
-@since     		10/02/2016
-
-@param			cNumOrc		, Numero do Orçamento
-@param			cOrderId	, Numero do OrderId e-Commerce
-@param			cPedCodCli	, Numero do OrderId e-Commerce Cliente
-@param			cOpera		, Codigo da Operadora
-@param			dDtaEmiss	, Data de Emissao do Pedido e-Commerce
-@param			nParcTx		, Numero de parcelas para calcula da Taxa
-
-@return			aRet - Array aRet[1] - Logico aRet[2] - Codigo Erro aRet[3] - Descricao do Erro
+	@description	Gera contas a receber
+	@author			Bernard M.Margarido
+	@version   		1.00
+	@since     		10/02/2016
 /*/			
 /**************************************************************************************************/
 Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dDtaEmiss,nParcTx)
@@ -3066,16 +3007,16 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 	//----------------------+
 	// Posiciona Orçamento  |
 	//----------------------+
-	dbSelectArea("WSA")
-	WSA->( dbSetOrder(1) )
-	WSA->( dbSeek(xFilial("WSA") + cNumOrc) )
+	dbSelectArea("XTA")
+	XTA->( dbSetOrder(1) )
+	XTA->( dbSeek(xFilial("XTA") + cNumOrc) )
 
 	//-------------------------------+
 	// Posiciona Condição Negociada  |
 	//-------------------------------+
-	dbSelectArea("WSC")
-	WSC->( dbSetOrder(1) )
-	If !WSC->( dbSeek(xFilial("WSC") + cNumOrc) )
+	dbSelectArea("XTC")
+	XTC->( dbSetOrder(1) )
+	If !XTC->( dbSeek(xFilial("XTC") + cNumOrc) )
 		aRet[1] := .F.
 		aRet[2] := cOrderId
 		aRet[3] := "PAGAMENTO NAO ENCONTRADO PARA O PEDIDO ORDERID " + Alltrim(cOrderId) + ". FAVOR INFORMAR O ADMINISTRADOR DO SISTEMA."	
@@ -3087,21 +3028,21 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 	//------------------------+
 	// Cria Contas a Receber  |
 	//------------------------+
-	While WSC->( !Eof() .And. xFilial("WSC") + cNumOrc == WSC->( WSC_FILIAL + WSC_NUM) )
+	While XTC->( !Eof() .And. xFilial("XTC") + cNumOrc == XTC->( XTC_FILIAL + XTC_NUM) )
 
 		aSe1 := {}
 		
 		//----------------------------------------+
 		// Caso pagamento tenha mais de um cartão | 
 		//----------------------------------------+
-		If Alltrim(WSC->WSC_FORMA) == "CC" .And. Alltrim(cNsuId) <> Alltrim(WSC->WSC_NSUTEF)
-		 	WSC->( dbSkip() )
+		If Alltrim(XTC->XTC_FORMA) == "CC" .And. Alltrim(cNsuId) <> Alltrim(XTC->XTC_NSUTEF)
+		 	XTC->( dbSkip() )
 			Loop 
 		EndIf
 		
-		cNumE1	:= PadR(WSC->WSC_NUMECL,nTamTitu)
-		cParce	:= PadR(WSC->WSC_ITEM,nTamParc)
-		cPrefixo:= WSC->WSC_PARCTEF
+		cNumE1	:= PadR(XTC->XTC_NUMECL,nTamTitu)
+		cParce	:= PadR(XTC->XTC_ITEM,nTamParc)
+		cPrefixo:= XTC->XTC_PARCTEF
 		nOpcA 	:= 3
 		
 		//----------------------------+
@@ -3109,11 +3050,11 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 		//----------------------------+		
 		If SE1->( dbSeek(xFilial("SE1") + cPrefixo + cNumE1 + cParce ) )
 			nOpcA := 4
-			WSC->( dbSkip() )
+			XTC->( dbSkip() )
 			Loop 
 		EndIf
 			
-		If Alltrim(WSC->WSC_FORMA) == "CC"
+		If Alltrim(XTC->XTC_FORMA) == "CC"
 			cNatureza := &(SuperGetMV("MV_NATCART"))
 			If lTaxaCC
 				aRet := aEcoTxAdm(cOpera,nParcTx,2)
@@ -3122,54 +3063,54 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 					cLojaOper	:= aRet[3]
 				EndIf	
 			EndIf
-			cCliente  := WSA->WSA_CLIENTE
-			cLoja	  := WSA->WSA_LOJA		
-		ElseIf Alltrim(WSC->WSC_FORMA) == "CD"
+			cCliente  := XTA->XTA_CLIENTE
+			cLoja	  := XTA->XTA_LOJA		
+		ElseIf Alltrim(XTC->XTC_FORMA) == "CD"
 			cNatureza := &(SuperGetMV("MV_NATTEF"))
-			cCliente  := WSA->WSA_CLIENTE
-			cLoja	  := WSA->WSA_LOJA
-		ElseIf Alltrim(WSC->WSC_FORMA) == "BOL"
-			cCliente  := WSA->WSA_CLIENTE
-			cLoja	  := WSA->WSA_LOJA	
+			cCliente  := XTA->XTA_CLIENTE
+			cLoja	  := XTA->XTA_LOJA
+		ElseIf Alltrim(XTC->XTC_FORMA) == "BOL"
+			cCliente  := XTA->XTA_CLIENTE
+			cLoja	  := XTA->XTA_LOJA	
 			cNatureza := &(SuperGetMV("MV_NATOUTR"))
 			
-		ElseIf Alltrim(WSC->WSC_FORMA) == "MKT"
-			cCliente  := WSA->WSA_CLIENTE
-			cLoja	  := WSA->WSA_LOJA	
+		ElseIf Alltrim(XTC->XTC_FORMA) == "MKT"
+			cCliente  := XTA->XTA_CLIENTE
+			cLoja	  := XTA->XTA_LOJA	
 			cNatureza := &(SuperGetMV("MV_NATOUTR"))
 		EndIf
 
-		If Alltrim(WSC->WSC_FORMA) $ "BOL/FI"
+		If Alltrim(XTC->XTC_FORMA) $ "BOL/FI"
 			cHist := "PED: " + cOrderId + " BOLETO"	
-		ElseIf Alltrim(WSC->WSC_FORMA) $ "MKT"	
+		ElseIf Alltrim(XTC->XTC_FORMA) $ "MKT"	
 			cHist := "PED: " + cOrderId + " MARKET PLACE"
 		Else
-			cHist := "PED: " + cOrderId + " CARTAO:" + Upper(WSC->WSC_ADMINIS)
+			cHist := "PED: " + cOrderId + " CARTAO:" + Upper(XTC->XTC_ADMINIS)
 		EndIf
 		
 		cNatureza := IIF(ValType(cNatureza) == "N", Alltrim(Str(cNatureza)),cNatureza)
 		
 		aAdd(aSe1,{"E1_FILIAL"			, xFilial("SE1")						  	    					, Nil })				
 		aAdd(aSe1,{"E1_PREFIXO"			, cPrefixo								  	    					, Nil })
-		aAdd(aSe1,{"E1_TIPO"			, Alltrim(WSC->WSC_FORMA)					    					, Nil })
-		aAdd(aSe1,{"E1_NUM"				, Alltrim(WSC->WSC_NUMECL)											, Nil })
-		aAdd(aSe1,{"E1_PARCELA"			, Alltrim(WSC->WSC_ITEM)						   						, Nil })
+		aAdd(aSe1,{"E1_TIPO"			, Alltrim(XTC->XTC_FORMA)					    					, Nil })
+		aAdd(aSe1,{"E1_NUM"				, Alltrim(XTC->XTC_NUMECL)											, Nil })
+		aAdd(aSe1,{"E1_PARCELA"			, Alltrim(XTC->XTC_ITEM)						   						, Nil })
 		aAdd(aSe1,{"E1_NATUREZ"			, cNatureza															, Nil })
 		aAdd(aSe1,{"E1_CLIENTE"			, IIF(Empty(cCliOper),cCliente,cCliOper)							, Nil })
 		aAdd(aSe1,{"E1_LOJA"			, IIF(Empty(cLojaOper),cLoja,cLojaOper)								, Nil })
-		aAdd(aSe1,{"E1_VALOR"			, WSC->WSC_VALOR														, Nil })
+		aAdd(aSe1,{"E1_VALOR"			, XTC->XTC_VALOR														, Nil })
 		aAdd(aSe1,{"E1_EMISSAO"			, cTod(dDtaEmiss)													, Nil })
-		aAdd(aSe1,{"E1_VENCTO"			, WSC->WSC_DATA														, Nil })
-		aAdd(aSe1,{"E1_VLCRUZ"			, WSC->WSC_VALOR														, Nil })		
-		aAdd(aSe1,{"E1_VENCREA"			, DataValida(WSC->WSC_DATA,.T.)        								, Nil })
+		aAdd(aSe1,{"E1_VENCTO"			, XTC->XTC_DATA														, Nil })
+		aAdd(aSe1,{"E1_VLCRUZ"			, XTC->XTC_VALOR														, Nil })		
+		aAdd(aSe1,{"E1_VENCREA"			, DataValida(XTC->XTC_DATA,.T.)        								, Nil })
 		aAdd(aSe1,{"E1_XNUMECO"			, cOrderId															, Nil })  
 		aAdd(aSe1,{"E1_XNUMECL"			, cPedCodCli														, Nil })  
 		aAdd(aSe1,{"E1_ORIGEM"			, "FINA040"															, Nil })  
 		aAdd(aSe1,{"E1_STATUS"			, "A"																, Nil })  
 		aAdd(aSe1,{"E1_FLUXO"			, "S"																, Nil })  
-		aAdd(aSe1,{"E1_VLRREAL"			, WSC->WSC_VALOR														, Nil })  
-		aAdd(aSe1,{"E1_DOCTEF" 			, WSC->WSC_DOCTEF													, Nil })
-		aAdd(aSe1,{"E1_NSUTEF"			, WSC->WSC_NSUTEF													, Nil })
+		aAdd(aSe1,{"E1_VLRREAL"			, XTC->XTC_VALOR														, Nil })  
+		aAdd(aSe1,{"E1_DOCTEF" 			, XTC->XTC_DOCTEF													, Nil })
+		aAdd(aSe1,{"E1_NSUTEF"			, XTC->XTC_NSUTEF													, Nil })
 		aAdd(aSe1,{"E1_HIST"			, cHist																, Nil })
 		
 		MsExecAuto({|x,y| FINA040(x,y)},aSe1,nOpcA)
@@ -3208,7 +3149,7 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 			EndIf
 
 			aRet[1] := .F.
-			aRet[2] := Alltrim(WSC->WSC_XNUMECL)
+			aRet[2] := Alltrim(XTC->XTC_XNUMECL)
 			aRet[3] := "ERRO AO GERAR CONTAS A RECEBER " + cMsgErro
 
 		Else
@@ -3218,7 +3159,7 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 			aRet[3] := ""
 		EndIf
 
-		WSC->( dbSkip() )
+		XTC->( dbSkip() )
 
 	EndDo
 
@@ -3226,15 +3167,11 @@ Static Function AEcoGrvSe1(cNumOrc,cOrderId,cPedCodCli,cOpera,cPrefixo,cNsuId,dD
 Return aRet
 
 /**************************************************************************************************/
-
 /*/{Protheus.doc} AEcoUpdPv
-
-@description	Realiza a atualização dos pedidos e-commerce
-
-@author			Bernard M.Margarido
-@version   		1.00
-@since     		10/02/2016
-
+	@description	Realiza a atualização dos pedidos e-commerce
+	@author			Bernard M.Margarido
+	@version   		1.00
+	@since     		10/02/2016
 /*/
 /**************************************************************************************************/
 Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRestPv)
@@ -3242,21 +3179,11 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	Local aRet			:= {.T.,"",""}
 	
 	Local cVendedor 	:= GetNewPar("EC_VENDECO")
-	//Local cPedCodCli	:= ""	
 	Local cCnpj			:= ""
-	//Local cDocEco		:= ""
-	//Local cHoraEmis		:= ""
-	//Local cNotaDev		:= ""
 	Local cPedStatus	:= ""
-	//Local cTipo			:= "LJ"
-	
-	//Local nQtdParc		:= 0			
-	//Local nVlrTotal		:= 0
-	
+
 	Local lBaixaEco		:= .F.
 	Local lEnvStatus	:= .F.
-	//Local lFatAut		:= GetNewPar("EC_FATAUTO",.F.)
-	//Local lLiberPv		:= GetNewPar("EC_LIBPVAU",.F.)
 			
 	Local dDtaEmiss		:= Nil
 		
@@ -3293,20 +3220,13 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	cLojaCli	:= sA1->A1_LOJA
 	cVendedor	:= ""
 	nDesconto	:= 0
-	/*
-	aRet := AEcoGrvRes(cOrderId,cOrdPvCli,cNumOrc,cCodCli,cLojaCli,cVendedor,nDesconto,dDtaEmiss,oRestPv:Items,oRestPv:ShippingData,oRestPv)
-	If !aRet[1]
-		RestArea(aArea)
-		Return aRet
-	EndIf
-	*/
-	
+		
 	//---------------------+
 	// Posiciona Orçamento |
 	//---------------------+
-	dbSelectArea("WSA")	
-	WSA->( dbSetOrder(1) )
-	WSA->( dbSeek(xFilial("WSA") + cNumOrc) )
+	dbSelectArea("XTA")	
+	XTA->( dbSetOrder(1) )
+	XTA->( dbSeek(xFilial("XTA") + cNumOrc) )
 	
 	//--------------+
 	// Dados Pedido |
@@ -3316,9 +3236,9 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	//---------------------------+
 	// Posiciona Status do Pedido|
 	//---------------------------+
-	dbSelectArea("WS1")
-	WS1->( dbSetOrder(2) )
-	If !WS1->( dbSeek(xFilial("WS1") + Padr(cPedStatus,nTamStat)) )
+	dbSelectArea("ZTC")
+	ZTC->( dbSetOrder(3) )
+	If !ZTC->( dbSeek(xFilial("WS1") + Padr(cPedStatus,nTamStat)) )
 		LogExec("STATUS CODIGO " + Alltrim(cPedStatus) + " NAO LOCALIZADO PARA O PEDIDO ORDERID " + cOrderId + " FAVOR CADASTRAR O STATUS E IMPORTAR O PEDIDO NOVAMENTE.")
 		aRet[1] := .F.
 		aRet[2] := cOrderId
@@ -3330,61 +3250,31 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	//------------------+
 	// Status Cancelado |
 	//------------------+
-	If WS1->WS1_CODIGO == "008" 
-				
-		//--------------------------------+
-		// Envia status para o e-Commerce |
-		//--------------------------------+
-		lEnvStatus	:= IIF(WS1->WS1_ENVECO == "S",.T.,.F.)
-		lBaixaEco	:= .T.
-				
-		RecLock("WSA",.F.)
-			WSA->WSA_CODSTA	:= WS1->WS1_CODIGO
-			WSA->WSA_DESTAT	:= Alltrim(WS1->WS1_DESCRI)
-		WSA->( MsUnLock() )	
-	
-		//----------------------+
-		// Pagamento Confirmado |
-		//----------------------+
-	ElseIf WS1->WS1_CODIGO == "002"
-			
-		//--------------------------------+
-		// Envia status para o e-Commerce |
-		//--------------------------------+
-		lEnvStatus	:= IIF(WS1->WS1_ENVECO == "S",.T.,.F.)
-		lBaixaEco	:= .T.
-			
-		RecLock("WSA",.F.)
-			WSA->WSA_CODSTA	:= WS1->WS1_CODIGO
-			WSA->WSA_DESTAT	:= Alltrim(WS1->WS1_DESCRI)
-		WSA->( MsUnLock() )
-	
-	//---------------+
-	// Demais Status |
-	//---------------+
-	ElseIf WS1->WS1_CODIGO == "007"
-		//--------------------------------+
-		// Envia status para o e-Commerce |
-		//--------------------------------+
-		lEnvStatus	:= IIF(WS1->WS1_ENVECO == "S",.T.,.F.)
-		lBaixaEco	:= .T.
+	If ZTC->ZTC_ORDEM $ "998/999" 
 
-		RecLock("WSA",.F.)
-			WSA->WSA_CODSTA	:= WS1->WS1_CODIGO
-			WSA->WSA_DESTAT	:= Alltrim(WS1->WS1_DESCRI)
-		WSA->( MsUnLock() )	
+		//--------------------------------+
+		// Envia status para o e-Commerce |
+		//--------------------------------+
+		lEnvStatus	:= IIF(ZTC->ZTC_INTEGR == "1",.T.,.F.)
+		lBaixaEco	:= .T.
+				
+		RecLock("XTA",.F.)
+			XTA->XTA_CODSTA	:= ZTC->ZTC_ORDEM
+			XTA->XTA_DESTAT	:= RTrim(ZTC->ZTC_DESCV3)
+		XTA->( MsUnLock() )	
+		
 	EndIf
 
 	//------------------------+
 	// Grava Status do Pedido |
 	//------------------------+
-	u_AEcoStaLog(WS1->WS1_CODIGO,cOrderId,cNumOrc,dDataBase,Time())
+	u_AEcoStaLog(ZTC->ZTC_ORDEM,cOrderId,cNumOrc,dDataBase,Time())
 
 	//---------------------------+
 	// Atualiza status ecommerce |
 	//---------------------------+
 	If lEnvStatus
-		aRet := u_AEcoStat(WSA->WSA_NUM)
+		aRet := u_AEcoStat(XTA->XTA_NUM)
 	EndIf	
 
 RestArea(aArea)
@@ -3684,7 +3574,7 @@ Static Function AEcoGrvWs2(cNumOrc,cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 	// Posiciona Status do Pedido|
 	//---------------------------+
 	dbSelectArea("WS1")
-	WS1->( dbSetOrder(2) )
+	WS1->( dbSetOrder(3) )
 	If !WS1->( dbSeek(xFilial("WS1") + Padr(Alltrim(cPedStatus),nTamStat)) )
 		LogExec("STATUS " + Capital(cPedStatus) + " NAO LOCALIZADO PARA O PEDIDO ORDERID " + cOrderId + " FAVOR CADASTRAR O STATUS E IMPORTAR O PEDIDO NOVAMENTE.")
 		aRet[1] := .F.
@@ -3760,7 +3650,7 @@ Static Function AEcoI11IP(cIdTran,cCodAfili,cCodTransp,cIdPost,_cIdServ)
 If Empty(cIdPost)
 	AEcoI11TR(cIdTran,@cCodTransp,@_cIdServ)
 Else
-	cCodTransp	:= GetNewPar("EC_TRANSP","EC0001")
+	cCodTransp	:= GetNewPar("EC_TRANSP","000001")
 EndIf	
 
 Return .T. 
@@ -3775,78 +3665,54 @@ Return .T.
 /*/
 /***************************************************************/
 Static Function AEcoI11TR(cIdTran,cCodTransp,_cIdServ)
-Local aArea 	:= GetArea() 
-Local cAlias	:= GetNextAlias()
+Local cAlias	:= ""
 Local cQuery 	:= ""
 Local cIdPost	:= ""
 
 cQuery := " SELECT " + CRLF  
 cQuery += "		COD_TRANSP, " + CRLF  
-cQuery += "		ZZ0_IDSER " + CRLF  
+cQuery += "		XTG_IDVTEX, " + CRLF  
+cQuery += "		XTG_STATUS " + CRLF  
 cQuery += " FROM " + CRLF  
 cQuery += " ( " + CRLF  
 cQuery += "		SELECT " + CRLF  
-cQuery += "			ZZ7.ZZ7_TRANSP COD_TRANSP, " + CRLF
-cQuery += "			COALESCE(ZZ0.ZZ0_IDSER,'') ZZ0_IDSER " + CRLF
-cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("ZZ7") + " ZZ7 " + CRLF  
-cQuery += "			LEFT JOIN " + RetSqlName("ZZ0") + " ZZ0 ON ZZ0.ZZ0_FILIAL = '" + xFilial("ZZ0") + "' AND ZZ0.ZZ0_CODECO = ZZ7.ZZ7_TRANSP AND ZZ0.D_E_L_E_T_ = '' " + CRLF 
-cQuery += "		WHERE " + CRLF 
-cQuery += "			ZZ7.ZZ7_FILIAL = '" + xFilial("ZZ7") + "' AND " + CRLF 
-cQuery += "			UPPER(ZZ7.ZZ7_IDECOM) = '" + Upper(cIdTran) + "' AND " + CRLF
-cQuery += "			ZZ7.D_E_L_E_T_ = '' "  + CRLF  
-/*
-cQuery += "		UNION ALL " + CRLF  
-cQuery += "		SELECT " + CRLF  
 cQuery += "			A4.A4_COD COD_TRANSP, " + CRLF
-cQuery += "			COALESCE(ZZ0.ZZ0_IDSER,'') ZZ0_IDSER " + CRLF
+cQuery += "			XTG.XTG_IDVTEX, " + CRLF
+cQuery += "			XTG.XTG_STATUS " + CRLF
 cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("SA4") + " A4 " + CRLF  
-cQuery += "			LEFT JOIN " + RetSqlName("ZZ0") + " ZZ0 ON ZZ0.ZZ0_FILIAL = '" + xFilial("ZZ0") + "' AND UPPER(ZZ0.ZZ0_CODECO) = '" + Upper(cIdTran) + "' AND ZZ0.D_E_L_E_T_ = '' " + CRLF 
+cQuery += "			" + RetSqlName("XTG") + " XTG " + CRLF  
+cQuery += "			INNER JOIN " + RetSqlName("SA4") + " A4 ON A4.A4_FILIAL = '" + xFilial("SA4") + "' AND A4.A4_COD = XTG.XTG_TRANSP AND A4.D_E_L_E_T_ = '' " + CRLF 
 cQuery += "		WHERE " + CRLF 
-cQuery += "			A4.A4_FILIAL = '" + xFilial("SA4") + "' AND " + CRLF 
-cQuery += "			UPPER(A4.A4_ECSERVI) = '" + Upper(cIdTran) + "' AND " + CRLF
-cQuery += "			A4.D_E_L_E_T_ = '' " + CRLF
-*/
+cQuery += "			XTG.XTG_FILIAL = '" + xFilial("XTG") + "' AND " + CRLF 
+cQuery += "			UPPER(XTG.XTG_IDVTEX) = '" + Upper(cIdTran) + "' AND " + CRLF
+cQuery += "			XTG.D_E_L_E_T_ = '' "  + CRLF  
 cQuery += " ) TRANSP " 
 
-dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
+cAlias := MPSysOpenQuery(cQuery)
 
 If (cAlias)->( Eof() )
 	cCodTransp	:= ""
 	_cIdServ	:= ""
+	
 	(cAlias)->( dbCloseArea() )
-	RestArea(aArea)
+
 	Return cIdPost
 EndIf
 
 cCodTransp	:= (cAlias)->COD_TRANSP
-_cIdServ	:= (cAlias)->ZZ0_IDSER
+_cIdServ	:= ""
 
 (cAlias)->( dbCloseArea() )
 
-RestArea(aArea)
 Return .T. 
 
 /*******************************************************************************************/
 /*/{Protheus.doc} aEcoI011Entr
-
-@description Atualiza dados de entrega no cadastro do cliente
-
-@author Bernard M. Margarido
-@since 22/06/2018
-@version 1.0
-
-@param cCodCli	, characters, descricao
-@param cLojaCli	, characters, descricao
-@param cNomDest	, characters, descricao
-@param cEndDest	, characters, descricao
-@param cNumDest	, characters, descricao
-@param cBaiDest	, characters, descricao
-@param cCepDest	, characters, descricao
-@param cMunDest	, characters, descricao
-@param cEstDest	, characters, descricao
-@type function
+	@description Atualiza dados de entrega no cadastro do cliente
+	@author Bernard M. Margarido
+	@since 22/06/2018
+	@version 1.0
+	@type function
 /*/
 /*******************************************************************************************/
 Static Function aEcoI011Entr(	cCodCli,cLojaCli,cNomDest,;
@@ -3870,7 +3736,7 @@ EndIf
 //-------------------------------------------------------------------+
 // Mesmo endereço de entrega e cobrança atualiza somente complemento |
 //-------------------------------------------------------------------+
-If Alltrim(SA1->A1_END) == Alltrim(cEndVld)
+If RTrim(SA1->A1_END) == RTrim(cEndVld)
 	//---------------------------+
 	// Atualiza dados de entrega |
 	//---------------------------+
@@ -3901,12 +3767,12 @@ Else
 		//------------------+
 		// Endereço Entrega |
 		//------------------+
-		SA1->A1_CEPE	:= "" //cCepDest
-		SA1->A1_ENDENT	:= "" //cEndDest + ", " + cNumDest
-		SA1->A1_BAIRROE	:= "" //cBaiDest
-		SA1->A1_MUNE	:= "" //cMunDest
-		SA1->A1_ESTE	:= "" //cEstDest
-		SA1->A1_CODMUNE	:= "" //cCodMune
+		SA1->A1_CEPE	:= cCepDest
+		SA1->A1_ENDENT	:= cEndDest + ", " + cNumDest
+		SA1->A1_BAIRROE	:= cBaiDest
+		SA1->A1_MUNE	:= cMunDest
+		SA1->A1_ESTE	:= cEstDest
+		SA1->A1_CODMUNE	:= cCodMune
 		
 	SA1->( MsUnLock() )
 	
@@ -4176,10 +4042,12 @@ Local _cQryParam 	:= ""
 
 Local _oVTEX		:= VTEX():New()
 
+Local _lRet	 		:= .T.
+
 //------------------------+
 // Parametros de pesquisa |
 //------------------------+
-_cQryParam 	:= "?f_status=ready-for-handling"
+_cQryParam 	:= "f_status=ready-for-handling"
 _cOrderBy  	:= "&orderBy=creationDate,asc"
 _cPerPage  	:= "&per_page=100"
 _cPage	  	:= "&page=" + cValToChar(_nPage) + "	
@@ -4192,7 +4060,7 @@ _oVTEX:cParam	:= _cParams
 _oVTEX:cMetodo	:= "GET"
 
 If _oVTEX:OrderBatches()
-	If ValType(_oVTEX:cJSonRet) == "U"
+	If ValType(_oVTEX:cJSonRet) <> "U"
 		_cJSon := _oVTEX:cJSonRet
 		If !FWJsonDeserialize(_cJSon,@_oJson)
 			_lRet := .F.
