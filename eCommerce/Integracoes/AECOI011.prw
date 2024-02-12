@@ -1287,7 +1287,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	//------------------+
 	// Atualiza Status  |
 	//------------------+
-	aRet := AEcoGrvWs2(cNumOrc,cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
+	aRet := AEcoGrvXTM(cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 
 	If !aRet[1]
 		RestArea(aArea)
@@ -2529,14 +2529,14 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 	//-----------------------+
 	// Operadoras e-Commerce |
 	//-----------------------+
-	dbSelectArea("WS4")
-	WS4->( dbSetOrder(1) )
+	dbSelectArea("XTH")
+	XTH->( dbSetOrder(1) )
 
 	For nTran := 1 To Len(oPayMent:Transactions)
 		
 		If oPayMent:Transactions[nTran]:IsActive
 			
-			If cCodAfili $ "DSP/DPC" .And. ValType(oPayMent:Transactions[nTran]:transactionId) == "U"
+			If ValType(oPayMent:Transactions[nTran]:transactionId) == "U"
 				Loop
 			EndIf 
 
@@ -2578,7 +2578,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//-------------------------------------------+
 					// Posiciona Operadora de Pagamento eCommerce|
 					//-------------------------------------------+
-					If !WS4->( dbSeek(xFilial("WS4") + cOpera ) )
+					If !XTH->( dbSeek(xFilial("XTH") + cOpera ) )
 						aRet[1] := .F.
 						aRet[2] := cOpera
 						aRet[3] := "NAO FOI ENCONTRADA A OPERADORA CADASTRADA NO PROTHEUS. FAVOR CADASTRAR A OPERADORA."
@@ -2590,7 +2590,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//------------+
 					// C. Credito |
 					//------------+
-					If WS4->WS4_TIPO == "1"
+					If XTH->XTH_FORMA == "1"
 						cTipo 		:= "CC"
 						cFormPG 	:= "CC"
 						oDadCart	:= oPayMent:Transactions[nTran]:Payments[nPay]
@@ -2602,7 +2602,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//--------+	
 					// Boleto |
 					//--------+
-					ElseIf WS4->WS4_TIPO == "2"
+					ElseIf XTH->XTH_FORMA == "3"
 						cTipo 		:= "BOL"
 						cFormPG 	:= "BO"
 						cSemNsu 	:= FWJsonSerialize(oPayMent:Transactions[nTran]:Payments[nPay]:ConnectorResponses)
@@ -2612,7 +2612,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//--------+	
 					// Debito | 	
 					//--------+
-					ElseIf WS4->WS4_TIPO == "3"
+					ElseIf XTH->XTH_FORMA == "2"
 						cTipo 		:= "CD"
 						cFormPG 	:= "CD"
 						oDadCart	:= oPayMent:Transactions[nTran]:Payments[nPay]
@@ -2624,7 +2624,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//--------------+	
 					// Market Place |
 					//--------------+ 
-					ElseIf WS4->WS4_TIPO == "4"
+					ElseIf XTH->XTH_FORMA == "5"
 						cTipo 		:= "MKT"
 						cFormPG 	:= "BO"
 						If nVlrTotal < nVlrTotMkt
@@ -2634,7 +2634,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//-----+	
 					// PIX |
 					//-----+ 
-					ElseIf WS4->WS4_TIPO == "5"
+					ElseIf XTH->XTH_FORMA == "4"
 						cTipo 		:= "PIX"
 						cFormPG		:= "PI"
 						cSemNsu 	:= FWJsonSerialize(oPayMent:Transactions[nTran]:Payments[nPay]:ConnectorResponses)
@@ -2662,7 +2662,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//-----------------------------+
 					// Descrição da Bandeira usada |
 					//-----------------------------+
-					cAdmCart := Capital(WS4->WS4_DESCRI)
+					cAdmCart := Capital(XTH->XTH_ADQUI)
 						
 					//----------+
 					// Grava SL4|
@@ -2672,8 +2672,8 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					//----------------------------------------------+
 					// Valida se utiliza Administradora ficnanceira |
 					//----------------------------------------------+
-					If lTaxaCC .And. WS4->WS4_TIPO $ "1/2/5"
-						aRet := aEcoTxAdm(WS4->WS4_CODADM,Len(aVencTo))
+					If lTaxaCC .And. XTH->XTH_FORMA $ "1/2/5"
+						aRet := aEcoTxAdm(XTH->XTH_COD,Len(aVencTo))
 						If aRet[1]
 							nTxParc := aRet[2]
 							cCodAdm	:= aRet[4]
@@ -2692,14 +2692,14 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 				
 					For nParc := 1 To Len(aVencTo)
 												
-						If WS4->WS4_TIPO == "1"
+						If XTH->XTH_FORMA == "1"
 							cParcela := LJParcela( nParc, c1DUP )
 						EndIf
 						
 						//----------------------------------------------+
 						// Valida se utiliza Administradora ficnanceira |
 						//----------------------------------------------+
-						If lTaxaCC .And. WS4->WS4_TIPO $ "1/2/5"
+						If lTaxaCC .And. XTH->XTH_FORMA $ "1/2/5"
 							nVlrParc 	:= Round( aVencTo[nParc][2] - ( aVencTo[nParc][2] *  nTxParc / 100 ) , 2 ) 
 							dDtaVencto	:= aVencTo[nParc][1]
 						Else
@@ -2797,14 +2797,14 @@ Static Function AEcoSe4(cOrderId,cTipo,nQtdParc)
 
 		cCodigo := "BOL"	
 		cDescri	:= "BOLETO"
-		cCondPg	:= GetNewPar("EC_BOLVENC")
+		cCondPg	:= GetNewPar("EC_BOLVENC","7")
 		cTpCond := "1"
 	
 	ElseIf cTipo == "CD"
 
 		cCodigo := "CD1"	
 		cDescri	:= "CARTAO DEBITO"
-		cCondPg	:= "00"
+		cCondPg	:= "01"
 		cTpCond := "1"
 	
 	ElseIf cTipo == "MKT"
@@ -2818,7 +2818,7 @@ Static Function AEcoSe4(cOrderId,cTipo,nQtdParc)
 
 		cCodigo := "PIX"	
 		cDescri	:= "PIX"
-		cCondPg	:= GetNewPar("EC_PIXVENC","30")
+		cCondPg	:= GetNewPar("EC_PIXVENC","01")
 		cTpCond := "1"
 
 	EndIf	
@@ -3238,7 +3238,7 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	//---------------------------+
 	dbSelectArea("ZTC")
 	ZTC->( dbSetOrder(3) )
-	If !ZTC->( dbSeek(xFilial("WS1") + Padr(cPedStatus,nTamStat)) )
+	If !ZTC->( dbSeek(xFilial("ZTC") + Padr(cPedStatus,nTamStat)) )
 		LogExec("STATUS CODIGO " + Alltrim(cPedStatus) + " NAO LOCALIZADO PARA O PEDIDO ORDERID " + cOrderId + " FAVOR CADASTRAR O STATUS E IMPORTAR O PEDIDO NOVAMENTE.")
 		aRet[1] := .F.
 		aRet[2] := cOrderId
@@ -3543,24 +3543,14 @@ Static Function AEcoBxTit(cNumTit)
 Return aRet 
 
 /**************************************************************************************************/
-/*/{Protheus.doc} AEcoGrvWs2
-
-@description	Grava Status do Pedido eCommerce
-
-@author			Bernard M.Margarido
-@version   		1.00
-@since     		10/02/2016
-
-@param			cNumOrc		, Numero do Orçamento 
-@param			cOrderId	, Numero OrderId e-Commerce	
-@param			nPedStatus	, Codigo do Status do Pedido
-@param			dDtaEmiss	, Data de Emissao
-@param			cHoraEmis	, Hora da Emissao
-
-@return			aRet		- Array aRet[1] - Logico aRet[2] - Codigo Erro aRet[3] - Descricao do Erro  
+/*/{Protheus.doc} AEcoGrvXTM
+	@description	Grava Status do Pedido eCommerce
+	@author			Bernard M.Margarido
+	@version   		1.00
+	@since     		10/02/2016
 /*/
 /**************************************************************************************************/
-Static Function AEcoGrvWs2(cNumOrc,cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
+Static Function AEcoGrvXTM(cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 	Local aArea		:= GetArea()
 	Local aRet		:= {.T.,"",""}
 
@@ -3573,9 +3563,9 @@ Static Function AEcoGrvWs2(cNumOrc,cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 	//---------------------------+
 	// Posiciona Status do Pedido|
 	//---------------------------+
-	dbSelectArea("WS1")
-	WS1->( dbSetOrder(3) )
-	If !WS1->( dbSeek(xFilial("WS1") + Padr(Alltrim(cPedStatus),nTamStat)) )
+	dbSelectArea("ZTC")
+	ZTC->( dbSetOrder(3) )
+	If !ZTC->( dbSeek(xFilial("ZTC") + Padr(Alltrim(cPedStatus),nTamStat)) )
 		LogExec("STATUS " + Capital(cPedStatus) + " NAO LOCALIZADO PARA O PEDIDO ORDERID " + cOrderId + " FAVOR CADASTRAR O STATUS E IMPORTAR O PEDIDO NOVAMENTE.")
 		aRet[1] := .F.
 		aRet[2] := cOrderId
@@ -3583,25 +3573,26 @@ Static Function AEcoGrvWs2(cNumOrc,cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 		RestArea(aArea)
 		Return aRet
 	EndIf
+
 	
 	//------------------+
 	// Codigo do Status |
 	//------------------+
-	cStatus := WS1->WS1_CODIGO
+	cStatus := ZTC->ZTC_ORDEM
 	
 	cQuery := "	SELECT " + CRLF
-	cQuery += "		WS2_CODSTA " + CRLF
+	cQuery += "		XTM_CODSTA " + CRLF
 	cQuery += "	FROM " + CRLF
-	cQuery += "		" + RetSqlName("WS2") + " " + CRLF 
+	cQuery += "		" + RetSqlName("XTM") + " " + CRLF 
 	cQuery += "	WHERE " + CRLF
-	cQuery += "		WS2_FILIAL = '" + xFilial("WS2") + "' AND " + CRLF
-	cQuery += "		WS2_NUMSL1 = '" + cNumOrc + "' AND " + CRLF
+	cQuery += "		XTM_FILIAL = '" + xFilial("XTM") + "' AND " + CRLF
+	cQuery += "		XTM_IDECOM = '" + cOrderId + "' AND " + CRLF
 	cQuery += "		D_E_L_E_T_ = '' "
 
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 
 	If (cAlias)->( Eof() )
-		U_AEcoStaLog(cStatus,cOrderId,cNumOrc,cTod(dDtaEmiss),cHoraEmis)
+		U_AEcoStaLog(cStatus,cOrderId,cTod(dDtaEmiss),cHoraEmis)
 		(cAlias)->( dbCloseArea() )
 	Else
 		 (cAlias)->( dbCloseArea() )

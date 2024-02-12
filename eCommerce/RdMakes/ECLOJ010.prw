@@ -74,6 +74,7 @@ Local _oMsMGet 		:= Nil
 Local _oMsMGetEnd	:= Nil
 Local _oMsGetDIt   	:= Nil
 Local _oMsGetDSt	:= Nil
+Local _oMsGetPgt	:= Nil 
 
 Private _oFolder    := Nil
 
@@ -83,6 +84,8 @@ Private _aCab		:= {}
 Private _aEnd		:= {}
 Private _aHeadSta	:= {}
 Private _aColsSta	:= {}
+Private _aHeadPgt	:= {}
+Private _aColsPgt	:= {}
 Private aField 		:= {}
 
 Private aTela[0][0]
@@ -152,6 +155,12 @@ _oDlg := MsDialog():New(_oSize:aWindSize[1], _oSize:aWindSize[2],_oSize:aWindSiz
 	//--------------+	 
 	_oMsMGetEnd := MsMGet():New("XTA",XTA->( Recno() ),2,,,,,{000,000,000,000},,,,,,_oFolder:aDialogs[2],,,,,,.T.,aField)
 	_oMsMGetEnd:oBox:Align := CONTROL_ALIGN_ALLCLIENT
+
+	//-----------+
+	// Pagamento |
+	//-----------+
+	_oMsGetPgt 	:= MsNewGetDados():New(000,000,000,000,2,/*cLinOk*/,/*cTudoOk1*/,/*cIniCpos*/,/*aAlterGda*/,/*nFreeze*/,/*nMax*/,/*cFieldOk*/,/*cSuperDel*/,/*cDelOk*/,_oFolder:aDialogs[3],_aHeadPgt,_aColsPgt)
+	_oMsGetPgt:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
 
 	//-----------+
 	// Historico |
@@ -258,40 +267,79 @@ If Len(_aColsIt) <= 0
 	_aColsIt[1][Len(_aHeadIt)+1]:= .F.
 EndIf
 
+//-----------+
+// Pagamento |
+//-----------+
+_aHeadPgt	:= {}
+_aColsPgt	:= {}
+
+aAdd(_aHeadPgt,{"Forma"			,"PGTFORMA"		,"@!"							,TamSx3("XTC_FORMA")[1]		,0,".F.","û","C",""," ","" } )
+aAdd(_aHeadPgt,{"DT Emissao"	,"PGTEMISS"		,"@D"							,TamSx3("XTC_DATA")[1]		,0,".F.","û","D",""," ","" } )
+aAdd(_aHeadPgt,{"DT Vencto"		,"PGTDATA"		,"@D"							,TamSx3("XTC_DATA")[1]		,0,".F.","û","D",""," ","" } )
+aAdd(_aHeadPgt,{"Valor "		,"PGTVALOR"		,PesqPict("XTC","XTC_VALOR")	,TamSx3("XTC_VALOR")[1]		,TamSx3("XTC_VALOR")[2],".F.","û","N",""," ","" } )
+
+dbSelectArea("XTC")
+XTC->( dbSetOrder(1) )
+If XTC->( dbSeek(xFilial("XTC") + XTA->XTA_NUM) )
+	While XTC->( !Eof() .And. xFilial("XTC") + XTA->XTA_NUM == XTC->XTC_FILIAL + XTC->XTC_NUM)
+		aAdd(_aColsPgt, Array(Len(_aHeadPgt) + 1))
+		
+		_aColsPgt[Len(_aColsPgt)][1] := XTC->XTC_FORMA
+		_aColsPgt[Len(_aColsPgt)][2] := XTA->XTA_EMISSA
+		_aColsPgt[Len(_aColsPgt)][3] := XTC->XTC_DATA
+		_aColsPgt[Len(_aColsPgt)][4] := XTC->XTC_VALOR
+
+		_aColsPgt[Len(_aColsPgt)][Len(_aHeadPgt) + 1]:= .F.
+		
+		XTC->( dbSkip() )
+	EndDo 
+EndIf 
+
+If Len(_aColsPgt) == 0
+	aAdd(_aColsPgt, Array(Len(_aHeadPgt) + 1))
+		
+	_aColsPgt[Len(_aColsPgt)][1] := CriaVar("XTC_FORMA",.F.)
+	_aColsPgt[Len(_aColsPgt)][2] := CriaVar("XTA_EMISSA",.F.)
+	_aColsPgt[Len(_aColsPgt)][3] := CriaVar("XTC_DATA",.F.)
+	_aColsPgt[Len(_aColsPgt)][4] := CriaVar("XTC_VALOR",.F.)
+
+	_aColsPgt[Len(_aColsPgt)][Len(_aHeadPgt) + 1]:= .F.
+EndIf 
+
 //------------------+
 // Status do Pedido | 
 //------------------+
 _aHeadSta	:= {}
 _aColsSta	:= {}
 
-aAdd(_aHeadSta,{" "				,"WS2LEGEND"	,"@BMP"					,10							,0,""   ,"" ,"C",""," ","" } )
-aAdd(_aHeadSta,{"Status"		,"WS2STATUS"	,"@!"					,TamSx3("WS2_CODSTA")[1]	,0,".F.","û","C",""," ","" } )
-aAdd(_aHeadSta,{"Descricao"		,"WS2DESCRI"	,"@!"					,TamSx3("ZTC_DESCRI")[1]	,0,".F.","û","C",""," ","" } )
-aAdd(_aHeadSta,{"Data"			,"WS2DATA"		,"@D"					,TamSx3("WS2_DATA")[1]		,0,".F.","û","D",""," ","" } )
-aAdd(_aHeadSta,{"Hora "			,"WS2HORA"		,""						,TamSx3("WS2_HORA")[1]		,0,".F.","û","C",""," ","" } )
-//aAdd(_aHeadSta,{"Observacao"	,"WS2OBS"		,""						,TamSx3("WS2_OBS")[1]		,0,".F.","û","M",""," ","" } )
+aAdd(_aHeadSta,{" "				,"XTMLEGEND"	,"@BMP"					,10							,0,""   ,"" ,"C",""," ","" } )
+aAdd(_aHeadSta,{"Status"		,"XTMSTATUS"	,"@!"					,TamSx3("XTM_CODSTA")[1]	,0,".F.","û","C",""," ","" } )
+aAdd(_aHeadSta,{"Descricao"		,"XTMDESCRI"	,"@!"					,TamSx3("ZTC_DESCV3")[1]	,0,".F.","û","C",""," ","" } )
+aAdd(_aHeadSta,{"Data"			,"XTMDATA"		,"@D"					,TamSx3("XTM_DATA")[1]		,0,".F.","û","D",""," ","" } )
+aAdd(_aHeadSta,{"Hora "			,"XTMHORA"		,""						,TamSx3("XTM_HORA")[1]		,0,".F.","û","C",""," ","" } )
+//aAdd(_aHeadSta,{"Observacao"	,"XTMOBS"		,""						,TamSx3("XTM_OBS")[1]		,0,".F.","û","M",""," ","" } )
 
 dbSelectArea("ZTC")
 ZTC->( dbSetOrder(1) )
 
-dbSelectArea("WS2")
-WS2->( dbSetOrder(2) )
-If WS2->( dbSeek(xFilial("WS2") + XTA->XTA_NUM ) )
-	While WS2->( !Eof() .And. xFilial("WS2") + XTA->XTA_NUM == WS2->WS2_FILIAL + WS2->WS2_NUMSL1)
+dbSelectArea("XTM")
+XTM->( dbSetOrder(1) )
+If XTM->( dbSeek(xFilial("XTM") + XTA->XTA_NUMECO ) )
+	While XTM->( !Eof() .And. xFilial("XTM") + XTA->XTA_NUMECO == XTM->XTM_FILIAL + XTM->XTM_IDECOM)
 
-		ZTC->( dbSeek(xFilial("ZTC") + WS2->WS2_CODSTA ) )
+		ZTC->( dbSeek(xFilial("ZTC") + XTM->XTM_CODSTA ) )
 
 		aAdd(_aColsSta, Array(Len(_aHeadSta) + 1))
 		_aColsSta[Len(_aColsSta)][1] := ZTC->ZTC_CORSTA
-		_aColsSta[Len(_aColsSta)][2] := WS2->WS2_CODSTA
-		_aColsSta[Len(_aColsSta)][3] := ZTC->ZTC_DESCRI
-		_aColsSta[Len(_aColsSta)][4] := WS2->WS2_DATA
-		_aColsSta[Len(_aColsSta)][5] := WS2->WS2_HORA
-		//_aColsSta[Len(_aColsSta)][6] := WS2->WS2_OBS
+		_aColsSta[Len(_aColsSta)][2] := XTM->XTM_CODSTA
+		_aColsSta[Len(_aColsSta)][3] := ZTC->ZTC_DESCV3
+		_aColsSta[Len(_aColsSta)][4] := XTM->XTM_DATA
+		_aColsSta[Len(_aColsSta)][5] := XTM->XTM_HORA
+		//_aColsSta[Len(_aColsSta)][6] := XTM->XTM_OBS
 
 		_aColsSta[Len(_aColsSta)][Len(_aHeadSta) + 1]:= .F.
 
-		WS2->( dbSkip() )
+		XTM->( dbSkip() )
 	EndDo
 EndIf
 
@@ -299,11 +347,11 @@ If Len(_aColsSta) == 0
 	aAdd(_aColsSta, Array(Len(_aHeadSta) + 1))
 
 	_aColsSta[Len(_aColsSta)][1] := CriaVar("ZTC_CORSTA",.F.)
-	_aColsSta[Len(_aColsSta)][2] := CriaVar("WS2_CODSTA",.F.)
+	_aColsSta[Len(_aColsSta)][2] := CriaVar("XTM_CODSTA",.F.)
 	_aColsSta[Len(_aColsSta)][3] := CriaVar("ZTC_DESCV3",.F.)
-	_aColsSta[Len(_aColsSta)][4] := CriaVar("WS2_DATA",.F.)
-	_aColsSta[Len(_aColsSta)][5] := CriaVar("WS2_HORA",.F.)
-	_aColsSta[Len(_aColsSta)][6] := CriaVar("WS2_OBS",.F.)
+	_aColsSta[Len(_aColsSta)][4] := CriaVar("XTM_DATA",.F.)
+	_aColsSta[Len(_aColsSta)][5] := CriaVar("XTM_HORA",.F.)
+	_aColsSta[Len(_aColsSta)][6] := CriaVar("XTM_OBS",.F.)
 	
 	_aColsSta[Len(_aColsSta)][Len(_aHeadSta) + 1]:= .F.
 

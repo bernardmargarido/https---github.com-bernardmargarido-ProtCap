@@ -552,28 +552,24 @@ Return cAux
 	@author	Bernard M. Margarido
 	@since		18/02/2016
 	@version	1.00
-	@param			cCodSta		, Codigo do Status 
-	@param			cOrderId	, Numero do Pedido eCommerce
-	@param			cNumOrc		, Numero do Orcamento
 /*/
 /******************************************************************************/
-User Function AEcoStaLog(cCodSta,cOrderId,cNumOrc,dDtaEmiss,cHora)
+User Function AEcoStaLog(cCodSta,cOrderId,dDtaEmiss,cHora)
 	Local aArea			:= GetArea()
 
 	Default dDtaEmiss 	:= dDataBase
 	Default cHora		:= Time() 
 
-	dbSelectArea("WS2")
-	WS2->( dbSetOrder(2) )
-	If !WS2->( dbSeek(xFilial("WS2") + cNumOrc + cCodSta ) )
-		RecLock("WS2",.T.)
-			WS2->WS2_FILIAL := xFilial("WS2")
-			WS2->WS2_NUMECO	:= cOrderId
-			WS2->WS2_NUMSL1	:= cNumOrc
-			WS2->WS2_DATA	:= dDtaEmiss
-			WS2->WS2_HORA	:= cHora
-			WS2->WS2_CODSTA	:= cCodSta
-		WS2->( MsUnLock() )	   	
+	dbSelectArea("XTM")
+	XTM->( dbSetOrder(1) )
+	If !XTM->( dbSeek(xFilial("XTM") + cOrderId + cCodSta ) )
+		RecLock("XTM",.T.)
+			XTM->XTM_FILIAL := xFilial("XTM")
+			XTM->XTM_IDECOM	:= cOrderId
+			XTM->XTM_DATA	:= dDtaEmiss
+			XTM->XTM_HORA	:= cHora
+			XTM->XTM_CODSTA	:= cCodSta
+		XTM->( MsUnLock() )	   	
 	EndIf	
 	RestArea(aArea)
 Return .T.
