@@ -2502,11 +2502,12 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 	Local cCodAuto	:= ""
 	Local cNsuId	:= ""
 	Local cNumCart	:= ""
-	Local cRetMsg	:= ""
 	Local cSemNsu	:= ""
 	Local cTID		:= ""
 	Local cCodAdm	:= ""
 	Local cFormPG	:= ""
+	Local cPayID	:= ""
+	Local cPayName	:= ""
 	Local cPrefixo	:= GetNewPar("EC_PREFIXO","ECO")
 		
 	Local nVlrParc	:= 0
@@ -2557,6 +2558,9 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 					cNsuId		:= ""
 					cTID		:= ""
 					cNumCart	:= ""
+
+					cPayID 		:= oPayMent:Transactions[nTran]:Payments[nPay]:id
+					cPayName 	:= oPayMent:Transactions[nTran]:Payments[nPay]:PaymentSystemName
 
 					cOpera 		:= PadL(oPayMent:Transactions[nTran]:Payments[nPay]:PayMentSystem,nTamOper,"0")
 					nQtdParc	:= oPayMent:Transactions[nTran]:Payments[nPay]:InstallMents	
@@ -2718,7 +2722,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 							XTC->XTC_FORMPG		:= cFormPG
 							XTC->XTC_ADMINI		:= IIF(Empty(cCodAdm),cOpera,cCodAdm)
 							XTC->XTC_NUMCAR		:= cNumCart
-							XTC->XTC_OBS    	:= cRetMsg
+							XTC->XTC_OBS    	:= cPayName
 							XTC->XTC_DATATE		:= dTos(cTod(dDtaEmiss))
 							XTC->XTC_HORATE		:= StrTran(cHoraEmis,":","")
 							XTC->XTC_DOCTEF 	:= cCodAuto
@@ -2728,6 +2732,9 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 							XTC->XTC_PARCTE		:= cPrefixo  
 							XTC->XTC_ITEM   	:= cParcela    
 							XTC->XTC_TID		:= cTID
+							XTC->XTC_PAYID 		:= cPayID
+							XTC->XTC_AUTHID		:= cCodAuto
+							XTC->XTC_NSU   		:= cNsuId
 						XTC->( MsunLock() )
 																
 					Next nParc
@@ -3268,7 +3275,7 @@ Static Function AEcoUpdPv(cOrderId,cOrdPvCli,cNumOrc,cNumDoc,cNumSer,cNumPv,oRes
 	//------------------------+
 	// Grava Status do Pedido |
 	//------------------------+
-	u_AEcoStaLog(ZTC->ZTC_ORDEM,cOrderId,cNumOrc,dDataBase,Time())
+	u_AEcoStaLog(ZTC->ZTC_ORDEM,cOrderId,dDataBase,Time())
 
 	//---------------------------+
 	// Atualiza status ecommerce |
@@ -3592,7 +3599,7 @@ Static Function AEcoGrvXTM(cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 
 	If (cAlias)->( Eof() )
-		U_AEcoStaLog(cStatus,cOrderId,cTod(dDtaEmiss),cHoraEmis)
+		U_AEcoStaLog(cStatus,cOrderId,dDtaEmiss,cHoraEmis)
 		(cAlias)->( dbCloseArea() )
 	Else
 		 (cAlias)->( dbCloseArea() )
@@ -3603,20 +3610,10 @@ Return aRet
 
 /**************************************************************************************************/
 /*/{Protheus.doc} RetPrcUni
-
-@description	Converte para decimal
-
-@author			Bernard M.Margarido
-@version   		1.00
-@since     		10/02/2016
-
-@param			cNumOrc		, Numero do Orçamento 
-@param			cOrderId	, Numero OrderId e-Commerce	
-@param			nPedStatus	, Codigo do Status do Pedido
-@param			dDtaEmiss	, Data de Emissao
-@param			cHoraEmis	, Hora da Emissao
-
-@return			aRet		- Array aRet[1] - Logico aRet[2] - Codigo Erro aRet[3] - Descricao do Erro  
+	@description	Converte para decimal
+	@author			Bernard M.Margarido
+	@version   		1.00
+	@since     		10/02/2016
 /*/
 /**************************************************************************************************/
 Static Function RetPrcUni(nVlrUnit)
