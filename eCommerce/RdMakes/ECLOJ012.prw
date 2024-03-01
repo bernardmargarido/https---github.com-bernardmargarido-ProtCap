@@ -150,7 +150,7 @@ Local _cAuthID      := ""
 
 Local _nValDesc     := 0
 Local _nItem        := 0
-Local _nDecIt	    := TamSx3("UB_VLRITE")[2]
+Local _nDecIt	    := TamSx3("C6_VALOR")[2]
 
 Private lMsErroAuto := .F.
 Private lAutomatoX  := .T.
