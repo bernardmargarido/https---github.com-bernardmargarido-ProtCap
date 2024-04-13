@@ -104,6 +104,7 @@ Local cXmlHead 	 	:= ""
 Local cError    	:= ""
 
 Local nTimeOut		:= 240
+Local _nHttpSta 	:= 0 
 
 Local _lBloqueio	:= GetNewPar("EC_BLSMSG",.F.)
 
@@ -119,9 +120,9 @@ EndIf
 //-------------------------------+
 // Pocisiona Pedido de eCommerce |
 //-------------------------------+
-dbSelectArea("WSA")
-WSA->( dbSetOrder(1) )
-If !WSA->( dbSeek(xFilial("WSA") + cNumOrc) )
+dbSelectArea("XTA")
+XTA->( dbSetOrder(1) )
+If !XTA->( dbSeek(xFilial("XTA") + cNumOrc) )
 	aRet[1] := .F.
 	aRet[2] :=  cNumOrc
 	aRet[3]	:= "NAO FOI POSSIVEL ATUALIZAR STATUS DO PEDIDO " + cNumOrc + ". PEDIDO NAO ENCONTRADO NO PROTHEUS."
@@ -135,21 +136,22 @@ aAdd(aHeadOut,"X-VTEX-API-AppKey:" + cAppKey )
 aAdd(aHeadOut,"X-VTEX-API-AppToken:" + cAppToken )
 
 If lCancel
-	cHtmlPage :=  HttpPost(cUrl + "/api/oms/pvt/orders/" + RTrim(WSA->WSA_NUMECO) + "/cancel/?an=" + _cVtexName + "","","",nTimeOut,aHeadOut,@cXmlHead)
+	cHtmlPage := HttpPost(cUrl + "/api/oms/pvt/orders/" + RTrim(XTA->XTA_NUMECO) + "/cancel/?an=" + _cVtexName + "","","",nTimeOut,aHeadOut,@cXmlHead)
 Else
-	cHtmlPage :=  HttpPost(cUrl + "/api/oms/pvt/orders/" + RTrim(WSA->WSA_NUMECO) + "/start-handling/?an=" + _cVtexName + "","","",nTimeOut,aHeadOut,@cXmlHead)
-EndIf	 
-	
-If HTTPGetStatus() == 200 .Or. Empty(cHtmlPage)
+	cHtmlPage := HttpPost(cUrl + "/api/oms/pvt/orders/" + RTrim(XTA->XTA_NUMECO) + "/start-handling/?an=" + _cVtexName + "","","",nTimeOut,aHeadOut,@cXmlHead)
+EndIf
 
-	RecLock("WSA",.F.)
-		WSA->WSA_VLBXPV := "2"
-	WSA->( MsUnLock() )	
+_nHttpSta := HTTPGetStatus()
+If _nHttpSta == 200 .Or. Empty(cHtmlPage)
+
+	RecLock("XTA",.F.)
+		XTA->XTA_VLBXPV := "2"
+	XTA->( MsUnLock() )	
 	
 	aRet[1] := .T.
-	aRet[2] := WSA->WSA_NUM
-	aRet[3] := "ALTERACAO DE STATUS DO PEDIDO " + WSA->WSA_NUM + " ENVIADO COM SUCESSO."
-	LogExec("ALTERACAO DE STATUS DO PEDIDO " + WSA->WSA_NUM + " ENVIADO COM SUCESSO.")
+	aRet[2] := XTA->XTA_NUM
+	aRet[3] := "ALTERACAO DE STATUS DO PEDIDO " + XTA->XTA_NUM + " ENVIADO COM SUCESSO."
+	LogExec("ALTERACAO DE STATUS DO PEDIDO " + XTA->XTA_NUM + " ENVIADO COM SUCESSO.")
 	
 Else
 
@@ -158,9 +160,9 @@ Else
 	EndIf
 	
 	aRet[1] := .F.
-	aRet[2] := WSA->WSA_NUM
-	aRet[3] := "ERRO AO ENVIAR A ALTERACAI DE STATUS DO PEDIDO " + WSA->WSA_NUM + " " + cError
-	LogExec("ALTERACAO DE STATUS DO PEDIDO " + WSA->WSA_NUM + " ENVIADO COM SUCESSO.")
+	aRet[2] := XTA->XTA_NUM
+	aRet[3] := "ERRO AO ENVIAR A ALTERACAI DE STATUS DO PEDIDO " + XTA->XTA_NUM + " " + cError
+	LogExec("ALTERACAO DE STATUS DO PEDIDO " + XTA->XTA_NUM + " ENVIADO COM SUCESSO.")
 	
 	aAdd(aMsgErro,{aRet[2],aRet[3]})
 		

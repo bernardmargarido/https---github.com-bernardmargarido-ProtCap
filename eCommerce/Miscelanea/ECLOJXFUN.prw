@@ -434,6 +434,13 @@ If XTA->( dbSeek(xFilial("XTA") + PadR(_cOrderId,_nTOrderId)) )
 	XTA->( MsUnLock() )
 EndIf
 
+//------------------+
+// Grava status TGV |
+//------------------+
+If !Empty(XTA->XTA_NUMSUA)
+	U_EcStaSUA(XTA->XTA_NUMSUA,ZTC->ZTC_SIGLA)
+EndIf 
+
 //------------------------+
 // Grava Status do Pedido |
 //------------------------+
@@ -481,7 +488,8 @@ Return nPerDesc
 User Function EcVldNF(_cDoc,_cSerie,_cOrderId)
 Local _aArea	:= GetArea()
 
-Local _cCodSta	:= "005"
+Local _cCodSta	:= "010"
+Local _cEnvLog 	:= "3"
 
 //-------------------------------+
 // Atualiza dados da nota fiscal |
@@ -494,7 +502,7 @@ If !SF2->( dbSeek(xFilial("SF2") + _cDoc + _cSerie ) )
 EndIf
 
 RecLock("SF2",.F.)
-	SF2->F2_XNUMECO := _cOrderId
+	SF2->F2_XIDVTV3 := _cOrderId
 SF2->( MsUnLock() )	 
 
 //-------------------------------+
@@ -509,10 +517,7 @@ ZTC->( dbSeek(xFilial("ZTC") + _cCodSta) )
 //-------------------------------------+
 dbSelectArea("XTA")
 XTA->( dbSetOrder(2) )
-If XTA->( dbSeek(xFilial("XTA") +_cOrderId) )
-	_cCodSta := "005"
-	_cEnvLog := "3"
-
+If XTA->( dbSeek(xFilial("XTA") + _cOrderId) )
 	RecLock("XTA",.F.)
 		XTA->XTA_DOC	:= _cDoc
 		XTA->XTA_SERIE	:= _cSerie
@@ -521,6 +526,11 @@ If XTA->( dbSeek(xFilial("XTA") +_cOrderId) )
 		XTA->XTA_ENVLOG	:= _cEnvLog
 	XTA->( MsUnlock() )
 EndIf
+
+//------------------+
+// Grava status TGV |
+//------------------+
+U_EcStaSUA(XTA->XTA_NUMSUA,ZTC->ZTC_SIGLA)
 
 //------------------------+
 // Grava Status do Pedido |
@@ -538,3 +548,29 @@ EndIf
 
 RestArea(_aArea)
 Return .T.
+
+/*********************************************************************************/
+/*/{Protheus.doc} EcStaSUA
+	@description Atualiza status TGV
+	@type  Function
+	@author Bernard M Margarido
+	@since 02/04/2024
+	@version version
+/*/
+/*********************************************************************************/
+User Function EcStaSUA(_cNumOrc,_cSigla)
+Local _aArea	:= GetArea()
+
+//----------------------------+
+// SUA - Posiciona orçamentos |
+//----------------------------+
+dbSelectArea("SUA")
+SUA->( dbSetOrder(1) )
+If SUA->( dbSeek(xFilial("SUA") + _cNumOrc) )
+	RecLock("SUA",.F.)
+		SUA->UA_XSTATUS := _cSigla
+	SUA->( MsUnLock() )
+EndIf 
+
+RestArea(_aArea)
+Return Nil 

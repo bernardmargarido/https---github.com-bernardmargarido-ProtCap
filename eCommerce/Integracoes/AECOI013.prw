@@ -125,7 +125,7 @@ Local _cXmlNF	:= ""
 Local nIdSku	:= 0
 Local _nVlrTotal:= 0
 Local _nVolume	:= 0
-Local _nTOrc	:= TamSx3("WSA_NUM")[1]
+Local _nTOrc	:= TamSx3("XTA_NUM")[1]
 
 Local _oJson	:= Nil
 Local _oItens	:= Nil
@@ -133,9 +133,9 @@ Local _oItens	:= Nil
 //---------------------+
 // Posiciona Orçamento |
 //---------------------+
-dbSelectArea("WSA")
-WSA->( dbSetOrder(1) )
-If !WSA->( dbSeek(xFilial("WSA") + PadR(cNumOrc,_nTOrc)) )
+dbSelectArea("XTA")
+XTA->( dbSetOrder(1) )
+If !XTA->( dbSeek(xFilial("XTA") + PadR(cNumOrc,_nTOrc)) )
 	LogExec("<< AECOI013 >> - ORCAMENTO " + cNumOrc + " NAO LOCALIZADO." )
 	RestArea(aArea)
 	Return .F.
@@ -144,17 +144,17 @@ EndIf
 //----------------------------------+
 // Consulta Data de Emissao da Nota |
 //----------------------------------+
-aEcoI13DtaE(WSA->WSA_DOC,WSA->WSA_SERIE,WSA->WSA_CLIENT,WSA->WSA_LOJA,@cChaveNfe,@_cXmlNF,@dDtaEmiss,@_nVlrTotal,@cCfop,@_nVolume)
+aEcoI13DtaE(XTA->XTA_DOC,XTA->XTA_SERIE,XTA->XTA_CLIENT,XTA->XTA_LOJA,@cChaveNfe,@_cXmlNF,@dDtaEmiss,@_nVlrTotal,@cCfop,@_nVolume)
 
-cOrderID	:= RTrim(WSA->WSA_NUMECO)
-cTracking 	:= Rtrim(WSA->WSA_TRACKI)
-cNumTransp	:= WSA->WSA_TRANSP
+cOrderID	:= RTrim(XTA->XTA_NUMECO)
+cTracking 	:= Rtrim(XTA->XTA_TRACKI)
+cNumTransp	:= XTA->XTA_TRANSP
 
 //------------------+
 // Valida se é DLog |
 //------------------+
 If Rtrim(cNumTransp) $ RTrim(_cCodDLog)
-	aEcoI13Url(WSA->WSA_NUMECO,@cUrlTrack,@cTracking)
+	aEcoI13Url(XTA->XTA_NUMECO,@cUrlTrack,@cTracking)
 EndIf
 //-----------------------+
 // Monta String API Rest |
@@ -162,7 +162,7 @@ EndIf
 _oJson					:= {}        
 _oJson					:= Array(#)	
 _oJson[#"type"]			:= "Output"
-_oJson[#"invoiceNumber"]:= RTrim(WSA->WSA_DOC) + "-" + RTrim(WSA->WSA_SERIE)
+_oJson[#"invoiceNumber"]:= RTrim(XTA->XTA_DOC) + "-" + RTrim(XTA->XTA_SERIE)
 
 //------------+
 // Chave NF-e |
@@ -171,8 +171,8 @@ If !Empty(cChaveNfe)
 	_oJson[#"invoiceKey"]	:= cChaveNfe
 EndIf
 
-If Empty(cTracking) .And. At('Shopee',WSA->WSA_NUMECO) > 0 
-	cTracking := RTrim(WSA->WSA_DOC) + RTrim(WSA->WSA_SERIE)
+If Empty(cTracking) .And. At('Shopee',XTA->XTA_NUMECO) > 0 
+	cTracking := RTrim(XTA->XTA_DOC) + RTrim(XTA->XTA_SERIE)
 EndIf 
 
 _oJson[#"courier"]			:= cNumTransp
@@ -185,9 +185,9 @@ _oJson[#"embeddedInvoice"]	:= StrTran(_cXmlNF,'"',"'")
 //-------------------------+
 _oJson[#"items"]	:= {}
 
-WSB->( dbSetOrder(1) )
-WSB->( dbSeek(xFilial("WSB") + WSA->WSA_NUM ) )
-While WSB->( !Eof() .And. xFilial("WSB") + WSA->WSA_NUM == WSB->WSB_FILIAL + WSB->WSB_NUM )
+XTB->( dbSetOrder(1) )
+XTB->( dbSeek(xFilial("XTB") + XTA->XTA_NUM ) )
+While XTB->( !Eof() .And. xFilial("XTB") + XTA->XTA_NUM == XTB->XTB_FILIAL + XTB->XTB_NUM )
 
 	aAdd(_oJson[#"items"],Array(#))
 	_oItens				:= aTail(_oJson[#"items"])   
@@ -195,16 +195,16 @@ While WSB->( !Eof() .And. xFilial("WSB") + WSA->WSA_NUM == WSB->WSB_FILIAL + WSB
 	//------------------------------------------+
 	// Posiciona Porduto para pegar codigo Vtex |
 	//------------------------------------------+
-	aEcoI013Sku(WSA->WSA_IDLOJA,WSB->WSB_PRODUT,@nIdSku)
+	aEcoI013Sku(XTA->XTA_IDLOJA,XTB->XTB_PRODUT,@nIdSku)
 	
-	cQuant := Alltrim(Str(Int(WSB->WSB_QUANT)))
-	cPrcVen:= cValToChar(RetPrcUni(WSB->WSB_VRUNIT))
+	cQuant := Alltrim(Str(Int(XTB->XTB_QUANT)))
+	cPrcVen:= cValToChar(RetPrcUni(XTB->XTB_VRUNIT))
 
-	_oItens[#"id"]			:= 	IIF(Empty(WSB->WSB_KIT),Alltrim(Str(nIdSku)),RTrim(WSB->WSB_KIT))
+	_oItens[#"id"]			:= 	IIF(Empty(XTB->XTB_KIT),Alltrim(Str(nIdSku)),RTrim(XTB->XTB_KIT))
 	_oItens[#"quantity"]	:= 	cQuant
 	_oItens[#"price"]		:= 	cPrcVen
 		
-	WSB->( dbSkip() )   
+	XTB->( dbSkip() )   
 	
 EndDo
 
@@ -231,7 +231,7 @@ cRest := xToJson(_oJson)
 //---------------+
 // Envia Invoice |
 //---------------+ 
-aRet := AEcoI13Inv(WSA->WSA_DOC,WSA->WSA_SERIE,cOrderID,cRest,cUrl,cAppKey,cAppToken)
+aRet := AEcoI13Inv(XTA->XTA_DOC,XTA->XTA_SERIE,cOrderID,cRest,cUrl,cAppKey,cAppToken)
 
 RestArea(aArea)
 Return aRet[1]
@@ -339,6 +339,7 @@ Local aRet			:= {.T.,"",""}
 //Local cAppToken	:= GetNewPar("EC_APPTOKE")
 
 Local nTimeOut		:= 240
+Local _nHttpSta		:= 0
 
 Local aHeadOut  	:= {}
 Local cXmlHead 	 	:= ""     
@@ -354,9 +355,10 @@ aAdd(aHeadOut,"Content-Type: application/json" )
 aAdd(aHeadOut,"X-VTEX-API-AppKey:" + cAppKey )
 aAdd(aHeadOut,"X-VTEX-API-AppToken:" + cAppToken ) 
                      
-cRetPost := HttpPost(cUrl + "/api/oms/pvt/orders/" + Alltrim(cOrderID) + "/invoice","",cRest,nTimeOut,aHeadOut,@cXmlHead) 
+cRetPost	:= HttpPost(cUrl + "/api/oms/pvt/orders/" + Alltrim(cOrderID) + "/invoice","",cRest,nTimeOut,aHeadOut,@cXmlHead) 
+_nHttpSta 	:= HTTPGetStatus()
 
-If HTTPGetStatus() == 200 
+If _nHttpSta == 200 
 	If FWJsonDeserialize(cRetPost,@oXmlRet)
 		If ValType(oXmlRet) == "O"	
 			aRet[1] := .T.

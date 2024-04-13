@@ -358,7 +358,9 @@ Local _cLinha			:= ""
 Local _cCompEnd 		:= ""
 Local _cCompEnt 		:= ""
 Local _cProfVtex 		:= ""
-Local _cCMunDef			:= GetNewPar("EC_CMUNDE","99999")
+Local _cCodVen 			:= GetMV("VT_VTEXVND")
+Local _cCondPG  		:= SuperGetMV("VT_COND",,"003")
+//Local _cCMunDef			:= GetNewPar("EC_CMUNDE","99999")
 
 Local aCliente  		:= {} 
 
@@ -512,6 +514,7 @@ If Len(aEndEnt) > 0
 	cCepE		:= aEndEnt[CEP]
 	cEstE		:= aEndEnt[ESTADO]
 	_cCompEnt	:= aEndEnt[COMPLE]
+	_cCodMunE	:= aEndEnt[IBGE]
 ElseIf Len(aEndRes) > 0
 	cEndE		:= aEndRes[ENDERE]
 	cNumEndE	:= aEndRes[NUMERO]
@@ -520,6 +523,7 @@ ElseIf Len(aEndRes) > 0
 	cCepE		:= aEndRes[CEP]
 	cEstE		:= aEndRes[ESTADO]
 	_cCompEnt	:= aEndRes[COMPLE]
+	_cCodMunE	:= aEndRes[IBGE]
 EndIf
 
 //--------------------------------------+
@@ -564,11 +568,15 @@ aAdd(aCliente ,	{"A1_MUNE"		,	_cMunEnt								,	Nil	})
 aAdd(aCliente ,	{"A1_BAIRROE"	,	_cBairroE								,	Nil	})
 aAdd(aCliente ,	{"A1_CEPE"		,	cCepE									,	Nil	})
 aAdd(aCliente ,	{"A1_COMPENT"	,	_cCompEnt								,	Nil	})
+aAdd(aCliente ,	{"A1_XCDMUNE"	,	_cCodMunE								,	Nil	})
 aAdd(aCliente ,	{"A1_XENDCOM"	,	_cEndFat								,	Nil	})
 aAdd(aCliente ,	{"A1_XBAIRRC"	,	_cBairroF								,	Nil	})
 aAdd(aCliente ,	{"A1_XMUNCOM"	,	_cMunFat								,	Nil	})
 aAdd(aCliente ,	{"A1_XESTCOM"	,	cEst									,	Nil	})
 aAdd(aCliente ,	{"A1_XCEPCOM"	,	cCep									,	Nil	})
+
+aAdd(aCliente ,	{"A1_VEND"		,	_cCodVen								,	Nil	})
+aAdd(aCliente ,	{"A1_COND"		,	_cCondPG								,	Nil	})
 aAdd(aCliente ,	{"A1_TIPO"		,	cTipoCli								,	Nil	})
 aAdd(aCliente ,	{"A1_DDD"		,	cDdd01									,	Nil	})
 aAdd(aCliente ,	{"A1_TEL"		,	cTel01									,	Nil	})
@@ -740,10 +748,12 @@ If Len(aCliente) > 0
 		//------------------------------------+
 		// Envia e-Mail com erro de municipio |
 		//------------------------------------+	
+		/*
 		If Rtrim(cCodMun) == RTrim(_cCMunDef)
 			u_AEcMailC(cCodInt,cDescInt,cCnpj,cNomeCli)
 		EndIf
-		
+		*/
+
 		//---------------------+
 		// Variavel de retorno |
 		//---------------------+
@@ -1208,7 +1218,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	// Valida o Id de Postagem |
 	//-------------------------+
 	If ValType(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId) <> "U"
-		AEcoI11IP(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId,cCodAfili,@cCodTransp,@cIdPost,@_cIdServ)
+		AEcoI11IP(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:CourierId,cCodAfili,cCodCli,cLojaCli,@cCodTransp,@cIdPost,@_cIdServ)
 	ElseIf ValType(oRestPv:ShippingData:LogisticsInfo[1]:DeliveryIds[1]:courierName) ==  "vtex:fob_1"
 		cCodTransp 	:= ""
 		cIdPost		:= ""
@@ -1287,7 +1297,7 @@ Static Function AEcoGrvPv(cOrderId,oRestPv,aEndRes,aEndCob,aEndEnt,_cLojaID)
 	//------------------+
 	// Atualiza Status  |
 	//------------------+
-	aRet := AEcoGrvXTM(cOrderId,cPedStatus,dDtaEmiss,cHoraEmis)
+	aRet := AEcoGrvXTM(cOrderId,cPedStatus,dDataBase,cHoraEmis)
 
 	If !aRet[1]
 		RestArea(aArea)
@@ -2470,6 +2480,7 @@ Static Function AEcoGrvCab(	cNumOrc,cOrderId,cCodCli,cLojaCli,cTipoCli,cVendedor
 		XTA->XTA_REFEN		:= cEndRef 
 		XTA->XTA_IDENDE		:= cIdEnd
 		XTA->XTA_SERPOS		:= _cIdServ
+		XTA->XTA_ENVLOG 	:= "1"
 		If XTA->( FieldPos("XTA_IDLOJA") > 0 )
 			XTA->XTA_IDLOJA		:= _cLojaID
 			XTA->XTA_DESLOJ		:= _cDescLoja
@@ -2561,7 +2572,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 
 					cPayID 		:= oPayMent:Transactions[nTran]:Payments[nPay]:id
 					cPayName 	:= oPayMent:Transactions[nTran]:Payments[nPay]:PaymentSystemName
-
+					cPaySys 	:= oPayMent:Transactions[nTran]:Payments[nPay]:PayMentSystem
 					cOpera 		:= PadL(oPayMent:Transactions[nTran]:Payments[nPay]:PayMentSystem,nTamOper,"0")
 					nQtdParc	:= oPayMent:Transactions[nTran]:Payments[nPay]:InstallMents	
 					nVlrTotal	:= RetPrcUni(oPayMent:Transactions[nTran]:Payments[nPay]:Value)
@@ -2735,6 +2746,7 @@ Static Function AEcoGrvFin(oPayment,oRestPv,cNumOrc,cOrderId,cPedCodCli,cHoraEmi
 							XTC->XTC_PAYID 		:= cPayID
 							XTC->XTC_AUTHID		:= cCodAuto
 							XTC->XTC_NSU   		:= cNsuId
+							XTC->XTC_PAYSYS		:= cPaySys
 						XTC->( MsunLock() )
 																
 					Next nParc
@@ -3633,13 +3645,15 @@ Return nValor
 	@type function
 /*/
 /*******************************************************************************/
-Static Function AEcoI11IP(cIdTran,cCodAfili,cCodTransp,cIdPost,_cIdServ)
+Static Function AEcoI11IP(cIdTran,cCodAfili,cCodCli,cLojaCli,cCodTransp,cIdPost,_cIdServ)
 
 If Empty(cIdPost)
 	AEcoI11TR(cIdTran,@cCodTransp,@_cIdServ)
-Else
-	cCodTransp	:= GetNewPar("EC_TRANSP","000001")
 EndIf	
+
+If Empty(cIdPost) .Or. Empty(cCodTransp)
+	AEcoI11TRC(cCodCli,cLojaCli,@cCodTransp)
+EndIf 
 
 Return .T. 
 
@@ -3693,6 +3707,38 @@ _cIdServ	:= ""
 (cAlias)->( dbCloseArea() )
 
 Return .T. 
+
+/*******************************************************************************************/
+/*/{Protheus.doc} AEcoI11TRC
+	@description Regra para codigo transportadora
+	@type  Static Function
+	@author Bernard M Margarido
+	@since 02/04/2024
+	@version version
+/*/
+/*******************************************************************************************/
+Static Function AEcoI11TRC(cCodCli,cLojaCli,cCodTransp)
+Local aAreaAtu 	 := GetArea()
+Local cUF		 := ""
+Local cCodMun 	 := ""
+
+SA1->( dbSetOrder(1) )
+If SA1->( dbSeek(xFilial("SA1")+SA1->A1_COD+SA1->A1_LOJA) )
+
+	CC2->( dbSetOrder(1) )
+	If CC2->( dbSeek(xFilial("CC2")+ SA1->A1_ESTE + SA1->A1_XCDMUNE) )
+		cUF		:= SA1->A1_ESTE
+		cCodMun := SA1->A1_XCDMUNE
+	Else
+		cUF		:= SA1->A1_ESTE
+		cCodMun := POSICIONE("CC2", 4, xFilial("CC2") + SA1->A1_ESTE + SA1->A1_MUNE,"CC2_CODMUN")
+	EndIf
+
+	cCodTransp := U_AA080RTR(cUF, cCodMun)
+EndIf
+
+RestArea(aAreaAtu)	
+Return Nil
 
 /*******************************************************************************************/
 /*/{Protheus.doc} aEcoI011Entr

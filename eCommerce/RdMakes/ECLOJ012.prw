@@ -128,7 +128,6 @@ Local _aArea        := GetArea()
 Local _aCabec       := {}
 Local _aItem        := {}
 Local _aItems       := {}
-Local _aRefImpos	:= {} 
 
 Local _cNumLJ       := ""
 Local _cOperador    := "000499"
@@ -147,10 +146,11 @@ Local _cTID         := ""
 Local _cBandeira    := ""
 Local  _cPayID      := ""
 Local _cAuthID      := ""
+Local _cOBS         := ""
 
 Local _nValDesc     := 0
 Local _nItem        := 0
-Local _nDecIt	    := TamSx3("C6_VALOR")[2]
+Local _nParcela     := 0 
 
 Private lMsErroAuto := .F.
 Private lAutomatoX  := .T.
@@ -200,12 +200,6 @@ EndIf
 //----------------------------+
 EcLoj012A(XTA->XTA_IDENDE,@_cCodCont,@_cDescCont)
 
-//------------------------+
-// Inicia Funções Fiscais |
-//------------------------+
-MaFisEnd()
-MaFisIni(SA1->A1_COD,SA1->A1_LOJA,"C","N",SA1->A1_TIPO,_aRefImpos,Nil,Nil,Nil,"MATA461",Nil,Nil,Nil,Nil,Nil,Nil)
-
 //----------------------------------+
 // Numero do Orçamento no Siga Loja |
 //----------------------------------+
@@ -232,26 +226,6 @@ While XTB->( !Eof() .And. xFilial("XTB") + XTA->XTA_NUM == XTB->XTB_FILIAL + XTB
     _aItem      := {}
     _nValDesc   := 0 //Max((XTB->XTB_PRCTAB -  XTB->XTB_VRUNIT  ) * XTB->XTB_QUANT ,0)
     _nItem++
-    //----------------------------------------+
-    // Adiciona Produto para calculos fiscais |
-    //----------------------------------------+
-    MaFisAdd(   XTB->XTB_PRODUT,;
-                XTB->XTB_TES,;
-                XTB->XTB_QUANT,;
-                XTB->XTB_VRUNIT,;
-                XTB->XTB_VALDES,;
-                "",;
-                "",;
-                0,;
-                0,;
-                0,;
-                0,;
-                0,;
-                Round(XTB->XTB_QUANT * XTB->XTB_VRUNIT,_nDecIt),;
-                0,;				   					
-                SB1->( Recno() ),;                  
-                SF4->( Recno() ),;                  
-                XTB->XTB_ITEM)
 
     aAdd( _aItem, {"UB_FILIAL"	, XTB->XTB_FILIAL										, Nil })
     aAdd( _aItem, {"UB_NUM"	    , _cNumLJ       										, Nil })
@@ -266,26 +240,6 @@ While XTB->( !Eof() .And. xFilial("XTB") + XTA->XTA_NUM == XTB->XTB_FILIAL + XTB
 	aAdd( _aItem, {"UB_LOCAL"   , XTB->XTB_LOCAL       			    				    , Nil })
     aAdd( _aItem, {"UB_PRCTAB"	, XTB->XTB_VRUNIT										, Nil })
     aAdd( _aItem, {"UB_DTENTRE"	, XTB->XTB_FDTENT										, Nil })
-    aAdd( _aItem, {"UB_XBASIPI"	, MaFisRet(_nItem,"IT_BASEIPI")   						, Nil })
-    aAdd( _aItem, {"UB_XIPI"	, MaFisRet(_nItem,"IT_VALIPI")	    					, Nil })   
-    aAdd( _aItem, {"UB_XVALIPI"	, MaFisRet(_nItem,"IT_VALIPI")  						, Nil })
-    aAdd( _aItem, {"UB_BASEICM"	, MaFisRet(_nItem,"IT_BASEICM")							, Nil })
-    aAdd( _aItem, {"UB_XALQICM"	, MaFisRet(_nItem,"IT_ALIQICM")		    				, Nil })
-    aAdd( _aItem, {"UB_XVALICM"	, MaFisRet(_nItem,"IT_VALICM")  						, Nil })
-    aAdd( _aItem, {"UB_XVALPIS"	, MaFisRet(_nItem,"IT_VALPS2")	    					, Nil })
-    aAdd( _aItem, {"UB_XVALCOF"	, MaFisRet(_nItem,"IT_VALCF2")  	    				, Nil })
-    aAdd( _aItem, {"UB_XBASPCC"	, MaFisRet(_nItem,"IT_BASECF2")   						, Nil })
-    aAdd( _aItem, {"UB_XALQPS2"	, MaFisRet(_nItem,"IT_ALIQPS2")   						, Nil })
-    aAdd( _aItem, {"UB_XALQCF2"	, MaFisRet(_nItem,"IT_ALIQCF2")							, Nil })
-    aAdd( _aItem, {"UB_XVALCMP"	, MaFisRet(_nItem,"IT_VALCMP")	    					, Nil })
-    aAdd( _aItem, {"UB_XDIFAL"	, MaFisRet(_nItem,"IT_DIFAL")		    				, Nil }) 
-    aAdd( _aItem, {"UB_XVFCPDI"	, MaFisRet(_nItem,'IT_VFCPDIF')		    				, Nil })
-    aAdd( _aItem, {"UB_XBASDES"	, MaFisRet(_nItem,'IT_BASEDES')							, Nil })
-    aAdd( _aItem, {"UB_XALQCMP"	, MaFisRet(_nItem,"IT_ALIQCMP")						    , Nil })
-    aAdd( _aItem, {"UB_XALFCMP"	, MaFisRet(_nItem,"IT_ALFCCMP")							, Nil })
-    aAdd( _aItem, {"UB_XREDICM"	, MaFisRet(_nItem,"IT_PREDST")							, Nil })
-    aAdd( _aItem, {"UB_XBASSOL"	, MaFisRet(_nItem,"IT_BASESOL")						    , Nil })
-    aAdd( _aItem, {"UB_XVALSOL"	, MaFisRet(_nItem,"IT_VALSOL")							, Nil })
     
     aAdd(_aItems,_aItem)
 
@@ -317,6 +271,8 @@ _cBandeira  := RTrim(XTC->XTC_OBS)
 _cPayID     := RTrim(XTC->XTC_PAYID)
 _cAuthID    := RTrim(XTC->XTC_AUTHID)
 _cNSUTef    := RTrim(XTC->XTC_NSU)
+_cOBS       := "Pedido Ecommerce: "+ XTA->XTA_NUMECO
+_nParcela   := XTA->XTA_PARCEL
 
 //-----------+
 // Cabeçalho |
@@ -336,7 +292,8 @@ aAdd( _aCabec,	{"UA_OPER"		, _cOper										        , Nil })
 aAdd( _aCabec,	{"UA_EMISSAO"	, XTA->XTA_EMISSA 								        , Nil })
 aAdd( _aCabec,	{"UA_TMK"	    , _cTMK            								        , Nil })
 aAdd( _aCabec,	{"UA_FORMPG"	, _cFormPG      								        , Nil })
-aAdd( _aCabec,	{"UA_TPFRETE"	, IIF(XTA->XTA_FRETE > 0 ,"C","F")  			        , Nil })
+aAdd( _aCabec,	{"UA_PARCELA"	, _nParcela      								        , Nil })
+aAdd( _aCabec,	{"UA_TPFRETE"	, "C"                                                   , Nil })
 aAdd( _aCabec,	{"UA_FRETE"		, XTA->XTA_FRETE    							        , Nil })
 aAdd( _aCabec,	{"UA_ENDCOB"	, SA1->A1_ENDCOB   								        , Nil })
 aAdd( _aCabec,	{"UA_BAIRROC"	, SA1->A1_BAIRROC  								        , Nil })
@@ -371,33 +328,11 @@ aAdd( _aCabec,	{"UA_XDTA"	    , "200"         							            , Nil })
 aAdd( _aCabec,	{"UA_XDTAM"	    , "A"            							            , Nil })
 aAdd( _aCabec,  {"UA_DESPESA"	, XTA->XTA_DESPES					                    , Nil })
 aAdd( _aCabec,  {"UA_XTIPO"	    , _cTipo					                            , Nil })
-aAdd( _aCabec,  {"UA_VALICM"	, MaFisRet(,"NF_VALICM")	                            , Nil }) 
-aAdd( _aCabec,  {"UA_VALISS"	, MaFisRet(,"NF_VALISS")	                            , Nil }) 
-aAdd( _aCabec,  {"UA_VALIPI"	, MaFisRet(,"NF_VALIPI")	                            , Nil }) 
-aAdd( _aCabec,  {"UA_XVALCMP"	, MaFisRet(,"NF_VALCMP")	                            , Nil })
-aAdd( _aCabec,  {"UA_XDIFAL"	, MaFisRet(,"NF_DIFAL")		                            , Nil }) 
-aAdd( _aCabec,  {"UA_XVFCPDI"	, MaFisRet(,"NF_VFCPDIF")	                            , Nil })
-aAdd( _aCabec,  {"UA_XBASSOL"	, MaFisRet(,"NF_BASESOL" )	                            , Nil })
-aAdd( _aCabec,  {"UA_XVALSOL"	, MaFisRet(,"NF_VALSOL" )	                            , Nil })
-aAdd( _aCabec,  {"UA_VALMERC"	, MaFisRet(,"NF_VALMERC")	                            , Nil })
-aAdd( _aCabec,  {"UA_VLRLIQ"	, MaFisRet(,"NF_VALMERC") + XTA->XTA_FRETE              , Nil })
+aAdd( _aCabec,  {"UA_XCDMUNE"	, SA1->A1_COD_MUN			                            , Nil })
 aAdd( _aCabec,	{"UA_VEND"		, XTA->XTA_VEND				                            , Nil })
-aAdd( _aCabec,	{"UA_INICIO"	, Time()    				                            , Nil })
-aAdd( _aCabec,	{"UA_FIM"		, Time()    				                            , Nil })
-aAdd( _aCabec,	{"UA_STATUS"	, "   "    				                                , "AllwaysTrue()" })
+aAdd( _aCabec,	{"UA_INDPRES"	, "2"       				                            , Nil })
 
-//UA_DIASDAT 
-//UA_HORADAT
-//UA_VALBRUT
-//UA_DTLIM 
-//UA_PARCELA
-//UA_MOEDA
-//UA_XPEDMIN
-//UA_XTIPOPV 
-//UA_XCUSTO
-//UA_XVLRLIQ
-//UA_XDEPVEN
-
+//aAdd( _aCabec,	{"UA_STATUS"	, "   "    				                                , "AllwaysTrue()" })
 
 //------------------------+
 // Processa ExecAuto Loja |
@@ -441,75 +376,50 @@ If Len(_aCabec) > 0 .And. Len(_aItems) > 0
         //----------------------+
         ConfirmSx8()
 
+        //--------------------------+
+        // Atualiza dados orçamento |
+        //--------------------------+
+        dbSelectArea("SUA")
+        SUA->( dbSetOrder(1) )
+        If SUA->( dbSeek(xFilial("SUA") + _cNumLJ) )
+            RecLock("SUA",.F.)
+                SUA->UA_XFIRSTC := _cFirstCC
+                SUA->UA_XLASTC  := _cLastCC 
+                SUA->UA_XTRSCT1 := _cPayID  
+                SUA->UA_XTRSCT3 := _cTID    
+                SUA->UA_XAUTHID := _cAuthID   
+                SUA->UA_XNSU    := _cNSUTef   
+                SUA->UA_XPAYNAM := _cBandeira 
+                SUA->UA_XPAYSYS := _cBandeira
+                SUA->UA_FORMPG  := _cFormPG
+                SUA->UA_PARCELA := _nParcela
+                SUA->UA_XOBSCOM := _cOBS
+                SUA->UA_XOBSLOG := _cOBS
+            SUA->( MsUNLock() )
+        EndIf
+
         //----------------------------------+
         // Atualiza dados Orçamento inicial |
         //----------------------------------+
         RecLock("XTA",.F.)
-            XTA->XTA_NUMSUA := SUA->UA_NUM
+            XTA->XTA_NUMSUA := _cNumLJ
+            XTA->XTA_ENVLOG := "2"
         XTA->( MsUnLock() )
 
         //------------------------+
         // Libera pedido de Venda | 
         //------------------------+
-        /*
-        If EcLoj012Lib(SC5->C5_NUM)
-            U_GrvStaEc(XTA->XTA_NUMECO,"003")
-        Else
+        If EcLoj012Lib(SUA->UA_NUMSC5)
             U_GrvStaEc(XTA->XTA_NUMECO,"004")
+        Else
+            U_GrvStaEc(XTA->XTA_NUMECO,"006")
         EndIf
-        */
+        
     EndIf
 
     LogExec("FIM EXECAUTO DATA " + dToc( Date()) + " HORA " + Time() )
 
 EndIf
-
-/*
-Begin Transaction 
-    //-----------------+
-    // Grava cabeçalho |
-    //-----------------+
-    RecLock("SUA",.T.)
-        For _nX := 1 To Len(_aStrSUA)
-            _cCpo01 := 'SUA->' + RTrim(_aStrSUA[_nX][1])
-            If ( _nPCpo := aScan(_aCabec,{|x| RTrim(x[1]) == RTrim(_aStrSUA[_nX][1])}) ) > 0 
-                &(_cCpo01) := _aCabec[_nPCpo][2]
-            Else 
-                &(_cCpo01) := CriaVar(_cCpo01,.F.)
-            EndIf 
-        Next _nX 
-    SUA->( MsUnLock() )
-
-    //-------------+
-    // Grava Itens | 
-    //-------------+
-    For _nX := 1 To Len(_aItems)
-        RecLock("SUB",.T.)
-            For _nY := 1 To Len(_aStrSUB)
-                _cCpo01 := 'SUB->' + RTrim(_aStrSUB[_nY][1])
-                If ( _nPCpo := aScan(_aItems[_nX],{|x| RTrim(x[1]) == RTrim(_aStrSUB[_nY][1])}) ) > 0 
-                    &(_cCpo01) := _aItems[_nX][_nPCpo][2]
-                Else 
-                    &(_cCpo01) := CriaVar(_cCpo01,.F.)
-                EndIf 
-            Next _nY 
-        SUB->( MsUnLock() )
-    Next _nX 
-    
-    //----------------------+
-    // Confirma a numeração |
-    //----------------------+
-    ConfirmSx8()
-
-    //----------------------------------+
-    // Atualiza dados Orçamento inicial |
-    //----------------------------------+
-    RecLock("XTA",.F.)
-        XTA->XTA_NUMSUA := SUA->UA_NUM
-    XTA->( MsUnLock() )
-
-End Transaction 
-*/
 
 RestArea(_aArea)
 Return Nil
@@ -525,31 +435,7 @@ Return Nil
 Static Function EcLoj012Lib(_cNumPv)
 Local _aArea        := GetArea()
 
-Local _aCabec       := {}
-Local _aRegSC6      := {}
-
-Local _nVlrLiber    := 0
-Local _nValTot      := 0
-Local _nQtdLib      := 0
-
-Local _lRet         := .T.
-
-Private lMsErroAuto := .F.
-
-aAdd(_aCabec, { "C5_FILIAL", xFilial("SC5") , Nil   })
-aAdd(_aCabec, { "C5_NUM"   , _cNumPv        , Nil   })
-
-//------------------+
-// Seleciona pedido | 
-//------------------+
-dbSelectArea("SC5")
-SC5->( dbSetOrder(1) )
-
-//---------------+
-// Seleciona TES | 
-//---------------+
-dbSelectArea("SF4")
-SF4->( dbSetOrder(1) )
+Local _lRet         := .F.
 
 //---------------------------+
 // Seleciona itens liberados | 
@@ -560,100 +446,14 @@ SC9->( dbSetOrder(1) )
 //--------------------------------------+
 // Posiciona itens do pedido e-Commerce |
 //--------------------------------------+
-dbSelectArea("SC6")
-SC6->( dbSetOrder(1) )
-SC6->( dbSeek(xFilial("SC6") + _cNumPv))
-While SC6->( !Eof() .And. xFilial("SC6") + _cNumPv == SC6->C6_FILIAL + SC6->C6_NUM )
-    //--------------------------+
-    // Atualiza Total do pedido | 
-    //--------------------------+
-    _nValTot += SC6->C6_VALOR
-
-    //---------------+
-    // Posiciona TES | 
-    //---------------+
-	SF4->( MsSeek( xFilial("SF4") + SC6->C6_TES ) )
-    
-    //------------------+
-    // Reserva registro |
-    //------------------+
-    If SC5->( RecLock("SC5",.F.) )
-
-		_nQtdLib := IIF(SC6->C6_QTDLIB == 0,SC6->C6_QTDVEN,SC6->C6_QTDLIB)
-		
-		//---------------------------------+
-		// Recalcula a Quantidade Liberada |
-		//---------------------------------+
-		SC6->( RecLock("SC6",.F.) )
-		
-		//---------------------------+
-		// Libera por Item de Pedido |
-		//---------------------------+
-		Begin Transaction
-			SC6->C6_QTDLIB := IIF(SC6->C6_QTDLIB == 0,SC6->C6_QTDVEN,SC6->C6_QTDLIB) 
-
-            //--------------------------------+    
-            // Valida se item já foi liberado | 
-            //--------------------------------+    
-			If SC9->( dbSeek(xFilial("SC9") + SC6->C6_NUM + SC6->C6_ITEM))
-
-                //----------------------+        
-                // Salva valor liberado | 
-                //----------------------+    
-				_nVlrLiber := SC6->C6_VALOR
-
-                //-------------+
-                // Salva Recno | 
-                //-------------+
-                _aRegSC6    := {}
-				aAdd(_aRegSC6, SC6->(RecNo()))
-
-                //------------------+
-				// Posiciona pedido |
-                //------------------+
-				SC5->( dbSeek(xFilial("SC5") + SC6->C6_NUM ) )
-
-                //----------------------------------------------------------------------------+    
-				// Caso possuir o chamo a função de validação de cabecario do pedido de venda |
-                //----------------------------------------------------------------------------+
-				MaAvalSC5("SC5",3,.F.,.F.,,,,,,SC9->C9_PEDIDO,_aRegSC6,.T.,.F.,@_nVlrLiber)		
-				
-                //--------------------------------------------------------------------+
-                // A liberação do credito é forçada pois o pagamento já foi realizado |
-                //--------------------------------------------------------------------+
-				RecLock("SC9",.F.)
-				    SC9->C9_BLCRED := " "
-				SC9->( MsUnlock() )										
-			Else						
-                //------------------------------------------------------------------------------+ 
-				// Liberação do Credito/estoque do pedido de venda mais informações ver fatxfun |
-                //------------------------------------------------------------------------------+ 
-				MaLibDoFat( SC6->(RecNo()),_nQtdLib,.T.,.T.,.F.,.F.,.F.,.F.)	
-			EndIf 											
-			
-		End Transaction
-	EndIf
-	
-	SC5->( MsUnLock() )
-	SC6->( MsUnLock() )
-
-    SC6->( dbSkip() )
-EndDo
-
-//--------------------------------------------------------------------------+
-// Verifica se existe bloqueio de crédito ou estoque, se existir desbloqueia|
-//--------------------------------------------------------------------------+
-MaLiberOk( { SC6->C6_NUM } )
-SC5->(dbSeek(xFilial("SC5") + _cNumPv) )
-If !lMsErroAuto
-	_lRet   := .T.
-Else
-	MostraErro("/erros/" + "SC5_LIB" + _cNumPv )
-	_lRet   := .F.
-EndIf
+dbSelectArea("SC9")
+SC9->( dbSetOrder(1) )
+If SC9->( dbSeek(xFilial("SC9") + _cNumPv))
+    _lRet := .T.
+EndIf 
 
 RestArea(_aArea)
-Return .T.
+Return _lRet
 
 /**************************************************************************/
 /*/{Protheus.doc} EcLoj012Qry
@@ -722,7 +522,7 @@ _cQuery := " SELECT " + CRLF
 _cQuery += "    U5_CODCONT, " + CRLF 
 _cQuery += "    U5_CONTAT " + CRLF 
 _cQuery += " FROM " + CRLF 
-_cQuery += "    SU5010 " + CRLF 
+_cQuery += "    " + RetSqlName("SU5") + " " + CRLF 
 _cQuery += " WHERE " + CRLF 
 _cQuery += "    U5_FILIAL = '" + xFilial("SU5") + "' AND " + CRLF 
 _cQuery += "    U5_XIDEND = '" + _cIdEnt + "' AND " + CRLF 
