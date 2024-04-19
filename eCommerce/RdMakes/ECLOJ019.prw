@@ -4,7 +4,7 @@
 
 /**************************************************************************/
 /*/{Protheus.doc} ECLOJ019
-    @description Cadastro de Lojas eCommerce
+    @description Filiais Protheus X VTEX
     @type  Function
     @author Bernard M Margarido
     @since 16/02/2024
@@ -29,7 +29,7 @@ _oBrowse:AddLegend( "XTN_STATUS == .F.", "RED" , "Inativo" )
 //------------------+
 // Titulo do Browse |
 //------------------+
-_oBrowse:SetDescription('Transportadoras ERP x eCommerce')
+_oBrowse:SetDescription('Filiais Protheus X VTEX')
 _oBrowse:SetMenuDef("ECLOJ019")
 
 //--------------------+
@@ -51,6 +51,8 @@ Static Function ModelDef()
 Local _oModel		:= Nil
 Local _oStruXTN     := Nil
 
+Local _bWhen        := {|_oModel| ECLOJ019B(_oModel)}
+
 //-----------------+
 // Monta Estrutura |
 //-----------------+
@@ -59,10 +61,17 @@ _oStruXTN   := FWFormStruct(1,"XTN")
 //--------------------+
 // Gatillho campo CGC |
 //--------------------+
-_oStruXTN:AddTrigger( 	'XTN_FILIAL' 	/*cIdField*/ ,;
+_oStruXTN:AddTrigger( 	'XTN_IDECOM' 	/*cIdField*/ ,;
                         'XTN_DESC'	/*cTargetIdField*/ ,;  
                         { || .T. } /*bPre*/ ,;
                         { || ECLOJ019A("XTN_FILIAL","XTN_DESC") } /*bSetValue*/ )
+
+
+_oStruXTN:SetProperty( 'XTN_DESC'   , MODEL_FIELD_WHEN, {|| .F.} )
+_oStruXTN:SetProperty( 'XTN_URL1'   , MODEL_FIELD_WHEN, _bWhen)
+_oStruXTN:SetProperty( 'XTN_URL2'   , MODEL_FIELD_WHEN, _bWhen)
+_oStruXTN:SetProperty( 'XTN_APPKEY' , MODEL_FIELD_WHEN, _bWhen)
+_oStruXTN:SetProperty( 'XTN_APPTOK' , MODEL_FIELD_WHEN, _bWhen)
 
 //-------+
 // Model |
@@ -146,15 +155,38 @@ Local _oModelXTG:= _oModel:GetModel("MASTER")
 Local _cOrigem  := ""    
 Local _cResult  := ""
 
+Local _nTFil    := TamSx3("XTN_DESC")[1]
 //---------------------------+
 // Realiza pesquisa do campo |
 //---------------------------+
-_cOrigem := _oModelXTG:GetValue(_cCpoOri)
-_cResult := FwFilialName(cEmpAnt,cFilAnt)
+_cOrigem := cFilAnt
+_cResult := PadR(FwFilialName(cEmpAnt,cFilAnt),_nTFil)
 
 _oModelXTG:LoadValue( _cCpoAtu , _cResult )
 
 Return _cResult
+
+/************************************************************************************/
+/*/{Protheus.doc} ECLOJ019B
+    @description Validas e campo pode ser editado 
+    @type  Static Function
+    @author Bernard M Margarido
+    @since 13/04/2024
+    @version version
+/*/
+/************************************************************************************/
+Static Function ECLOJ019B(_oModel)
+Local _nOper    := _oModel:GetOperation()
+
+Local _cUserAut := GetMv("EC_LOJAID",,"000000/003104")
+
+Local _lRet     := .F.
+
+If _nOper == 3 .Or. __cUserId $ _cUserAut 
+    _lRet := .T.
+EndIf
+
+Return _lRet 
 
 /************************************************************************************/
 /*/{Protheus.doc} MenuDef

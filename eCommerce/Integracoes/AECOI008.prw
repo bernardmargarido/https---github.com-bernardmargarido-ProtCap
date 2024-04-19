@@ -53,12 +53,20 @@ ConOut("")
 LogExec(Replicate("-",80))
 LogExec("INICIA INTEGRACAO DE ESTOQUE COM A VTEX - DATA/HORA: "+DTOC(DATE())+" AS "+TIME())
 
-If _lJob
-	AECOINT08()
-Else
-	Processa({|| AECOINT08() },"Aguarde...","Consultando Estoque.")
-EndIf
-
+If _lMultLj
+	If _lJob
+		AECOMULT08()
+	Else 
+		_oProcess:= MsNewProcess():New( {|| AECOMULT08()},"Aguarde...","Consultando Estoque." )
+		_oProcess:Activate()
+	EndIf 
+Else 
+	If _lJob
+		AECOINT08()
+	Else
+		Processa({|| AECOINT08() },"Aguarde...","Consultando Estoque.")
+	EndIf
+EndIf 
 LogExec("FINALIZA INTEGRACAO DE ESTOQUE COM A VTEX - DATA/HORA: "+DTOC(DATE())+" AS "+TIME())
 LogExec(Replicate("-",80))
 ConOut("")
@@ -78,6 +86,86 @@ u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cTh
 
 Return Nil
 
+/*****************************************************************************************/
+/*/{Protheus.doc} AECOMULT08
+	@description Multi Lojas e-Commerce
+	@author Bernard M. Margarido
+	@since 17/05/2018
+	@version 1.0
+	@type function
+/*/
+/*****************************************************************************************/
+Static Function AECOMULT08()
+Local _aArea		:= GetArea()
+
+Local _cFilAux 		:= cFilAnt 
+
+Private _cLojaID	:= ""
+Private _cUrl		:= ""
+Private _cUrl_2		:= ""
+Private _cAppKey	:= ""
+Private _cAppToken	:= ""
+
+//-----------------+
+// Lojas eCommerce |
+//-----------------+
+dbSelectArea("XTN")
+XTN->( dbSetOrder(1) ) 
+XTN->( dbGoTop() )
+
+If !_lJob
+	_oProcess:SetRegua1( XTN->( RecCount()))
+EndIf 
+
+LogExec(" TOTAL REGISTRO " + cValToChar( XTN->( RecCount()) ))
+
+While XTN->( !Eof() )
+
+	If !_lJob	
+		_oProcess:IncRegua1("Loja eCommerce " + RTrim(XTN->XTN_IDECOM) )
+	EndIf 
+
+	LogExec("Loja eCommerce " + RTrim(XTN->XTN_IDECOM))
+
+	//----------------------+
+	// Somente lojas ativas |
+	//----------------------+
+	If XTN->XTN_STATUS
+
+		//----------------------------+
+		// Posiciona a filial correta | 
+		//----------------------------+
+		If XTN->XTN_FILIAL <> cFilAnt 
+			cFilAnt := XTN->XTN_FILIAL
+		EndIf  
+
+		//----------------------+
+		// Envia as estoque b2b |
+		//----------------------+
+		_cLojaID	:= XTN->XTN_IDECOM
+		_cUrl		:= XTN->XTN_URL1
+		_cUrl_2		:= XTN->XTN_URL2
+		_cAppKey	:= XTN->XTN_APPKEY
+		_cAppToken	:= XTN->XTN_APPTOK
+		
+		AECOINT08()
+
+		//----------------------------+
+		// Restaura a filial corrente |
+		//----------------------------+
+		If _cFilAux <> cFilAnt
+			cFilAnt := _cFilAux
+		EndIf 
+
+	EndIf
+	
+	XTN->( dbSkip() )
+	
+EndDo
+
+RestArea(_aArea)
+Return .T.
+
 /**************************************************************************************************/
 /*/{Protheus.doc} AECOINT08
 	@description	Rotina consulta e envia estoque dos produtos para a pataforma e-Commerce
@@ -87,17 +175,16 @@ Return Nil
 /*/
 /**************************************************************************************************/
 Static Function AECOINT08()
-Local aArea		:= GetArea()
+Local aArea			:= GetArea()
 
-Local cCodSku	:= ""
-Local cDescSku	:= ""
-Local cAlias	:= GetNextAlias()
+Local cCodSku		:= ""
+Local cDescSku		:= ""
+Local cAlias		:= GetNextAlias()
 
-Local nToReg	:= 0
-Local nIdSku	:= 0
+Local nToReg		:= 0
+Local nIdSku		:= 0
 
-Local oJson		:= Nil
-//Local oEstoque	:= Nil
+Local oJson			:= Nil
 
 //---------------------------------------------+
 // Valida se existem Estoques a serem enviadas |
@@ -112,7 +199,7 @@ EndIf
 // Inicia o envio Estoques |
 //-------------------------+
 If !_lJob
-	ProcRegua(nToReg)
+	_oProcess:SetRegua2( nToReg )
 EndIf
 
 While (cAlias)->( !Eof() )
@@ -121,7 +208,7 @@ While (cAlias)->( !Eof() )
 	// Incrementa regua de processamento |
 	//-----------------------------------+
 	If !_lJob
-		IncProc("Estoque " + Alltrim((cAlias)->CODSKU)  + " - " + Alltrim((cAlias)->DESCSKU) )
+		_oProcess:IncRegua2("Estoque " + Alltrim((cAlias)->CODSKU)  + " - " + Alltrim((cAlias)->DESCSKU) )
 	Endif	
 
 	LogExec("ESTOQUE " + Alltrim((cAlias)->CODSKU)  + " - " + Alltrim((cAlias)->DESCSKU) )
@@ -218,6 +305,12 @@ _oVTEX:cMetodo		:= "PUT"
 _oVTEX:cJSon		:= cRest
 _oVTEX:cID			:= cValToChar(nIdSku)
 _oVTEX:cWarehouse 	:= cWarehouse
+
+If !Empty(_cLojaID)
+	_oVTEX:cAppKey		:= _cAppKey
+	_oVTEX:cAppToken	:= _cAppToken
+	_oVTEX:cUrl			:= _cUrl
+EndIf 
 
 If _oVTEX:Stocks()
 	

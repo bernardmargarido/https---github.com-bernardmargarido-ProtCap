@@ -90,24 +90,34 @@ LogExec("INICIA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DA
 //----------------------------+
 // Inicia processo de Pedidos |
 //----------------------------+
-If _lJob
-	AECOINT11()
-Else
-	_oProcess:= MsNewProcess():New( {|| AECOINT11()},"Aguarde...","Consultando Pedidos." )
-	_oProcess:Activate()
-EndIf	
 
-//-------------------------------+
-// Inicia gravação / atualização |
-//-------------------------------+
-If Len(aOrderId) > 0 
+If _lMultLj
 	If _lJob
-		AEcoI11PvC()
+		AECOMULT11()
+	Else 
+		_oProcess:= MsNewProcess():New( {|| AECOMULT11()},"Aguarde...","Consultando Estoque." )
+		_oProcess:Activate()
+	EndIf 
+Else 
+	If _lJob
+		AECOINT11()
 	Else
-		_oProcess:= MsNewProcess():New( {|| AEcoI11PvC()},"Aguarde...","Gravando/Atualizando Novos Pedidos.")
+		_oProcess:= MsNewProcess():New( {|| AECOINT11()},"Aguarde...","Consultando Pedidos." )
 		_oProcess:Activate()
 	EndIf	
-EndIf
+
+	//-------------------------------+
+	// Inicia gravação / atualização |
+	//-------------------------------+
+	If Len(aOrderId) > 0 
+		If _lJob
+			AEcoI11PvC()
+		Else
+			_oProcess:= MsNewProcess():New( {|| AEcoI11PvC()},"Aguarde...","Gravando/Atualizando Novos Pedidos.")
+			_oProcess:Activate()
+		EndIf	
+	EndIf
+EndIf 
 
 LogExec("FINALIZA INTEGRACAO CLIENTES / PEDIDOS ECOMMERCE - DATA/HORA: " + DTOC(DATE()) + " AS " + TIME())
 LogExec(Replicate("-",80))
@@ -122,6 +132,103 @@ If Len(aMsgErro) > 0
 EndIf
 
 RestArea(_aArea)	
+Return .T.
+
+/*****************************************************************************************/
+/*/{Protheus.doc} AECOMULT11
+	@description Multi Lojas e-Commerce
+	@author Bernard M. Margarido
+	@since 17/05/2018
+	@version 1.0
+	@type function
+/*/
+/*****************************************************************************************/
+Static Function AECOMULT11()
+Local _aArea		:= GetArea()
+
+Local _cFilAux 		:= cFilAnt 
+
+Private _cLojaID	:= ""
+Private _cUrl		:= ""
+Private _cUrl_2		:= ""
+Private _cAppKey	:= ""
+Private _cAppToken	:= ""
+
+//-----------------+
+// Lojas eCommerce |
+//-----------------+
+dbSelectArea("XTN")
+XTN->( dbSetOrder(1) ) 
+XTN->( dbGoTop() )
+
+If !_lJob
+	_oProcess:SetRegua1( XTN->( RecCount()))
+EndIf 
+
+LogExec(" TOTAL REGISTRO " + cValToChar( XTN->( RecCount()) ))
+
+While XTN->( !Eof() )
+
+	If !_lJob	
+		_oProcess:IncRegua1("Loja eCommerce " + RTrim(XTN->XTN_IDECOM) )
+	EndIf 
+
+	LogExec("Loja eCommerce " + RTrim(XTN->XTN_IDECOM))
+
+	//----------------------+
+	// Somente lojas ativas |
+	//----------------------+
+	If XTN->XTN_STATUS
+
+		//----------------------------+
+		// Posiciona a filial correta | 
+		//----------------------------+
+		If XTN->XTN_FILIAL <> cFilAnt 
+			cFilAnt := XTN->XTN_FILIAL
+		EndIf  
+
+		//----------------------+
+		// Envia as estoque b2b |
+		//----------------------+
+		_cLojaID	:= XTN->XTN_IDECOM
+		_cUrl		:= XTN->XTN_URL1
+		_cUrl_2		:= XTN->XTN_URL2
+		_cAppKey	:= XTN->XTN_APPKEY
+		_cAppToken	:= XTN->XTN_APPTOK
+		
+		If _lJob
+			AECOINT11()
+		Else
+			_oProcess:= MsNewProcess():New( {|| AECOINT11()},"Aguarde...","Consultando Pedidos." )
+			_oProcess:Activate()
+		EndIf	
+
+		//-------------------------------+
+		// Inicia gravação / atualização |
+		//-------------------------------+
+		If Len(aOrderId) > 0 
+			If _lJob
+				AEcoI11PvC()
+			Else
+				_oProcess:= MsNewProcess():New( {|| AEcoI11PvC()},"Aguarde...","Gravando/Atualizando Novos Pedidos.")
+				_oProcess:Activate()
+			EndIf	
+		EndIf
+
+		//----------------------------+
+		// Restaura a filial corrente |
+		//----------------------------+
+		If _cFilAux <> cFilAnt
+			cFilAnt := _cFilAux
+		EndIf 
+
+	EndIf
+	
+	XTN->( dbSkip() )
+	
+EndDo
+
+RestArea(_aArea)
 Return .T.
 
 /**************************************************************************************************/
@@ -252,6 +359,13 @@ For _nX := 1 To Len(aOrderId)
 	//--------------------------------------------------+
 	_oVTEX:cID		:= aOrderId[_nX]
 	_oVTEX:cMetodo	:= "GET"
+
+	If !Empty(_cLojaID)
+		_oVTEX:cAppKey		:= _cAppKey
+		_oVTEX:cAppToken	:= _cAppToken
+		_oVTEX:cUrl			:= _cUrl
+	EndIf 
+
 	If _oVTEX:CompleteOrders()
 		
 		//------------------------------------+
@@ -4092,6 +4206,12 @@ _cParams 	:= _cQryParam + _cOrderBy + _cPerPage + _cPage
 //---------+
 _oVTEX:cParam	:= _cParams
 _oVTEX:cMetodo	:= "GET"
+
+If !Empty(_cLojaID)
+	_oVTEX:cAppKey		:= _cAppKey
+	_oVTEX:cAppToken	:= _cAppToken
+	_oVTEX:cUrl			:= _cUrl
+EndIf 
 
 If _oVTEX:OrderBatches()
 	If ValType(_oVTEX:cJSonRet) <> "U"
