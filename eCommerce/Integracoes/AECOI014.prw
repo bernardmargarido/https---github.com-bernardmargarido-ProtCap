@@ -46,7 +46,7 @@ LogExec("INICIA INTEGRACAO DE GRUPOS DE CAMPOS ESPECIFICOS COM A VTEX - DATA/HOR
 //-----------------------------------------+
 // Inicia processo de envio das categorias |
 //-----------------------------------------+
-Processa({|| AECOINT14() },"Aguarde...","Consultando as Grupo de Campos.")
+Processa({|| AECOINT14() },"Aguarde...","Consultando Grupo de Campos.")
 
 
 LogExec("FINALIZA INTEGRACAO DE GRUPOS DE CAMPOS ESPECIFICOS COM A VTEX - DATA/HORA: "+DTOC(DATE())+" AS "+TIME())
@@ -172,7 +172,7 @@ LogExec("ENVIANDO GRUPO ESPECIFICOS " + _cCodGrp + " - " + RTrim(_cNome) + " ." 
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsongrupo_especificos_" + RTrim(_cCodGrp) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsongrupo_especificos_" + RTrim(_cCodGrp) + ".json",_cRest)
 
 //---------------------+
 // Parametros de envio | 
@@ -190,7 +190,7 @@ If _oVTEX:GroupEspecification()
 		//--------------------+
 		// Posiciona Registro |
 		//--------------------+
-		ZTI->( dbGoTo(nRecno) )
+		ZTI->( dbGoTo(_nRecno) )
 
 		RecLock("ZTI",.F.)
 			ZTI->ZTI_INTLV := "2"
@@ -252,7 +252,8 @@ cChave		:= xFilial("ZTI") + _cCodGrp
 cPolitica	:= ""
 nRegRep		:= 0
 nIdLV		:= 0
-U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+nTenta		:= 1
+//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -277,6 +278,7 @@ cQuery := "	SELECT " + CRLF
 cQuery += "		ZTI.ZTI_CODIGO, " + CRLF
 cQuery += "		ZTI.ZTI_DESC, " + CRLF
 cQuery += "		ZTI.ZTI_IDVTX, " + CRLF
+cQuery += "		ZTI.ZTI_POSIT, " + CRLF
 cQuery += "		COALESCE(ACU.ACU_XIDLV,0) ACU_XIDLV, " + CRLF
 cQuery += "		ZTI.R_E_C_N_O_ RECNOZTI " + CRLF
 cQuery += " FROM  " + CRLF

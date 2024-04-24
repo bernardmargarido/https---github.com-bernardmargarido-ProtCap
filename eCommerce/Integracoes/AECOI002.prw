@@ -202,7 +202,7 @@ If _oVTEX:Brand()
 		LogExec("MARCA " + _cCodMarca + " - " + _cName + " . ENVIADA COM SUCESSO." )
 
 		RecLock("ZTD",.F.)
-			ZTD->ZTD_IDVTX		:= _oJSon['Id']
+			ZTD->ZTD_IDLV		:= _oJSon['Id']
 			ZTD->ZTD_INTLV		:= '2'
 		ZTD->( MsUnLock() )	
 
@@ -261,7 +261,8 @@ cChave		:= xFilial("ZTD") + _cCodMarca
 cPolitica	:= ""
 nRegRep		:= 0
 nIdLV		:= 0
-U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+nTenta      := 1
+//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)

@@ -96,6 +96,7 @@ Local _cRest 		:= ""
 Local _nIdVTex		:= 0
 Local _nIdBrand 	:= 0
 Local _nRecno		:= 0
+Local nToReg		:= 0
 
 Local cAlias		:= GetNextAlias()
 
@@ -300,7 +301,7 @@ If _oVTEX:Product()
 		EndIf 
 	EndIf	
 Else
-	If Type(_oVTEX:cError) <> "U"
+	If ValType(_oVTEX:cError) <> "U"
 
 		//----------------+
 		// Parametros LOG |
@@ -331,7 +332,8 @@ EndIf
 cPolitica	:= ""
 nRegRep		:= 0
 nIdLV		:= 0
-U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+nTenta		:= 1
+//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 
 FreeObj(_oVTEX)

@@ -213,7 +213,7 @@ If _oVTEX:Category()
 	//--------------------+
 	// Posiciona Registro |
 	//--------------------+
-	ACU->( dbGoTo(nRecno) )
+	ACU->( dbGoTo(_nRecno) )
 
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
@@ -278,7 +278,8 @@ cChave		:= xFilial("ACU") + _cCodCat
 cPolitica	:= ""
 nRegRep		:= 0
 nIdLV		:= 0
-U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+nTenta		:= 1
+//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -311,7 +312,7 @@ cQuery += "		ACU.ACU_XKWORD, " + CRLF
 cQuery += "		ACU.ACU_XLCMPC, " + CRLF
 cQuery += "		ACU.ACU_XREMAR, " + CRLF
 cQuery += "		ACU.ACU_XIDLV, " + CRLF
-cQuery += "		ACU.R_E_C_N_O_ RECNOACU, " + CRLF
+cQuery += "		ACU.R_E_C_N_O_ RECNOACU " + CRLF
 cQuery += " FROM " + CRLF 
 cQuery += "		" + RetSqlName("ACU") + " ACU " + CRLF
 cQuery += "		OUTER APPLY( " + CRLF
