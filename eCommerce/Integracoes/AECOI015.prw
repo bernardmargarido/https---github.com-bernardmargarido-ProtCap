@@ -267,7 +267,7 @@ cChave		:= xFilial("ZTE") + _cCodigo
 cPolitica	:= ""
 nRegRep		:= 0
 nIdLV		:= 0
-U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)

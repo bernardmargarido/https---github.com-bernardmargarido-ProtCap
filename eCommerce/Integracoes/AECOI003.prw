@@ -95,6 +95,8 @@ Local _cRest 		:= ""
 
 Local _nIdVTex		:= 0
 Local _nIdBrand 	:= 0
+Local _nCategID 	:= 0
+Local _nDepartID 	:= 0 
 Local _nRecno		:= 0
 Local nToReg		:= 0
 
@@ -136,17 +138,24 @@ While (cAlias)->( !Eof() )
 	_cDescMarca						:= RTrim((cAlias)->PR_DESC_MARCA)
 	_cStatus 						:= (cAlias)->EC_FLAG
 	_cTaxCode 						:= (cAlias)->PR_NCM
+	_cCategoria 					:= (cAlias)->PR_CATEGORIA
 
 	_nIdVTex						:= (cAlias)->PR_IDPROD
 	_nIdBrand 						:= (cAlias)->PR_MARCA
 	_nRecno							:= (cAlias)->RECNOPROD
+	_nCategID 						:= 0
+	_nDepartID 						:= 0
+
+	If !Empty(_cCategoria)
+		AECOI03C(_cCategoria,@_nCategID,@_nDepartID)
+	EndIf 
 
 	oJSon							:= Nil 
 	oJSon 							:= JSonObject():New()
 
 	oJSon["Name"]					:= _cName
-	oJSon["DepartmentId"]			:= 0
-	oJSon["CategoryId"]				:= 0
+	oJSon["DepartmentId"]			:= _nDepartID
+	oJSon["CategoryId"]				:= _nCategID
 	oJSon["BrandId"]				:= _nIdBrand
 	oJSon["LinkId"]					:= Nil
 	oJSon["RefId"]					:= _cCodProd
@@ -272,7 +281,7 @@ If _oVTEX:Product()
 		//----------------+
 		cStatus		:= "1"
 		cMsgErro	:= ""
-		nIDVtex		:= _oJSon['Id']
+		_nIdVTex	:= _oJSon['Id']
 
 
 	Else
@@ -283,7 +292,6 @@ If _oVTEX:Product()
 			//----------------+
 			cStatus		:= "2"
 			cMsgErro	:= RTrim(_oVTEX:cError)
-			nIDVtex		:= _nIdVTex
 
 			aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
 			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
@@ -294,7 +302,6 @@ If _oVTEX:Product()
 			//----------------+
 			cStatus		:= "2"
 			cMsgErro	:= "Sem comunicação com o integrador"
-			nIDVtex		:= _nIdVTex
 
 			aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". "})
 			LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ")
@@ -308,7 +315,6 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= _nIdVTex
 
 		aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
 		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
@@ -319,7 +325,6 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= "Sem comunicação com o integrador"
-		nIDVtex		:= _nIdVTex
 
 		aAdd(aMsgErro,{_cCodProd,"ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". "})
 		LogExec("ERRO AO ENVIAR PRODUTO PAI " + Alltrim(_cCodProd) + " - " + Upper(Alltrim(_cName)) + ". ")
@@ -330,10 +335,11 @@ EndIf
 // Grava LOG ZT0 |
 //---------------+
 cPolitica	:= ""
+nIDVtex		:= _nIdVTex
 nRegRep		:= 0
 nIdLV		:= 0
 nTenta		:= 1
-//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 
 FreeObj(_oVTEX)
@@ -390,7 +396,7 @@ cQuery += "			B4.B4_DESC PR_DESCRICAO, " + CRLF
 cQuery += "			ISNULL(CAST(CAST(B4_XDESCTE AS BINARY(2048)) AS VARCHAR(2048)),'') PR_DESC_TECNICA, " + CRLF
 cQuery += "			B4_POSIPI PR_NCM, " + CRLF
 cQuery += "			'' PR_DEPARTAMENTO, " + CRLF
-cQuery += "			'' PR_CATEGORIA, " + CRLF
+cQuery += "			B4.B4_XCATEGO PR_CATEGORIA, " + CRLF
 cQuery += "			ZTD.ZTD_IDLV PR_MARCA, " + CRLF
 cQuery += "			ZTD.ZTD_DESC PR_DESC_MARCA, " + CRLF
 cQuery += "			B4.B4_XATIVO PR_STATUS, " + CRLF
@@ -421,7 +427,7 @@ cQuery += "			B1.B1_DESC PR_DESCRICAO,  " + CRLF
 cQuery += "			ISNULL(CAST(CAST(B1_XDESCTE AS BINARY(2048)) AS VARCHAR(2048)),'') PR_DESC_TECNICA, " + CRLF
 cQuery += "			B1_POSIPI PR_NCM, " + CRLF
 cQuery += "			'' PR_DEPARTAMENTO, " + CRLF 
-cQuery += "			'' PR_CATEGORIA, " + CRLF
+cQuery += "			B1.B1_XCATEGO PR_CATEGORIA, " + CRLF
 cQuery += "			ZTD.ZTD_IDLV PR_MARCA, " + CRLF
 cQuery += "			ZTD.ZTD_DESC PR_DESC_MARCA, " + CRLF
 cQuery += "			B1.B1_XATIVO PR_STATUS, " + CRLF
@@ -464,6 +470,34 @@ EndIf
 Return .T.
 
 /*********************************************************************************/
+/*/{Protheus.doc} AECOI03C
+	@description Retorna departamento e catgoria 
+	@type  Static Function
+	@author Bernard M Margarido
+	@since 29/04/2024
+	@version version
+/*/
+/*********************************************************************************/
+Static Function AECOI03C(_cCategoria,_nCategID,_nDepartID)
+Local _aArea 	:= GetArea() 
+Local _aCateg	:= {}
+
+Local _lContinua:= .T.	
+
+dbSelectArea("ACU")
+ACU->( dbSetOrder(1) )
+While ACU->( dbSeek(xFilial("ACU") + _cCategoria) ) .And. _lContinua
+	_cCategoria := ACU->ACU_CODPAI
+	_nCategID	:= IIF(_nCategID == 0, ACU->ACU_XIDLV, _nCategID)
+	_nDepartID  := ACU->ACU_XIDLV
+	_lContinua  := IIF(Empty(ACU->ACU_CODPAI), .F., .T.)
+	aAdd(_aCateg,{ACU->ACU_COD,ACU->ACU_XIDLV})
+EndDo 
+
+RestArea(_aArea)
+Return Nil 
+
+/*********************************************************************************/
 /*/{Protheus.doc} LogExec
 	@description Grava Log do processo 
 	@author SYMM Consultoria
@@ -476,3 +510,4 @@ Static Function LogExec(cMsg)
 	CONOUT(cMsg)
 	LjWriteLog(cArqLog,cMsg)
 Return .T.
+

@@ -186,12 +186,12 @@ _oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
 _oVTEX:cJSon		:= _cRest
 _oVTEX:cID			:= cValToChar(_nIdVTex)
 
-If _oVTEX:Brand()
+//--------------------+
+// Posiciona Registro |
+//--------------------+
+ZTD->( dbGoTo(_nRecno) )
 
-	//--------------------+
-	// Posiciona Registro |
-	//--------------------+
-	ZTD->( dbGoTo(_nRecno) )
+If _oVTEX:Brand()
 
 	LogExec("ENVIANDO MARCA " + _cCodMarca + " - " + _cName + " ." )
 
@@ -210,9 +210,9 @@ If _oVTEX:Brand()
 		// Parametros LOG |
 		//----------------+
 		cStatus		:= "1"
-		cMsgErro	:= ""
-		nIDVtex		:= _oJSon['Id']
-
+		cMsgErro	:= "Marca atualizada com sucesso."
+		_nIdVTex 	:= _oJSon['Id']
+		
 	Else
 
 		//----------------+
@@ -220,7 +220,6 @@ If _oVTEX:Brand()
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError)})
@@ -234,7 +233,6 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= _nIdVTex
 
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError) )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . ERROR: " + RTrim(_oVTEX:cError)})
@@ -246,8 +244,7 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= "Sem comunicação com o integrador"
-		nIDVtex		:= _nIdVTex
-
+		
 		LogExec("ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . " )
 		aAdd(aMsgErro,{_cCodMarca,"ERRO AO ENVIAR A MARCA " + _cCodMarca + " - " + _cName + " . "})
 
@@ -259,10 +256,11 @@ EndIf
 //---------------+
 cChave		:= xFilial("ZTD") + _cCodMarca
 cPolitica	:= ""
+nIDVtex		:= _nIdVTex
 nRegRep		:= 0
 nIdLV		:= 0
 nTenta      := 1
-//U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)

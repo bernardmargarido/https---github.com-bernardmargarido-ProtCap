@@ -31,17 +31,13 @@ Private cHrIni		:= Time()
 Private dDtaInt		:= Date()
 
 Private aMsgErro	:= {}
+Private aPrdEnv		:= {}
 
 Private lJob 		:= .F.
 
 Private _lMultLj	:= GetNewPar("EC_MULTLOJ",.T.)
 
 Private _oProcess 	:= Nil
-
-//----------------------------------+
-// Grava Log inicio das Integrações | 
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
 
 //------------------------------+
 // Inicializa Log de Integracao |
@@ -71,11 +67,6 @@ If Len(aMsgErro) > 0
 	u_AEcoMail(cCodInt,cDescInt,aMsgErro)
 EndIf
 
-//----------------------------------+
-// Grava Log inicio das Integrações |
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)
-
 Return Nil
 
 /**************************************************************************************************/
@@ -94,9 +85,9 @@ Local _cCodSku 		:= ""
 Local _cName		:= ""		
 Local _cCodBar 		:= ""
 Local _cCodFabric	:= ""
-Local _cStatus		:= ""
 Local _cUM 			:= ""
 Local _cRest		:= ""
+Local _cDescSKU		:= ""
 
 Local _nAltura 		:= 0 
 Local _nComp		:= 0 
@@ -140,17 +131,18 @@ While (cAlias)->( !Eof() )
 	//-----------+
 	_cCodSku 	:= RTrim((cAlias)->SKU_COD)
 	_cName		:= RTrim((cAlias)->SKU_TITULO)
+	_cDescSKU 	:= RTrim((cAlias)->SKU_DESC)
 	_cCodBar 	:= RTrim((cAlias)->SKU_EAN)
 	_cCodFabric	:= RTrim((cAlias)->SKU_FRABRICANTE)
 	_cUM 		:= (cAlias)->SKU_UNIDADE_MEDIDA
 
-	_nAltura 	:= (cAlias)->SKU_ALTURA 
-	_nComp		:= (cAlias)->SKU_PROFUNDIDADE
-	_nLargura 	:= (cAlias)->SKU_LARGURA 
-	_nAltEmb	:= (cAlias)->SKU_ALTURA_EMB 
-	_nCompEmb 	:= (cAlias)->SKU_PROFUNDIDADE_EMB
-	_nLargEmb 	:= (cAlias)->SKU_LARGURA_EMB
-	_nPeso 		:= (cAlias)->SKU_PESO_LIQUIDO
+	_nAltura 	:= IIF((cAlias)->SKU_ALTURA > 0, (cAlias)->SKU_ALTURA, 1)
+	_nComp		:= IIF((cAlias)->SKU_PROFUNDIDADE > 0, (cAlias)->SKU_PROFUNDIDADE, 1)
+	_nLargura 	:= IIF((cAlias)->SKU_LARGURA > 0, (cAlias)->SKU_LARGURA, 1)
+	_nAltEmb	:= IIF((cAlias)->SKU_ALTURA_EMB > 0, (cAlias)->SKU_ALTURA_EMB, 1)
+	_nCompEmb 	:= IIF((cAlias)->SKU_PROFUNDIDADE_EMB > 0, (cAlias)->SKU_PROFUNDIDADE_EMB, 1)
+	_nLargEmb 	:= IIF((cAlias)->SKU_LARGURA_EMB > 0, (cAlias)->SKU_LARGURA_EMB, 1)
+	_nPeso 		:= IIF((cAlias)->SKU_PESO_LIQUIDO > 0, (cAlias)->SKU_PESO_LIQUIDO, 1)
 	_nCubagem 	:= 0
 	_nIdVTex	:= (cAlias)->SKU_IDVTEX
 	_nIdProd	:= (cAlias)->PR_IDVTEX
@@ -170,8 +162,8 @@ While (cAlias)->( !Eof() )
 	oJSon 							:= JSonObject():New()
 
    	oJSon["ProductId"]				:= _nIdProd
-   	oJSon["IsActive"]				:= _lStatus
-   	oJSon["ActivateIfPossible"]		:= _cStatus
+   	oJSon["IsActive"]				:= .F.
+   	oJSon["ActivateIfPossible"]		:= .F.
 	oJSon["Name"]					:= _cName
 	oJSon["RefId"]					:= _cCodSku
 	oJSon["Ean"]					:= _cCodBar
@@ -207,7 +199,7 @@ While (cAlias)->( !Eof() )
 	//---------------------------------------+
 	// Rotina realiza o envio para a Rakuten |
 	//---------------------------------------+
-	AEcoEnv(_cRest,_cCodSku,_cName,_nIdProd,_nIdVTex,_nRecno)
+	AEcoEnv(_cRest,_cCodSku,_cDescSKU,_nIdProd,_nIdVTex,_nRecno)
 	
 	(cAlias)->( dbSkip() )
 				
@@ -230,7 +222,7 @@ Return .T.
 	@type function
 /*/
 /**************************************************************************************************/
-Static Function AEcoEnv(_cRest,_cCodSku,_cName,_nIdProd,_nIdVTex,_nRecno)
+Static Function AEcoEnv(_cRest,_cCodSku,_cDescSKU,_nIdProd,_nIdVTex,_nRecno)
 Local aArea			:= GetArea()
 
 Local cChave		:= ""
@@ -247,14 +239,14 @@ Local _oJSon 		:= Nil
 
 Private cType		:= ''
 
-LogExec("ENVIANDO PRODUTO " + _cCodSku + " - " + Alltrim(_cName) + " ." )
+LogExec("ENVIANDO PRODUTO " + _cCodSku + " - " + Alltrim(_cDescSKU) + " ." )
 
 //--------------------------------+
 // Cria diretorio caso nao exista |
 //--------------------------------+
 MakeDir(cDirImp)
 MakeDir(cDirImp + cDirSave)
-MemoWrite(cDirImp + cDirSave + "\jsonsku_" + RTrim(_cCodSku) + ".json",cRest)
+MemoWrite(cDirImp + cDirSave + "\jsonsku_" + RTrim(_cCodSku) + ".json",_cRest)
 
 //---------------------+
 // Parametros de envio | 
@@ -263,12 +255,17 @@ _oVTEX:cMetodo		:= IIF(_nIdVTex > 0, "PUT", "POST")
 _oVTEX:cJSon		:= _cRest
 _oVTEX:cID			:= cValToChar(_nIdVTex)
 
+//-------------------------+
+// SB1 - Posiciona produto | 
+//-------------------------+
+SB1->( dbGoTo(_nRecno) )
+
 If _oVTEX:Sku()
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
 	If ValType(_oJSon) <> "U"
 		
-		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cName) + " . ENVIADA COM SUCESSO.")
+		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cDescSKU) + " . ENVIADA COM SUCESSO.")
 
 		//---------------+
 		// Posiciona SKU |
@@ -281,8 +278,6 @@ If _oVTEX:Sku()
 			SB1->( MsUnLock() )	
 		EndIf
 
-		cChave		:= SB1->B1_FILIAL + SB1->B1_COD
-
 		//--------------------------------------------------+
 		// Adiciona Array para envio dos campos especificos |
 		//--------------------------------------------------+
@@ -292,10 +287,10 @@ If _oVTEX:Sku()
 		// Parametros LOG |
 		//----------------+
 		cStatus		:= "1"
-		cMsgErro	:= ""
-		nIDVtex		:= _oJSon['Id']
+		cMsgErro	:= "SKU atualizado com sucesso."
+		_nIdVTex	:= _oJSon['Id']
 
-		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cName) + " . ENVIADA COM SUCESSO.")
+		LogExec("PRODUTO SKU " + _cCodSku + " - " + Alltrim(_cDescSKU) + " . ENVIADA COM SUCESSO.")
 
 	Else
 		If ValType(_oVTEX:cError) <> "U"
@@ -305,10 +300,9 @@ If _oVTEX:Sku()
 			//----------------+
 			cStatus		:= "2"
 			cMsgErro	:= RTrim(_oVTEX:cError)
-			nIDVtex		:= _nIdVTex
 
-			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIARSKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIARSKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ERROR: " +  RTrim(_oVTEX:cError))
 
 		Else 
 
@@ -317,10 +311,9 @@ If _oVTEX:Sku()
 			//----------------+
 			cStatus		:= "2"
 			cMsgErro	:= "Sem comunicação com o integrador"
-			nIDVtex		:= _nIdVTex
 
-			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". "})
-			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cName)) + ". ")
+			aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". "})
+			LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ")
 		EndIf 
 	EndIf	
 Else
@@ -331,10 +324,9 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= RTrim(_oVTEX:cError)
-		nIDVtex		:= _nIdVTex
 
-		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " + RTrim(_oVTEX:cError)})
-		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ERROR: " + RTrim(_oVTEX:cError)})
+		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ERROR: " +  RTrim(_oVTEX:cError))
 	Else 
 
 		//----------------+
@@ -342,10 +334,9 @@ Else
 		//----------------+
 		cStatus		:= "2"
 		cMsgErro	:= "Sem comunicação com o integrador"
-		nIDVtex		:= _nIdVTex
 
-		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". "})
-		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(cNomeSku)) + ". ")
+		aAdd(aMsgErro,{_cCodSku,"ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". "})
+		LogExec("ERRO AO ENVIAR SKU " + Alltrim(_cCodSku) + " - " + Upper(Alltrim(_cDescSKU)) + ". ")
 	EndIf 
 EndIf
 
@@ -353,8 +344,11 @@ EndIf
 // Grava LOG ZT0 |
 //---------------+
 cPolitica	:= ""
+cChave		:= SB1->B1_FILIAL + SB1->B1_COD
+nIDVtex		:= _nIdVTex
 nRegRep		:= 0
 nIdLV		:= 0
+nTenta		:= 1
 U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
@@ -440,7 +434,7 @@ cQuery += "			B1.B1_MSBLQL SKU_BLOQUEIO, " + CRLF
 cQuery += "			B1.R_E_C_N_O_ SKU_RECNO " + CRLF
 cQuery += "		FROM " + CRLF
 cQuery += "			" + RetSqlName("SB1") + " B1 (NOLOCK) " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("SB4") + " B4 (NOLOCK) ON B4.B4_FILIAL = B1.B1_FILIAL AND B4.B4_COD = SUBSTRING(B1.B1_COD,1,10) AND B4.B4_XINTLV = '2' AND B4.B4_XIDPRD > 0 AND AND B4.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB4") + " B4 (NOLOCK) ON B4.B4_FILIAL = B1.B1_FILIAL AND B4.B4_COD = SUBSTRING(B1.B1_COD,1,10) AND B4.B4_XINTLV = '2' AND B4.B4_XIDPRD > 0 AND B4.D_E_L_E_T_ = '' " + CRLF
 cQuery += "			INNER JOIN " + RetSqlName("SB5") + " B5 (NOLOCK) ON B5.B5_FILIAL = B1.B1_FILIAL AND B5.B5_COD = B1.B1_COD AND B5.D_E_L_E_T_ = '' " + CRLF
 cQuery += "			CROSS APPLY ( " + CRLF
 cQuery += "				SELECT " + CRLF
@@ -508,7 +502,7 @@ cQuery += "			B1.B1_XINTLV = '1' AND " + CRLF
 cQuery += "			B1.B1_XIDPRD > 0 AND " + CRLF
 cQuery += "			B1.D_E_L_E_T_ = '' " + CRLF
 cQuery += " ) SKU " + CRLF
-cQuery += "	ORDER BY SKU_COD "
+cQuery += " ORDER BY SKU_COD "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 count To nToReg  

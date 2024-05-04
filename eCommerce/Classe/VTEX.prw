@@ -167,10 +167,15 @@ If Self:cMetodo == "GET"
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
             Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else 
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -190,11 +195,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else 
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -210,11 +219,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else 
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -280,11 +293,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else 
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -304,11 +321,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -324,11 +345,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -390,11 +415,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -414,11 +443,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -434,11 +467,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -501,11 +538,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -525,11 +566,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -545,11 +590,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -612,11 +661,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -636,11 +689,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -656,11 +713,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -723,11 +784,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -747,11 +812,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -767,11 +836,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -834,11 +907,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -858,11 +935,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -878,11 +959,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -945,11 +1030,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -969,11 +1058,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -989,11 +1082,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1055,11 +1152,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1079,11 +1180,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else 
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1099,11 +1204,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1165,11 +1274,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1189,11 +1302,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1209,11 +1326,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1275,11 +1396,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1299,11 +1424,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1319,11 +1448,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1387,11 +1520,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1411,11 +1548,15 @@ ElseIf Self:cMetodo == "POST"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+          If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1431,11 +1572,15 @@ ElseIf Self:cMetodo == "PUT"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+           If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError    := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1495,11 +1640,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf
@@ -1559,11 +1708,15 @@ If Self:cMetodo == "GET"
         _lRet           := .T.
     Else
         If ValType(_oFwRest:GetResult()) <> "U"
-            Self:cJSonRet	:= DecodeUtf8(_oFwRest:GetResult())
-            _oJSonRet       := JSonObject():New()
-            _oJSonRet:FromJson(Self:cJSonRet)
-
-            Self:cError     := _oJSonRet["Message"]
+            If Empty(Self:cJSonRet) 
+                Self:cError     := "ERROR: " + _oFwRest:GetLastError()
+            Else  
+                _oJSonRet       := JSonObject():New()
+                _oJSonRet:FromJson(Self:cJSonRet)
+                If ValType(_oJSonRet) <> "U"
+                    Self:cError     := "ERROR: " + _oFwRest:GetLastError() + " " + IIF(ValType(_oJSonRet["Message"]) <> "U", _oJSonRet["Message"], "")
+                EndIf 
+            EndIf 
         Else 
             Self:cError     := "Não foi possivel conectar com as API's do eCommerce. Favor tentar mais tarde."
         EndIf

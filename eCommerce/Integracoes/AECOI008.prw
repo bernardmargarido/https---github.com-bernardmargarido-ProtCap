@@ -7,8 +7,8 @@
 
 #DEFINE CRLF CHR(13) + CHR(10)
 
-Static cCodInt	:= "008"
-Static cDescInt	:= "ESTOQUE"
+Static cCodInt	:= "SB2"
+Static cDescInt	:= "Estoque"
 Static cDirImp	:= "/ecommerce/"
 Static cDirSave	:= "estoque/"
 
@@ -38,11 +38,6 @@ Private _lJob		:= IIF(Isincallstack("U_ECLOJM03"),.T.,.F.)
 Private _lMultLj	:= GetNewPar("EC_MULTLOJ",.T.)
 
 Private _oProcess 	:= Nil
-
-//----------------------------------+
-// Grava Log inicio das Integrações | 
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
 
 //------------------------------+
 // Inicializa Log de Integracao |
@@ -78,11 +73,6 @@ If Len(aMsgErro) > 0
 	cStaLog := "1"
 	u_AEcoMail(cCodInt,cDescInt,aMsgErro)
 EndIf
-
-//----------------------------------+
-// Grava Log inicio das Integrações |
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)
 
 Return Nil
 
@@ -289,6 +279,15 @@ Local aArea			:= GetArea()
 Local _oVTEX 		:= VTEX():New()
 Local _oJSon 		:= Nil 
 
+Local cChave		:= ""
+Local cPolitica		:= ""
+Local cStatus		:= ""
+Local cMsgErro		:= ""
+
+Local nIDVtex		:= 0
+Local nRegRep		:= 0
+Local nIdLV			:= 0
+
 Private cType		:= ""
 
 //--------------------------------+
@@ -312,20 +311,21 @@ If !Empty(_cLojaID)
 	_oVTEX:cUrl			:= _cUrl
 EndIf 
 
+//--------------------+
+// Posiciona Registro |
+//--------------------+
+SB2->( dbGoTo(nRecnoSb2) )
+
 If _oVTEX:Stocks()
 	
 	_oJSon := JSonObject():New()
 	_oJSon:FromJson(_oVTEX:cJSonRet)
-	
-	//--------------------+
-	// Posiciona Registro |
-	//--------------------+
-	SB2->( dbGoTo( nRecnoSb2) )
+		
+	cStatus		:= "1"
+	cMsgErro	:= "Saldo atualizado com sucesso."
 
 	RecLock("SB2",.F.)
 		SB2->B2_MSEXP		:= dTos(Date())
-		SB2->B2_XDTEXP		:= Date()
-		SB2->B2_XHREXP		:= Time()	
 	SB2->( MsUnLock() )
 
 	LogExec("ESTOQUE PRODUTO " + cCodSku + " ENVIADO COM SUCESSO." )
@@ -334,11 +334,27 @@ Else
 	If ValType(_oVTEX:cError) <> "U"
 		aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIAR ESTOQUE PRODUTO " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cDescSku)) + ". ERROR: " + RTrim(_oVTEX:cError)})
 		LogExec("ERRO AO ENVIAR ESTOQUE PRODUTO " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cDescSku)) + ". ERROR: " +  RTrim(_oVTEX:cError))
+		cStatus		:= "2"
+		cMsgErro	:= _oVTEX:cError
 	Else 
 		aAdd(aMsgErro,{cCodSku,"ERRO AO ENVIAR ESTOQUE PRODUTO " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cDescSku)) + ". "})
 		LogExec("ERRO AO ENVIAR ESTOQUE PRODUTO " + Alltrim(cCodSku) + " - " + Upper(Alltrim(cDescSku)) + ". ")
+		cStatus		:= "2"
+		cMsgErro	:= "Sem comunicação com o integrador"
 	EndIf 
 EndIf
+
+//---------------+
+// Grava LOG ZT0 |
+//---------------+
+
+cPolitica	:= ""
+cChave		:= SB2->B2_FILIAL + SB2->B2_COD + SB2->B2_LOCAL
+nRegRep		:= 0
+nIdLV		:= 0
+nTenta		:= 1
+nIDVtex		:= nIdSku
+U_AEcoGrvLog(cCodInt,cDescInt,cStatus,cMsgErro,cChave,cPolitica,nIDVtex,nTenta,nRegRep,nIdLV)
 
 FreeObj(_oVTEX)
 FreeObj(_oJSon)
@@ -376,13 +392,12 @@ cQuery += "	( " + CRLF
 cQuery += "		SELECT " + CRLF
 cQuery += "			B2.B2_COD CODSKU, " + CRLF
 cQuery += "			B1.B1_DESC DESCSKU, " + CRLF
-cQuery += "			B5.B5_XIDSKU IDSKU, " + CRLF
+cQuery += "			B1.B1_XIDSKU IDSKU, " + CRLF
 cQuery += "			B2.B2_QATU SALDOB2, " + CRLF
 cQuery += "			B2.R_E_C_N_O_ RECNOSB2 " + CRLF
 cQuery += "		FROM " + CRLF
 cQuery += "			" + RetSqlName("SB2") + " B2 " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B2.B2_COD AND B1.B1_MSBLQL <> '1' AND B1.D_E_L_E_T_ = '' " + CRLF 
-cQuery += "			INNER JOIN " + RetSqlName("SB5") + " B5 ON B5.B5_FILIAL = '" + xFilial("SB5") + "' AND B5.B5_COD = B2.B2_COD AND B5.B5_XENVECO = '2' AND B5.B5_XENVSKU = '2' AND B5.B5_XUSAECO = 'S' AND B5.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B2.B2_COD AND B1.B1_MSBLQL <> '1' AND B1.B1_XINTLV = '2' AND B1.B1_XIDSKU > 0 AND B1.D_E_L_E_T_ = '' " + CRLF 
 cQuery += "		WHERE " + CRLF
 cQuery += "			B2.B2_FILIAL = '" + cFilEst  + "' AND " + CRLF 
 cQuery += "			B2.B2_LOCAL IN " + cLocal + " AND " + CRLF

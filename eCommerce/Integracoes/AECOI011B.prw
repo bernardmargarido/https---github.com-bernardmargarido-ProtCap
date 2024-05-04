@@ -45,11 +45,6 @@ If _lBloqueio
 	Return aRet
 EndIf
 
-//----------------------------------+
-// Grava Log inicio das Integrações | 
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,,,,,cThread,1)
-
 //------------------------------+
 // Inicializa Log de Integracao |
 //------------------------------+
@@ -75,11 +70,6 @@ If Len(aMsgErro) > 0
 	cStaLog := "1"
 	u_AEcoMail(cCodInt,cDescInt,aMsgErro)
 EndIf
-
-//----------------------------------+
-// Grava Log inicio das Integrações |
-//----------------------------------+
-u_AEcoGrvLog(cCodInt,cDescInt,dDtaInt,cHrIni,Time(),cStaLog,nQtdInt,aMsgErro,cThread,2)
 
 RestArea(aArea)
 Return aRet

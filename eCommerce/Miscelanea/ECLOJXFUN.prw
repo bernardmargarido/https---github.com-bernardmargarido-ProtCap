@@ -82,12 +82,12 @@ RecLock("ZT0",_lGrava)
 	ZT0->ZT0_TABELA	:= cCodigo
 	ZT0->ZT0_CHAVE 	:= cChave
 	ZT0->ZT0_PROCES	:= cDescricao
-	ZT0->ZT0_IDVTX 	:= nIdLV
+	ZT0->ZT0_IDVTX 	:= cValToChar(nIDVtex)
 	ZT0->ZT0_STATUS	:= cStatus
 	ZT0->ZT0_MENSAG	:= cMsgErro
 	ZT0->ZT0_TENTAT	:= nTenta
 	ZT0->ZT0_REGREP	:= nRegRep
-	ZT0->ZT0_IDLV  	:= nIDVtex
+	ZT0->ZT0_IDLV  	:= cValToChar(nIdLV)
 	ZT0->ZT0_POLCOM	:= cPolitica
 ZT0->( MsUnLock() )
 	
