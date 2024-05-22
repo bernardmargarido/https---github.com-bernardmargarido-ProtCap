@@ -258,22 +258,20 @@ _lSB2   := EcLoj011Qry(_cQuery)
 // Preços Pai |
 //------------+
 IncProc("Verificando Preços Produtos ")
-/*
-_cQuery := "	SELECT " + CRLF
-_cQuery += "		COUNT(*) TOTAL " + CRLF
-_cQuery += "	FROM " + CRLF
-_cQuery += "		" + RetSqlName("DA1") + " DA1 " + CRLF 
-_cQuery += "		INNER JOIN " + RetSqlName("DA0") + " DA0 ON DA0.DA0_FILIAL = '" + xFilial("DA0") + "' AND DA0.DA0_CODTAB = DA1.DA1_CODTAB AND DA0.D_E_L_E_T_ = '' " + CRLF 
-_cQuery += "		INNER JOIN " + RetSqlName("SB5") + " B5 ON B5.B5_FILIAL = '" + xFilial("SB5") + "' AND B5.B5_COD = DA1.DA1_CODPRO AND B5.B5_XENVECO = '2' AND B5.B5_XENVSKU = '2' AND B5.B5_XUSAECO = 'S' AND B5.D_E_L_E_T_ = '' " + CRLF 
-_cQuery += "		INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = DA1.DA1_CODPRO AND B1.B1_MSBLQL <> '1' AND B1.D_E_L_E_T_ = '' " + CRLF 
-_cQuery += "	WHERE " + CRLF 
-_cQuery += "		DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND " + CRLF 
-_cQuery += "		DA1.DA1_CODTAB = '" + _cCodTab + "' AND " + CRLF
-_cQuery += "		DA1.DA1_XENVEC = '1' AND " + CRLF  
-_cQuery += "		DA1.D_E_L_E_T_ = '' "
+
+_cQuery := " SELECT " + CRLF
+_cQuery += "	COUNT(*) TOTAL " + CRLF
+_cQuery += " FROM " + CRLF
+_cQuery += "	" + RetSqlName("SB1") + " B1 " + CRLF 
+_cQuery += " WHERE " + CRLF 
+_cQuery += "	B1.B1_FILIAL = '" + xFilial("SB1") + "' AND " + CRLF
+_cQuery += "	B1.B1_XIDSKU > 0 AND " + CRLF
+_cQuery += "	B1.B1_XINTLV = '2' AND " + CRLF
+_cQuery += "	B1.B1_MSEXP = '' AND " + CRLF 
+_cQuery += "	B1.D_E_L_E_T_ = '' " 
 
 _lDA1   := EcLoj011Qry(_cQuery)
-*/
+
 Return Nil
 
 /************************************************************************************/

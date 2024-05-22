@@ -94,7 +94,7 @@ _oStrSB4:SetProperty('B4_COLUNA', MODEL_FIELD_VALID, FwBuildFeature(STRUCT_FEATU
 _oModel	:= MPFormModel():New("SB4_00", /*_bPreValid*/ , /*_bPosValid*/ , /*_bCommit*/ , /*_bCancel*/ )
 
 //-----------------------------------+
-// Classe para valdiação dos eventos |
+// Classe para validação dos eventos |
 //-----------------------------------+
 _oEvent := GradeProduto():New()
 
