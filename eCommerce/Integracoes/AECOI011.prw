@@ -190,11 +190,11 @@ While XTN->( !Eof() )
 		//----------------------+
 		// Envia as estoque b2b |
 		//----------------------+
-		_cLojaID	:= XTN->XTN_IDECOM
-		_cUrl		:= XTN->XTN_URL1
-		_cUrl_2		:= XTN->XTN_URL2
-		_cAppKey	:= XTN->XTN_APPKEY
-		_cAppToken	:= XTN->XTN_APPTOK
+		_cLojaID	:= RTrim(XTN->XTN_IDECOM)
+		_cUrl		:= RTrim(XTN->XTN_URL1)
+		_cUrl_2		:= RTrim(XTN->XTN_URL2)
+		_cAppKey	:= RTrim(XTN->XTN_APPKEY)
+		_cAppToken	:= RTrim(XTN->XTN_APPTOK)
 		
 		If _lJob
 			AECOINT11()
@@ -549,7 +549,7 @@ EndIf
 If oDadosCli:IsCorporate
 	cNomeCli	:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:CorporateName),.T.))											, SA1->A1_NOME 		) 
 	cNReduz		:= IIF(nOpcA == 3,	Alltrim(u_ECACENTO(DecodeUtf8(oDadosCli:TradeName),.T.))												, SA1->A1_NREDUZ	)
-	cContato	:= IIF(nOpcA == 3,	u_ECACENTO(DecodeUtf8(oDadosCli:FirstName),.T.) + " " + u_ECACENTO(DecodeUtf8(oDadosCli:LastName),.T.)	, SA1->A1_CONTATO	)	
+	cContato	:= IIF(nOpcA == 3,	u_ECACENTO(DecodeUtf8(oDadosCli:FirstName),.T.) 														, SA1->A1_CONTATO	)	
 	cDdd01		:= IIF(nOpcA == 3,	SubStr(oDadosCli:CorporatePhone,5,2)																	, SA1->A1_DDD		)
 	cTel01		:= IIF(nOpcA == 3,	StrTran(SubStr(oDadosCli:CorporatePhone,8,nTamTel)," ","")												, SA1->A1_TEL		)
 	cInscE		:= IIF(nOpcA == 3,	IIF(ValType(oDadosCli:StateInscription) <> "U",Upper(oDadosCli:StateInscription),"ISENTO")				, SA1->A1_INSCR		)
@@ -4111,6 +4111,8 @@ _lGrava := AEcoVldAga(_cIdEnd)
 
 If _lGrava
 	_cCodEnd := GetSxeNum("AGA","AGA_CODIGO")
+	dbSelectArea("AGA")
+	AGA->( dbSetOrder(2) )
 	While AGA->( dbSeek(xFilial("AGA") + _cCodEnd ) )
 		ConfirmSx8()
 		_cCodEnd := GetSxeNum("AGA","AGA_CODIGO")
@@ -4198,7 +4200,7 @@ Local _lRet	 		:= .T.
 _cQryParam 	:= "f_status=ready-for-handling"
 _cOrderBy  	:= "&orderBy=creationDate,asc"
 _cPerPage  	:= "&per_page=100"
-_cPage	  	:= "&page=" + cValToChar(_nPage) + "	
+_cPage	  	:= "&page=" + AllTrim(cValToChar(_nPage)) + "	
 _cParams 	:= _cQryParam + _cOrderBy + _cPerPage + _cPage
 
 //---------+

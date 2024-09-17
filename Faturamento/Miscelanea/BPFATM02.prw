@@ -9,7 +9,7 @@
     @version version
 /*/
 /***********************************************************************************************/
-User Function BPFATM02(_cCodCli,_cLojaCli)
+User Function BPFATM02()
 Local _lRet     := .T.
 
 Local _cBussID  := ""

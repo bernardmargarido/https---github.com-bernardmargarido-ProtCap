@@ -29,8 +29,6 @@ Class ProtMonitor
     Data nQtdReg		As Integer
 	Data nTentativa	    As Integer
 
-    Data lAtualiza      As Boolean 
-
     Method New() Constructor
     Method ValidZ12() 
     Method ValidZ13() 
@@ -65,8 +63,6 @@ Method New() Class ProtMonitor
     ::nQtdReg       := 0
 	::nTentativa    := 0
 
-    ::lAtualiza     := .F.
-
 Return Nil 
 
 /****************************************************************************************/
@@ -98,18 +94,19 @@ _cQuery += " GROUP BY Z12_ID,Z12_CHAVE "
 
 _cAlias := MPSysOpenQuery(_cQuery)
 
+//::nTpRet:= _cAlias->(TENTATIVA)
 //------------+
 // Incrementa |
 //------------+
-If ::nTpRet == 1
+If ::nTpRet == 1     
     ::cSeqZ12   := IIF(Empty((_cAlias)->SEQ), "0001", Soma1((_cAlias)->SEQ))
     ::nTentativa:= IIF(Empty((_cAlias)->TENTATIVA), 1, (_cAlias)->TENTATIVA + 1)
 //--------------------------+
 // Retorna ultima sequencia |
 //--------------------------+
 Else
-    ::cSeqZ12   := (_cAlias)->SEQ
-    ::nTentativa:= (_cAlias)->TENTATIVA
+    ::cSeqZ12   := (_cAlias)->SEQ 
+    ::nTentativa:= (_cAlias)->TENTATIVA 
 EndIf
 
 //--------------------+
@@ -173,28 +170,50 @@ Return Nil
 /****************************************************************************************/
 Method GrvMonitor() Class ProtMonitor
 Local _aArea    := GetArea()
-
 Local _lRet     := .T.
 Local _lGrava   := .F.
 
-::nTpRet        := 2
-::ValidZ12()
-
-//--------------------------+
-// Seleciona tabela monitor |
-//--------------------------+
-dbSelectArea("Z12")
-Z12->( dbSetOrder(1) )
-If Z12->( dbSeek(xFilial("Z12") + PadR(::cIdProc,TamSx3("Z12_ID")[1]) + PadR(::cChave,TamSx3("Z12_CHAVE")[1]) + PadR(::cSeqZ12,TamSx3("Z12_SEQ")[1])) )
-    If Z12->Z12_STPROC == "6" .And. ::cStatus <> "6"
-        ::nTpRet    := 1
-        _lGrava     := .T.
-        ::ValidZ12()
+If ::cIdProc$"0013|0014|0015"
+    If ::cStatus=="1" //Pelo status passado está incluíndo um novo processo de integração Protheus-->Astrein
+        //preciso buscar a proxima sequencia disponivel deste processo+chave
+        ::nTpRet    := 1        //Dentro da VALIDZ12 o valor 1=incrementa novo processo; 2=atualiza e traz o ultimo ja existente e retorna valor de tentativas
+        ::ValidZ12()            //retorna a proxima sequencia deste processo+chave
+        _lGrava     := .T.      //Flag indicando novo registro na Z12
+        ::nTentativa:= 0        //Preciso forcar a quantidade de tentativas pois a validz12 retorna a quantidade do ultima sequencia do processo+chave
+    Else            //Alteracao
+        //Forca a Atualização do registro ja existente na Z12
+        ::nTpRet  := 2          //Dentro da VALIDZ12 o valor 1=incrementa novo processo; 2=atualiza e traz o ultimo ja existente e retorna valor de tentativas
+        _lGrava   := .F.        //Flag Indicando autalizaçao de registro na Z12
+        dbSelectArea("Z12")
+        Z12->( dbSetOrder(1) )
+        Z12->( dbSeek(xFilial("Z12") + PadR(::cIdProc,TamSx3("Z12_ID")[1]) + PadR(::cChave,TamSx3("Z12_CHAVE")[1]) + PadR(::cSeqZ12,TamSx3("Z12_SEQ")[1])) )
+        ::nTentativa :=  Z12->Z12_TENTAT + 1    //Incremento o numero de tentativas
     EndIf
 Else
-    ::nTpRet        := 1
-    _lGrava         := .T.
+    ::nTpRet        := 2 
     ::ValidZ12()
+    //--------------------------+
+    // Seleciona tabela monitor |
+    //--------------------------+
+    dbSelectArea("Z12")
+    Z12->( dbSetOrder(1) )
+    If Z12->( dbSeek(xFilial("Z12") + PadR(::cIdProc,TamSx3("Z12_ID")[1]) + PadR(::cChave,TamSx3("Z12_CHAVE")[1]) + PadR(::cSeqZ12,TamSx3("Z12_SEQ")[1])) )
+        If Z12->Z12_STPROC == "6" .And. ::cStatus <> "6"
+            ::nTpRet    := 1
+            _lGrava     := .T. 
+            ::ValidZ12()
+        Else
+        	If Z12->Z12_STPROC == "7"
+        		::nTpRet        := 1
+        		_lGrava         := .T.
+        		::ValidZ12()      		
+        	EndIf
+        EndIf
+    Else
+        ::nTpRet        := 1
+        _lGrava         := .T.
+        ::ValidZ12()
+    EndIf
 EndIf
 
 If _lGrava
@@ -222,9 +241,7 @@ Else
         Z12->Z12_DTPFIM := Date()
         Z12->Z12_HRPFIM := Time()
         Z12->Z12_STPROC := ::cStatus
-        If Self:lAtualiza
-            Z12->Z12_JSON   := ::cJSon
-        EndIf 
+        Z12->Z12_TENTAT := ::nTentativa //Tanimoto 21/12/2020. Inclui para atualizar o numero de tentaivas
     Z12->( MsUnLock() )
 EndIf
 

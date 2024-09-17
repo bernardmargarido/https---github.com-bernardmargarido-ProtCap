@@ -51,7 +51,6 @@ If !_lRet .Or. !Empty(_cError)
         MsgStop("Error: Cliente/Prospect " + CRLF + _cError,"LaborHS - Avisos")
     EndIf 
     */
-    BPFATM01K({_cCgc,_cError})
 
 EndIf 
 
@@ -2084,26 +2083,6 @@ While _nI <= _nLength
 EndDo 
     
 Return _aArray
-
-/***********************************************************************************/
-/*/{Protheus.doc} BPFATM01K
-    @description Realiza o envio de LOG 
-    @type  Static Function
-    @author Bernard M Margarido
-    @since 01/04/2024
-    @version version
-/*/
-/***********************************************************************************/
-Static Function BPFATM01K(_aMsg)
-Local _o4MDG    := BS4MDG():New()
-
-Local _cMail    := "bernard.margarido@laborhs.com.br"
-
-_o4MDG:cMail    := _cMail
-_o4MDG:aMsg     := _aMsg
-_o4MDG:EnvMail()
-
-Return Nil 
 
 /***********************************************************************************/
 /*/{Protheus.doc} BPFATM01O

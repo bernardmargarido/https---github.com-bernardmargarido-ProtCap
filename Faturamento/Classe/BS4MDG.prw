@@ -37,7 +37,7 @@ Class BS4MDG
     Method RetCadastros()
     Method GetFornecedor()
     Method GetTransportador()
-    Method EnvMail()        
+
 EndClass
 
 /**********************************************************************************/
@@ -231,7 +231,7 @@ aAdd(_aHeadOut, "X-API-Key: " + RTrim(Self:cAPIKey))
 //------------+
 _cSetParam  := "PROCESSO=ENVIO_CLIENTES&"
 _cSetParam  += "BUSINESS=PROTHEUS&"
-_cSetParam  += "COMPANY=LABOR"
+_cSetParam  += "COMPANY=BEPI"
 
 _cURL       := Self:cURL + ":" + Self:cPorta + "/bunzlbrasil?" + _cSetParam
 _cResponse  := HTTPQuote(_cURL, "GET", "", "", 600, _aHeadOut, @_cXMLHeadRet)
@@ -293,10 +293,10 @@ aAdd(_aHeadOut, "X-API-Key: " + RTrim(Self:cAPIKey))
 //------------+
 _cSetParam  := "PROCESSO=RESP&"
 _cSetParam  += "BUSINESS=PROTHEUS&"
-_cSetParam  += "COMPANY=LABOR"
+_cSetParam  += "COMPANY=BEPI"
 
 _cURL       := Self:cURL + ":" + Self:cPorta + "/bunzlbrasil?" + _cSetParam
-_cResponse  := HTTPQuote(_cURL, "POST", "", Self:cJSon, 600, _aHeadOut, @_cXMLHeadRet)
+_cResponse  := HTTPQuote(_cURL, "POST", "", EncodeUTF8(Self:cJSon), 600, _aHeadOut, @_cXMLHeadRet)
 _nStatus    := HTTPGetStatus(@_cError)
 
 If ValType(_cResponse) <> "U" 
@@ -352,7 +352,7 @@ aAdd(_aHeadOut, "X-API-Key: " + RTrim(Self:cAPIKey))
 //------------+
 _cSetParam  := "PROCESSO=ENVIO_FORNECEDORES&"
 _cSetParam  += "BUSINESS=PROTHEUS&"
-_cSetParam  += "COMPANY=LABOR"
+_cSetParam  += "COMPANY=BEPI"
 
 _cURL       := Self:cURL + ":" + Self:cPorta + "/bunzlbrasil?" + _cSetParam
 _cResponse  := HTTPQuote(_cURL, "GET", "", "", 600, _aHeadOut, @_cXMLHeadRet)
@@ -415,7 +415,7 @@ aAdd(_aHeadOut, "X-API-Key: " + RTrim(Self:cAPIKey))
 //------------+
 _cSetParam  := "PROCESSO=ENVIO_TRANSPORTADORAS&"
 _cSetParam  += "BUSINESS=PROTHEUS&"
-_cSetParam  += "COMPANY=LABOR"
+_cSetParam  += "COMPANY=BEPI"
 
 _cURL       := Self:cURL + ":" + Self:cPorta + "/bunzlbrasil?" + _cSetParam
 _cResponse  := HTTPQuote(_cURL, "GET", "", "", 600, _aHeadOut, @_cXMLHeadRet)
@@ -441,42 +441,5 @@ If ValType(_cResponse) <> "U"
 EndIf 
 
 FreeObj(_oJSonRet)
-
-Return _lRet 
-
-/**********************************************************************************/
-/*/{Protheus.doc} EnvMail
-    @description Metodo - Envia email contendo o LOG do processo
-    @author Bernard M Margarido
-    @since 03/07/2024
-    @version version
-/*/
-/**********************************************************************************/
-Method EnvMail() Class BS4MDG
-Local _lRet := .T.
-
-Local _aDados   := {}
-
-Local _cHtml    := ""
-Local _cAssunto := ""
-Local _cCabec   := ""
-Local _cMsg     := ""
-Local _cTipo	:= "T" 
-
-aAdd(_aDados,{'CNPJ ','MENSAGEM ', "DATA ", "HORA "})
-
-aAdd(_aDados,{  Self:aMsg[1],;
-                Self:aMsg[2],;
-                Date(),;	               
-                SubsTr(Time(),1,5);
-    })	
-
-_cAssunto   := "Integração 4MDG"
-_cCabec     := "Integração 4MDG"
-_cMsg       := "LOG processo de integração 4MDG."
-_cHtml	    := U_LABRETHTM(_cCabec,_cMsg,_cTipo,_aDados)
-_cTo        := Self:cMail + IIF(Empty(Self:cMailCC) ,"", ";" + Self:cMailCC)
-
-U_SendMail(_cTo, _cAssunto, _cHtml, "", .F.)
 
 Return _lRet 
