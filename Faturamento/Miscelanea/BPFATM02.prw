@@ -17,7 +17,7 @@ Local _cEmail   := ""
 Local _cError   := ""
 Local _cStatus  := "1"
 Local _cChave   := ""
-Local _cIdProc  := "0048"
+Local _cIdProc  := "0050"
 
 Local _oJSon    := JSonObject():New() 
 Local _oContato := Nil 

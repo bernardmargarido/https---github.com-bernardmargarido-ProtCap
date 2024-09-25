@@ -12,7 +12,7 @@
 User Function BPFATM05()
 Local _aArea    := GetArea() 
 
-Local _cIdProc  := "0051"
+Local _cIdProc  := "0053"
 
 Local _nTentat  := 0
 
@@ -189,7 +189,7 @@ While (_cAlias)->( !Eof() )
             If ( aScan(_aInclui, {|x| RTrim(x) == RTrim(_aStruct[_nX][1])}) == 0 ) 
                 _cCpo   := _aStruct[_nX][1]
                 If ValType(_oJSon[_cCpo]) <> "U"
-                    If !Empty(_oJSon[_cCpo]) .And. _oJSon[_cCpo] <> "X"
+                    If !Empty(_oJSon[_cCpo])
                         _xRet   := ""
                         If _aStruct[_nX][2] == "N"
                             _xRet := IIF(ValType(_oJSon[_cCpo]) == "C", Val(_oJSon[_cCpo]), _oJSon[_cCpo])
@@ -199,7 +199,6 @@ While (_cAlias)->( !Eof() )
                             Else 
                                 _xRet := cTod(_oJSon[_cCpo])
                             EndIf 
-                        Else 
                             _xRet := _oJSon[_cCpo]
                         EndIf 
                         aAdd(_aTransp, {_cCpo,         _xRet,              Nil})

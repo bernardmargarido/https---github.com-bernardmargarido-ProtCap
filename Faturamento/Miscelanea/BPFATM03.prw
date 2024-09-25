@@ -12,7 +12,7 @@
 User Function BPFATM03()
 Local _aArea    := GetArea() 
 
-Local _cIdProc  := "0049"
+Local _cIdProc  := "0051"
 
 Local _nTentat  := 0
 
@@ -84,7 +84,9 @@ If _o4MDG:GetCliente()
                     //--------------+
                     // Atualiza Z12 |
                     //--------------+
-                    _cChave     := FwTimeStamp(3,Date())   //IIF(ValType(_oJSon[_nX]['content_id']) <> "U", _oJSon[_nX]['content_id'], _oJSon[_nX]['A1_CGC'])
+                    _cParte1    := dTos(Date()) + StrZero(_nX,3)//Alltrim(StrTran(StrTran(FwTimeStamp(3,Date(),Time()),"-",""),":",""))
+                    _cParte2    := Alltrim(IIF(ValType(_oJSon[_nX]['A1_CGC']) <> "U", _oJSon[_nX]['A1_CGC'], IIF(ValType(_oJSon[_nX]['A1_NIF']) <> "U", _oJSon[_nX]['A1_NIF'], "999999")))
+                    _cChave     := _cParte1 + _cParte2 //IIF(ValType(_oJSon[_nX]['content_id']) <> "U", _oJSon[_nX]['content_id'], _oJSon[_nX]['A1_CGC'])
                     _oJSonCli   := JSonObject():New()
                     _oJSonCli   := _oJSon[_nX]
                     U_BzApi01d(_cIdProc,_cChave,_oJSonCli:ToJson(),_cError,_cStatus,Nil,.T.)
@@ -135,11 +137,13 @@ Local _cCodMunEn        := ""
 Local _cEst             := ""
 Local _cEste		    := ""
 Local _cCodMun	        := ""
-Local _cCodMunC	        := ""
+//Local _cCodMunC	        := ""
 Local _cCodMunCo	    := ""
 Local _cBco1		    := ""
 Local _cCond            := ""
 Local _cRisco		    := ""
+Local _cRazao           := ""
+Local _cInscR           := ""
 
 Local _xRet             := Nil              
 
@@ -154,14 +158,34 @@ Local _aCartExec        := {}
 Local _lRet             := .T.
 Local _lInclui          := .T.
 Local _lEx              := .F.
-Local _lLoja            := .F.
 Local _lContinua        := .T.
+Local _lValid           := .T.
 
 Local _nX               := 0
 Local _nOpcA            := 3
+Local _nPDDD            := 0
+Local _nPTel            := 0
+Local _nPCNae           := 0
+Local _nPCep            := 0
+Local _nPMailF          := 0
+Local _nPMail           := 0
+Local _nPCgc            := 0
+Local _nPNif            := 0
+Local _nPMun            := 0
+Local _nPEst            := 0
+Local _nPMunE           := 0
+Local _nPEstE           := 0
+Local _nPCodMun         := 0
+Local _nPCodMunE        := 0
+Local _nTMun            := TamSx3("A1_MUN")[1]
+Local _nTMunE           := TamSx3("A1_MUNE")[1]
 Local _nTCgc            := TamSx3("A1_CGC")[1]
 Local _nTRazao          := TamSx3("A1_NOME")[1]
 Local _nTNReduz         := TamSx3("A1_NREDUZ")[1]
+Local _nTCodMun		    := TamSx3("A1_COD_MUN")[1]
+Local _nTXCodMun	    := TamSx3("A1_XCDMUNE")[1]
+//Local _nTMunC		    := TamSx3("A1_MUNC")[1]	
+Local _nTCodMunE       := TamSx3("A1_CODMUNE")[1]
 
 Local _oJSon            := Nil 
 
@@ -214,22 +238,24 @@ While (_cAlias)->( !Eof() )
         _cGrpVen    := IIF(ValType(_oJSon['A1_GRPVEN']) <> "U", _oJSon['A1_GRPVEN'], "")
         _cEst       := IIF(ValType(_oJSon['A1_EST']) <> "U", _oJSon['A1_EST'], "")
         _cEste		:= IIF(ValType(_oJSon['A1_ESTE']) <> "U", _oJSon['A1_ESTE'], "")
-        _cCodMun	:= IIF(ValType(_oJSon['A1_COD_MUN']) <> "U", IIF(Len(_oJSon['A1_COD_MUN']) > 5, SubStr(_oJSon['A1_COD_MUN'],3) , _oJSon['A1_COD_MUN']) , "")
-        _cCodMunE	:= IIF(ValType(_oJSon['A1_XCDMUNE']) <> "U", IIF(Len(_oJSon['A1_XCDMUNE']) > 5, SubStr(_oJSon['A1_XCDMUNE'],3) , _oJSon['A1_XCDMUNE']) , "")
-        _cCodMunC	:= IIF(ValType(_oJSon['A1_MUNC']) <> "U", IIF(Len(_oJSon['A1_MUNC']) > 5, SubStr(_oJSon['A1_MUNC'],3) , _oJSon['A1_MUNC']) , "")
-        _cCodMunEn	:= IIF(ValType(_oJSon['A1_CODMUNE']) <> "U", IIF(Len(_oJSon['A1_CODMUNE']) > 5, SubStr(_oJSon['A1_CODMUNE'],3) , _oJSon['A1_CODMUNE']) , "")
+        _cCodMun	:= IIF(ValType(_oJSon['A1_COD_MUN']) <> "U", IIF(Len(_oJSon['A1_COD_MUN']) > 5, PadR(SubStr(_oJSon['A1_COD_MUN'],3),_nTCodMun) , PadR(_oJSon['A1_COD_MUN'],_nTCodMun)) , "")
+        _cCodMunE	:= IIF(ValType(_oJSon['A1_XCDMUNE']) <> "U", IIF(Len(_oJSon['A1_XCDMUNE']) > 5, PadR(SubStr(_oJSon['A1_XCDMUNE'],3),_nTXCodMun) , PadR(_oJSon['A1_XCDMUNE'],_nTXCodMun)) , "")
+        //_cCodMunC	:= IIF(ValType(_oJSon['A1_MUNC']) <> "U", IIF(Len(_oJSon['A1_MUNC']) > 5, PadR(SubStr(_oJSon['A1_MUNC'],3),_nTMunC) , PadR(_oJSon['A1_MUNC'],_nTMunC)) , "")
+        _cCodMunEn	:= IIF(ValType(_oJSon['A1_CODMUNE']) <> "U", IIF(Len(_oJSon['A1_CODMUNE']) > 5, PadR(SubStr(_oJSon['A1_CODMUNE'],3),_nTCodMunE) , PadR(_oJSon['A1_CODMUNE'],_nTCodMunE)) , "")
         _cCodMunCo	:= IIF(ValType(_oJSon['A1_XMUNCOM']) <> "U", _oJSon['A1_XMUNCOM'], "")
         _cBco1		:= IIF(ValType(_oJSon['A1_FPAGTO']) <> "U", _oJSon['A1_FPAGTO'], "")
         _cCond      := IIF(ValType(_oJSon['A1_COND']) <> "U", _oJSon['A1_COND'], "")
         _cRisco		:= IIF(ValType(_oJSon['A1_RISCO']) <> "U", _oJSon['A1_RISCO'], "")
+        _cInscR     := IIF(ValType(_oJSon['A1_INSCR']) <> "U", _oJSon['A1_INSCR'], "")
         _cCgc       := PadR(_oJSon['A1_CGC'] , _nTCgc)
-        _cNif       := IIF(ValType(_oJSon['A1_NIF']) <> "U", _oJSon['A1_NIF'], "")
-
+        _cNif       := IIF(ValType(_oJSon['A1_NIF']) <> "U", _oJSon['A1_NIF'], _cCgc)
+        _cRazao     := IIF(ValType(_oJSon['A1_NOME']) <> "U", _oJSon['A1_NOME'], "")
+        
+        _nOpcA      := 3
         _nLC        := IIF(ValType(_oJSon['A1_LC']) <> "U", Val(_oJSon['A1_LC']), 0)
 
         _dVencLC    := DaySum(Date(),90)
 
-        _lLoja      := .F.
         _lContinua  := .T.
         _lEx        := IIF(_oJSon['A1_TIPO'] == "X", .T., .F.) 
 
@@ -238,10 +264,8 @@ While (_cAlias)->( !Eof() )
         //-------------------------+
         // SA1 - Posiciona Cliente |
         //-------------------------+
-        If _lEx
-            BPFATM03D(_cNif,@_lInclui,@_cCodigo,@_cLoja,@_nOpcA)
-        Else 
-            BPFATM03E(_cCgc,@_cCodigo,@_cLoja,@_lInclui,_cCodigo,@_lLoja)
+        If !BPFATM03D(_cCgc,_cRazao,_cInscR,_lEx,@_cCodigo,@_cLoja,@_lInclui,@_nOpcA)
+            BPFATM03E(_cCgc,_cRazao,_cInscR,_lEx,@_cCodigo,@_cLoja,@_lInclui,@_nOpcA)
         EndIf 
 
         If _cPessoa == 'J' .And. !Empty(_cEste) .And. _cEst <> _cEste
@@ -250,7 +274,6 @@ While (_cAlias)->( !Eof() )
 		EndIf
 
         If _lInclui
-            
             //----------------------------+
             // Valida carteira do cliente |
             //----------------------------+
@@ -332,24 +355,32 @@ While (_cAlias)->( !Eof() )
 
         EndIf 
         
+        //----------------------------------------+
+        // Valida se ocorreu erro em alguma regra |
+        //----------------------------------------+
         If !_lContinua
 
             U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError,"3",4)
             BPFATM03H(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
 
         EndIf 
-        
 
         //----------------------+
         // Valida se é inclusão |
         //----------------------+
         If _lContinua
-           //-----------------------+
+            //-----------------------+
             // Cria array de cliente |
             //-----------------------+
             For _nX := 1 To Len(_aStruct)
                 If ( aScan(_aAltera, {|x| RTrim(x) == RTrim(_aStruct[_nX][1])}) == 0 ) 
+
+                    If _lEx .And. RTrim(_aStruct[_nX][1]) == "A1_COD_MUN"
+                        Loop 
+                    EndIf 
+
                     _cCpo   := _aStruct[_nX][1]
+                    _lValid := .F.
                     If ValType(_oJSon[_cCpo]) <> "U"
                         If !Empty(_oJSon[_cCpo])
                             Do Case
@@ -377,14 +408,16 @@ While (_cAlias)->( !Eof() )
                                     _xRet := IIF(SubStr(_oJSon[_cCpo],1,1) == "N","2","1")
                                 ElseIf _aStruct[_nX][1] == "A1_SIMPNAC"
                                     _xRet := IIF(SubStr(_oJSon[_cCpo],1,1) == "0","1","2")
-                                ElseIf _aStruct[_nX][1] == "A1_COD_MUN"
-                                    _xRet := _cCodMun
+                                ElseIf _aStruct[_nX][1] == "A1_EST" 
+                                    _xRet   := Upper(_oJSon[_cCpo])
+                                    _lValid := IIF(_lEx, .T., .F.)
+                                ElseIf _aStruct[_nX][1] == "A1_COD_MUN" 
+                                    _xRet   := _cCodMun
+                                    _lValid := IIF(_lEx, .T., .F.)
                                 ElseIf _aStruct[_nX][1] == 'A1_XCDMUNE'
                                     _xRet := _cCodMunE
                                 ElseIf _aStruct[_nX][1] == 'A1_CODMUNE'
                                     _xRet := _cCodMunEn
-                                ElseIf _aStruct[_nX][1] == 'A1_MUNC'
-                                    _xRet := _cCodMunC
                                 ElseIf _aStruct[_nX][1] == "A1_CNAE"
                                     _xRet := StrTran(StrTran(StrTran( _oJSon[_cCpo], "-","" ) , ".","") , "/","")
                                     _xRet  := Transform( _xRet, "@R ####-#/##" )
@@ -415,26 +448,128 @@ While (_cAlias)->( !Eof() )
                                     _xRet := "4029"
                                 ElseIf _aStruct[_nX][1] $ "A1_CEP*A1_CEPC*A1_XCEPCOM*A1_CEPE"
                                     _xRet := u_Numeros(Alltrim(_oJSon[_cCpo]))
-
                                 Else
                                     _xRet := U_BZNoAcento(_oJSon[_cCpo])
                                 EndIf
                             EndCase
-                            aAdd(_aCliente, { _aStruct[_nX][1], _xRet, Nil })
+                            aAdd(_aCliente, { _aStruct[_nX][1], _xRet, IIF(_lValid, ".T.", Nil) })
                         EndIf
                     EndIf
                 EndIf
             Next _nX
 
+            //-------------------------+
+            // Adiciona dados iniciais |
+            //-------------------------+
             aAdd(_aCliente, { "A1_COD"		    , _cCodigo  	                                                                    , Nil })
             aAdd(_aCliente, { "A1_LOJA"		    , _cLoja		                                                                    , Nil })
             aAdd(_aCliente, { "A1_CGC"          , _cCgc                                                                             , Nil })
             aAdd(_aCliente, { "A1_PESSOA"       , IIF(Len(RTrim(_cCgc)) < 14, "F", "J")                                             , Nil })
 
-            If _nOpcA == 3
-                If aScan(_aCliente, {|x| Rtrim(x[1]) == "A1_TIPO"}) == 0 
-                    aAdd(_aCliente, { "A1_TIPO" , "F"   , Nil }) 
+            //----------------------------+
+            // Valida campos de Municipio |
+            //----------------------------+
+            _nPMun      := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_MUN"})
+            _nPEst      := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_EST"})
+            _nPMunE     := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_MUNE"})
+            _nPEstE     := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_ESTE"})
+            _nPCodMun   := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_COD_MUN"})
+            _nPCodMunE  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_XCDMUNE"})
+
+            If _nPCodMun > 0 .And. _nPEst > 0
+                If _nPMun > 0
+                    CC2->(dbSetOrder(1))
+                    If CC2->(dbSeek(xFilial("CC2") + _aCliente[_nPEst][2] + _aCliente[_nPCodMun][2]))
+                        _aCliente[_nPMun][2] := PadR(CC2->CC2_MUN,_nTMun)
+                    Endif 
+                Else     
+                    CC2->(dbSetOrder(1))
+                    If CC2->(dbSeek(xFilial("CC2") + _aCliente[_nPEst][2] + _aCliente[_nPCodMun][2]))
+                        aAdd(_aCliente, { "A1_MUN"  , PadR(CC2->CC2_MUN,_nTMun)                                                    , Nil })
+                    EndIf 
                 EndIf 
+            EndIf 
+
+            If _nPCodMunE > 0 .And. _nPEstE > 0 
+                If _nPMunE > 0 
+                    CC2->(dbSetOrder(1))
+                    If CC2->(dbSeek(xFilial("CC2") + _aCliente[_nPEstE][2] + _aCliente[_nPCodMunE][2]))
+                        _aCliente[_nPMunE][2] := PadR(CC2->CC2_MUN,_nTMunE)
+                    Endif 
+                Else     
+                    CC2->(dbSetOrder(1))
+                    If CC2->(dbSeek(xFilial("CC2") + _aCliente[_nPEstE][2] + _aCliente[_nPCodMunE][2]))
+                        aAdd(_aCliente, { "A1_MUNE"  , PadR(CC2->CC2_MUN,_nTMunE)                                                    , Nil })
+                    EndIf 
+                EndIf 
+            EndIf 
+
+            //--------------------------------+
+            // Valida campos para Estrangeiro |
+            //--------------------------------+
+            If _lInclui .And. _lEx
+
+                _nPCgc  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_CGC"})
+                _nPNif  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_NIF"})
+                _nPDDD  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_DDD"})
+                _nPTel  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_TEL"})
+                _nPCNae := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_CNAE"})
+                _nPCep  := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_CEP"})
+                _nPMailF:= aScan(_aCliente,{|x| RTrim(x[1]) == "A1_MAILFIN"})
+                _nPMail := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_EMAIL"})
+                _nPCodM := aScan(_aCliente,{|x| RTrim(x[1]) == "A1_COD_MUN"})
+
+                If _nPNif > 0 .And. Empty(_aCliente[_nPNif][2])
+                    _aCliente[_nPNif][2]   := _aCliente[_nPCgc][2]
+                Else 
+                    aAdd(_aCliente, { "A1_NIF" , _aCliente[_nPCgc][2]   , Nil })
+                EndIf 
+
+                If _nPCgc > 0 
+                    _aCliente[_nPCgc][2]   := ""
+                Else 
+                    aAdd(_aCliente, { "A1_CGC" , ""     , Nil })
+                EndIf 
+
+                If _nPDDD > 0 .And. Empty(_aCliente[_nPDDD][2])
+                    _aCliente[_nPDDD][2]   := "000"
+                Else 
+                    aAdd(_aCliente, { "A1_DDD" , "000"  , Nil })
+                EndIf 
+
+                 If _nPTel > 0 .And. Empty(_aCliente[_nPTel][2])
+                    _aCliente[_nPTel][2]   := "00000000"
+                Else 
+                    aAdd(_aCliente, { "A1_TEL" , "00000000" , Nil })
+                EndIf 
+
+                 If _nPCNae > 0 .And. Empty(_aCliente[_nPCNae][2])
+                    _aCliente[_nPCNae][2]   := "9609-2/04"
+                Else 
+                    aAdd(_aCliente, { "A1_CNAE" , "9609-2/04"   , Nil })
+                EndIf 
+
+                 If _nPCep > 0 .And. Empty(_aCliente[_nPCep][2])
+                    _aCliente[_nPCep][2]   := "00000000"
+                Else 
+                    aAdd(_aCliente, { "A1_CEP"  , "00000000"    , Nil })
+                EndIf 
+
+                If _nPMailF > 0 .And. Empty(_aCliente[_nPMailF][2])
+                    _aCliente[_nPMailF][2]   := _aCliente[_nPMail][2]
+                Else 
+                    aAdd(_aCliente, { "A1_MAILFIN" , _aCliente[_nPMail][2]  , Nil })
+                EndIf 
+
+                If _nPCodM > 0 .And. Empty(_aCliente[_nPCodM][2])
+                    _aCliente[_nPCodM][2]   := "99999"
+                Else 
+                    aAdd(_aCliente, { "A1_COD_MUN" , "99999"  , Nil })
+                EndIf 
+
+            EndIf 
+
+            If _nOpcA == 3
                 aAdd(_aCliente, { "A1_XDTINC" , Date()   , Nil }) //Data de Inclusão do cadastro
                 aAdd(_aCliente, { "A1_XUSRINC", "SSA-CAD", Nil }) //Nome de Inclusão do cadastro
             Else
@@ -445,7 +580,9 @@ While (_cAlias)->( !Eof() )
             //-------------------------------+    
             // Realiza a gravação do Cliente |
             //-------------------------------+
-            _aCliente   := FWVetByDic( _aCliente, "SA1" )
+            If _lInclui .And. _lEx
+                _aCliente   := FWVetByDic( _aCliente, "SA1" )
+            EndIf
             
             lMsErroAuto := .F.
 
@@ -518,7 +655,24 @@ While (_cAlias)->( !Eof() )
                 BPFATM03H(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
                 
                 If _nOpcA == 3
+
                     BPFATM03G(_cCodigo,_cLoja,_nLC,_dVencLC,_cRisco)
+
+                    If Len(_aCarteira) > 0
+                    
+                        ZA6->(dbGoTo(_aCarteira[1]))
+                        _cMsgLog := BPFATM03J(_cCodigo,_cLoja)
+
+                        If !Empty(_cCartExec)
+                            ZA6->(dbGoTo(_aCartExec[1]))
+                            _cMsgLog := BPFATM03J(_cCodigo,_cLoja)
+                        EndIf
+                    EndIf
+
+                    If Empty(_cGrpVen)
+                        u_BZGRPVEN(_cCodigo,_cLoja,_cCanal,_cClasse,_cSClasse)
+                    EndIf
+
                 EndIf 
 
             EndIf 
@@ -577,6 +731,7 @@ If (_cAlias)->( Eof() )
 EndIf 
         
 Return .T.
+
 /************************************************************************************/
 /*/{Protheus.doc} BPFATM03D
     @description Consulta cliente estrangeiro
@@ -586,38 +741,40 @@ Return .T.
     @version version
 /*/
 /************************************************************************************/
-Static Function BPFATM03D(_cNIF,_lInclui,_cCodigo,_cLoja,_nOpcA)
-Local _cQuery := ""
-Local _cAlias := ""
+Static Function BPFATM03D(_cCgc,_cRazao,_cInscR,_lEx,_cCodigo,_cLoja,_lInclui,_nOpcA)
+Local _lRet     := .T.
+Local _cAlias   := ""
+Local _cQuery   := ""
 
 _cQuery := " SELECT " + CRLF
 _cQuery += "	A1_COD, " + CRLF
 _cQuery += "	A1_LOJA, " + CRLF
-_cQuery += "	A1_CGC " + CRLF 
+_cQuery += "	A1_INSCR " + CRLF
 _cQuery += " FROM " + CRLF
 _cQuery += "	" + RetSqlName("SA1") + " " + CRLF
 _cQuery += " WHERE " + CRLF
 _cQuery += "	A1_FILIAL = '" + xFilial("SA1") + "' AND " + CRLF
-_cQuery += "	A1_NIF = '" + _cNIF + "' AND " + CRLF
-_cQuery += "	D_E_L_E_T_ = '' " 
+If _lEx
+    _cQuery += "	A1_NOME LIKE '%" + _cRazao + "%' AND " + CRLF
+Else 
+    _cQuery += "	A1_CGC = '" + _cCgc + "' AND " + CRLF
+    _cQuery += "	A1_INSCR = '" + _cInscR + "' AND " + CRLF
+EndIf 
+
+_cQuery += "	D_E_L_E_T_ = '' " + CRLF
 
 _cAlias := MPSysOpenQuery(_cQuery)
 
-_lInclui    := .T.
-_cCodigo    := ""
-_cLoja      := ""
-_nOpcA      := 3
+_lRet       := IIF(Empty((_cAlias)->A1_COD),.F.,.T.)
+_nOpcA      := IIF(Empty((_cAlias)->A1_COD), 3, 4)
+_lInclui    := IIF(Empty((_cAlias)->A1_COD),.T.,.F.)
+_cCodigo    := IIF(Empty((_cAlias)->A1_COD), "", (_cAlias)->A1_COD)
+_cLoja      := IIF(Empty((_cAlias)->A1_LOJA), "", (_cAlias)->A1_LOJA)
 
-If !Empty((_cAlias)->A1_COD)
-    _lInclui    := .F.
-    _cCodigo    := (_cAlias)->A1_COD
-    _cLoja      := (_cAlias)->A1_LOJA
-    _nOpcA      := 4
-EndIf 
 
-(_cAlias)->( dbCloseArea() )	
+(_cAlias)->( dbCloseArea() )
 
-Return Nil 
+Return _lRet 
 
 /***********************************************************************************/
 /*/{Protheus.doc} BPFATM03E
@@ -627,28 +784,25 @@ Return Nil
 @since 03/11/2020
 /*/
 /***********************************************************************************/
-Static Function BPFATM03E(_cCnpj,_cCodigo,_cLoja,_lInclui,_cCodCli,_lLoja)
+Static Function BPFATM03E(_cCgc,_cRazao,_cInscR,_lEx,_cCodigo,_cLoja,_lInclui,_nOpcA)
 Local _aArea    := GetArea()
 
 dbSelectArea("SA1")
 SA1->( dbSetOrder(3) )
 
-//---------------+
-// Localiza CNPJ |
-//---------------+
-If SA1->( dbSeek(xFilial("SA1") + _cCnpj))
-    BPFATM03F(_cCnpj,@_cCodigo,@_cLoja,@_lInclui,_cCodCli,@_lLoja)
 //--------------------+
 // Localiza Raiz CNPJ |
 //--------------------+
-ElseIf SA1->( dbSeek(xFilial("SA1") + SubStr(_cCnpj,1,8)))
-    BPFATM03F(SubStr(_cCnpj,1,8),@_cCodigo,@_cLoja,@_lInclui,_cCodCli,@_lLoja)
+If SA1->( dbSeek(xFilial("SA1") + _cCgc) )
+    BPFATM03F(_cCgc,@_cCodigo,@_cLoja,@_lInclui,@_nOpcA)
+ElseIf SA1->( dbSeek(xFilial("SA1") + SubStr(_cCgc,1,8))) .And. !_lEx
+    BPFATM03F(SubStr(_cCgc,1,8),@_cCodigo,@_cLoja,@_lInclui,@_nOpcA)
 //--------------+
 // Novo Cliente |
 //--------------+
 Else
-    
     _lInclui    := .T.
+    _nOpcA      := 3
     _cCodigo    := GetSxeNum("SA1","A1_COD")
     _cLoja      := "0000"
 
@@ -671,7 +825,7 @@ Return Nil
 @since 06/11/2020
 /*/
 /***********************************************************************************/
-Static Function BPFATM03F(_cCnpj,_cCodigo,_cLoja,_lInclui,_cCodCli,_lLoja)
+Static Function BPFATM03F(_cCgc,_cCodigo,_cLoja,_lInclui,_nOpcA)
 
 Local _cQuery   := ""
 
@@ -688,14 +842,14 @@ _cQuery += " WHERE " + CRLF
 _cQuery += " A1_FILIAL = '" + xFilial("SA1") + "' AND " + CRLF
 _cQuery += " A1_LOJA   <> 'RENT' AND " + CRLF
 
-If Len(RTrim(_cCnpj)) < 14
-    _cQuery += "	A1_CGC LIKE '%" + _cCnpj + "%' AND " + CRLF
+If Len(RTrim(_cCgc)) < 14
+    _cQuery += "	A1_CGC LIKE '%" + _cCgc + "%' AND " + CRLF
 Else
-    _cQuery += "	A1_CGC = '" + _cCnpj + "' AND " + CRLF
+    _cQuery += "	A1_CGC = '" + _cCgc + "' AND " + CRLF
 EndIf
 
-If !Empty(_cCodCli)
-    _cQuery += " A1_COD = '" + _cCodCli + "' AND " + CRLF
+If !Empty(_cCodigo)
+    _cQuery += " A1_COD = '" + _cCodigo + "' AND " + CRLF
 EndIf
 
 _cQuery += "	D_E_L_E_T_ = '' " + CRLF
@@ -724,7 +878,7 @@ _cAlias     := MPSysOpenQuery(_cQuery)
 
 _cLoja      := Soma1((_cAlias)->LOJA)
 _lInclui    := .T.
-_lLoja      := .T.
+_nOpcA      := 3
 
 (_cAlias)->( dbCloseArea() )
 
@@ -814,3 +968,48 @@ Static Function BPFATM03I(_cCart)
 	(_cAlias)->( dbCloseArea() )
 
 Return {_nRec,_cDepVen}
+
+/*************************************************************************************/
+/*/{Protheus.doc} ErroAuto
+@description Grava cliente na carteira
+@type  Static Function
+@author Victor Dessunte
+@since 24/11/2020/
+/*/
+/*************************************************************************************/
+
+Static Function BPFATM03J(_cCodigo,_cLoja)
+
+	Local lRet		:= .F.
+	Local oModel	:= Nil
+	Local cMsgErro
+
+	Local cFilAux	:= cFilAnt
+
+	cFilant := ZA6->ZA6_FILIAL
+
+	oModel := FwLoadModel("PROMA148")
+	oModel:SetOperation(MODEL_OPERATION_INSERT)
+	oModel:Activate()
+
+	oModel:SetValue("ZA7MASTER"	, "ZA7_CLIENT"	, _cCodigo	)
+	oModel:SetValue("ZA7MASTER"	, "ZA7_LOJA"	, _cLoja	)
+
+	If oModel:VldData()
+		lRet := oModel:CommitData()
+	EndIf
+
+	If !lRet
+		cMsgErro := MODXERR(oModel)
+	EndIf
+
+	oModel := FwModelActive()
+
+	If ValType(oModel) <> "U"
+		oModel:Destroy()
+		FreeObj(oModel)
+	EndIf
+
+	cFilAnt := cFilAux
+
+Return cMsgErro

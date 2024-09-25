@@ -12,7 +12,7 @@
 User Function BPCOMM01()
 Local _aArea    := GetArea() 
 
-Local _cIdProc  := "0050"
+Local _cIdProc  := "0052"
 
 Local _nTentat  := 0
 
