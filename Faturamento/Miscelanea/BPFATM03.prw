@@ -188,6 +188,9 @@ Local _nTXCodMun	    := TamSx3("A1_XCDMUNE")[1]
 Local _nTCodMunE       := TamSx3("A1_CODMUNE")[1]
 
 Local _oJSon            := Nil 
+Local _cZ12Id           := ""
+Local _cZ12cHAVE        := ""
+Local _cZ12Json         := ""
 
 Private lMsErroAuto     := .F.
 Private lMsHelpAuto 	:= .T.
@@ -213,6 +216,11 @@ While (_cAlias)->( !Eof() )
     // Posiciona registro |
     //--------------------+
     Z12->( dbGoTo((_cAlias)->RECNOZ12))
+
+
+    _cZ12Id           := Z12->Z12_ID
+    _cZ12cHAVE        := Z12->Z12_CHAVE
+    _cZ12Json         := Z12->Z12_JSON
 
     _oJSon := JSonObject():New()
     _oJSon:FromJson(RTrim(Z12->Z12_JSON))
@@ -571,18 +579,18 @@ While (_cAlias)->( !Eof() )
 
             If _nOpcA == 3
                 aAdd(_aCliente, { "A1_XDTINC" , Date()   , Nil }) //Data de Inclusão do cadastro
-                aAdd(_aCliente, { "A1_XUSRINC", "SSA-CAD", Nil }) //Nome de Inclusão do cadastro
+                aAdd(_aCliente, { "A1_XUSRINC", "4MDG", Nil }) //Nome de Inclusão do cadastro
             Else
                 aAdd(_aCliente, { "A1_XDTALT" , Date()   , Nil }) //Data de Alteração do cadastro
-                aAdd(_aCliente, { "A1_XUSRALT", "SSA-CAD", Nil }) //Nome de Alteração do cadastro
+                aAdd(_aCliente, { "A1_XUSRALT", "4MDG", Nil }) //Nome de Alteração do cadastro
             EndIf
 
             //-------------------------------+    
             // Realiza a gravação do Cliente |
             //-------------------------------+
-            If _lInclui .And. _lEx
+            //If _lInclui .And. _lEx
                 _aCliente   := FWVetByDic( _aCliente, "SA1" )
-            EndIf
+            //EndIf
             
             lMsErroAuto := .F.
 
@@ -641,8 +649,8 @@ While (_cAlias)->( !Eof() )
                     Next _nX
                 EndIf 
 
-                U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError,"3",4)
-                BPFATM03H(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+                U_BzApi01d(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError,"3",4)
+                BPFATM03H(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError)
 
             Else
 
@@ -651,8 +659,8 @@ While (_cAlias)->( !Eof() )
                 _lRet       := .T.
                 _cError     := "Cliente incluido/atualizado com sucesso."
 
-                U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,"","2",4)
-                BPFATM03H(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+                U_BzApi01d(_cZ12Id,_cZ12cHAVE,_cZ12Json,"","2",4)
+                BPFATM03H(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError)
                 
                 If _nOpcA == 3
 

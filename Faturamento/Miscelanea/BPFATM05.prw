@@ -136,6 +136,12 @@ Local _nPMun            := 0
 Local _nPEst            := 0 
 Local _nTCgc            := TamSx3("A4_CGC")[1]
 
+Local _cZ12Id           := ""
+Local _cZ12Chave        := ""
+Local _cZ12Json         := ""
+Local _cFilAux          := ""
+Local _cFilAux2         := ""
+
 Private lMsErroAuto     := .F.
 Private lMsHelpAuto 	:= .T.
 Private lAutoErrNoFile 	:= .T.
@@ -158,6 +164,13 @@ While (_cAlias)->( !Eof() )
     //--------------------+
     Z12->( dbGoTo((_cAlias)->RECNOZ12))
 
+    _cFilAux          := ""
+    _cFilAux2         := ""
+    _cZ12Id           := Z12->Z12_ID
+    _cZ12Chave        := Z12->Z12_CHAVE
+    _cZ12Json         := Z12->Z12_JSON
+    _lInclui          := .T.
+
     _oJSon := JSonObject():New()
     _oJSon:FromJson(RTrim(Z12->Z12_JSON))
 
@@ -165,6 +178,14 @@ While (_cAlias)->( !Eof() )
     // Valida objeto |
     //---------------+
     If ValType(_oJSon) <> "U"
+
+        If _oJSon["A4_FILIAL"] <> cFilAnt
+            _cFilAux2 := _oJSon["A4_FILIAL"]
+            _cFilAux  := cFilAnt
+            cFilAnt   := _cFilAux2
+            FWSM0Util():setSM0PositionBycFilAnt()
+        EndIf
+
         //-----------------------------------+
         // Valida se é inclusão ou alteração | 
         //-----------------------------------+
@@ -189,7 +210,7 @@ While (_cAlias)->( !Eof() )
             If ( aScan(_aInclui, {|x| RTrim(x) == RTrim(_aStruct[_nX][1])}) == 0 ) 
                 _cCpo   := _aStruct[_nX][1]
                 If ValType(_oJSon[_cCpo]) <> "U"
-                    If !Empty(_oJSon[_cCpo])
+                    If !Empty(_oJSon[_cCpo]) .And. _oJSon[_cCpo] <> "X"
                         _xRet   := ""
                         If _aStruct[_nX][2] == "N"
                             _xRet := IIF(ValType(_oJSon[_cCpo]) == "C", Val(_oJSon[_cCpo]), _oJSon[_cCpo])
@@ -199,6 +220,7 @@ While (_cAlias)->( !Eof() )
                             Else 
                                 _xRet := cTod(_oJSon[_cCpo])
                             EndIf 
+                        Else 
                             _xRet := _oJSon[_cCpo]
                         EndIf 
                         aAdd(_aTransp, {_cCpo,         _xRet,              Nil})
@@ -218,7 +240,7 @@ While (_cAlias)->( !Eof() )
 
             While SA4->( dbSeek(xFilial("SA4") + _cCodigo))
                 ConfirmSx8()
-                _cCodigo := GetSxeNum("SA4","A4_COD","","1")
+                _cCodigo := GetSxeNum("SA4","A4_COD","",1)
             EndDo 
         EndIf
 
@@ -279,8 +301,13 @@ While (_cAlias)->( !Eof() )
 
             Next _nX
 
-            U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError,"3",4)
-            BPFATM05D(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+            If !Empty(_cFilAux)
+                cFilAnt  := _cFilAux
+                FWSM0Util():setSM0PositionBycFilAnt()
+            EndIf
+            
+            U_BzApi01d(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError,"3",4)
+            BPFATM05D(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError)
 
         Else
 
@@ -289,8 +316,13 @@ While (_cAlias)->( !Eof() )
             _lRet       := .T.
             _cError     := "Transportador incluido com sucesso."
 
-            U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,"","2",4)
-            BPFATM05D(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+            If !Empty(_cFilAux)
+                cFilAnt  := _cFilAux
+                FWSM0Util():setSM0PositionBycFilAnt()
+            EndIf
+
+            U_BzApi01d(_cZ12Id,_cZ12cHAVE,_cZ12Json,"","2",4)
+            BPFATM05D(_cZ12Id,_cZ12cHAVE,_cZ12Json,_cError)
 
         EndIf 
 
@@ -299,7 +331,7 @@ While (_cAlias)->( !Eof() )
         //--------------+
         aAdd(_aMsg,{_lRet,_cUUID,_cError,_cCgc,.F.})
     EndIf 
-
+   
     (_cAlias)->( dbSkip() )
 EndDo 
 

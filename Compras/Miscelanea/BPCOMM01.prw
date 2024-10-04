@@ -132,6 +132,14 @@ Local _nOpcA            := 3
 Local _nTCgc            := TamSx3("A2_CGC")[1]
 
 Local _oUrl             := Nil 
+Local _nPais            := TamSx3("A2_PAIS")[1]
+Local _cPais            := ''
+Local _cCodComp         := ''
+Local _cTipo            := ''
+
+Local _cZ12Id           := ""
+Local _cZ12cHAVE        := ""
+Local _cZ12Json         := ""
 
 Private lMsErroAuto     := .F.
 Private lMsHelpAuto 	:= .T.
@@ -155,6 +163,10 @@ While (_cAlias)->( !Eof() )
     //--------------------+
     Z12->( dbGoTo((_cAlias)->RECNOZ12))
 
+    _cZ12Id           := Z12->Z12_ID
+    _cZ12cHAVE        := Z12->Z12_CHAVE
+    _cZ12Json         := Z12->Z12_JSON
+
     _oJSon := JSonObject():New()
     _oJSon:FromJson(RTrim(Z12->Z12_JSON))
 
@@ -169,15 +181,30 @@ While (_cAlias)->( !Eof() )
         _cUUID      := _oJSon['content_id']
         _cCgc       := PadR(_oJSon['A2_CGC'] , _nTCgc)
         _cNifEX     := _oJSon['A2_NIFEX']
-        _lEx        := IIF(Upper(_oJSon['A2_TIPO']) == "X", .T., .F.) 
+        _cPais      := RIGHT(_oJson['A2_PAIS'],_nPais)
+        _lEx        := IIF(Upper(_oJSon['A2_TIPO']) == "X", .T., .F.)
+        _cCodComp   := IIf(ValType(_oJSon['A2_XUCOMPR']) <> "U", _oJSon['A2_XUCOMPR'],'')
+        _cTipo      := IIf(ValType(_oJSon['A2_XTIPO']) <> "U", _oJSon['A2_XTIPO'],'')
+
+        If !Empty(_cCodComp)
+           _cCodComp := AllTrim(Posicione('SY1',1,xFilial('SY1')+_oJson['A2_XUCOMPR'],'Y1_USER'))
+        EndIf
+
+        If _cTipo $ "C*M*L"
+            _cTipo := "D"
+        ElseIf _cTipo == "T"
+            _cTipo := "L"
+        Else
+            _cTipo := "N"
+        EndIf
 
         //----------------------------+
         // SA2 - Posiciona Fornecedor |
         //----------------------------+
         If _lEx
-            BPCOMM01D(_cNifEX,@_lInclui,@_cCodigo,@_cLoja,@_nOpcA)
+            BPCOMM01D(_cNifEX,@_lInclui,@_cCodigo,@_cLoja,@_nOpcA,_cTipo)
         Else 
-            BPCOMM01E(_cCgc,@_cCodigo,@_cLoja,@_nOpcA)
+            BPCOMM01E(_cCgc,@_cCodigo,@_cLoja,@_nOpcA,_cTipo)
         EndIf
 
         //----------------------+
@@ -210,6 +237,10 @@ While (_cAlias)->( !Eof() )
                                 _oUrl:FromJson(_oJSon[_cCpo])
                                 _xRet := _oUrl['url']
                             EndIf 
+                        ElseIf RTrim(_aStruct[_nX][1]) == "A2_PAIS"
+                            _xRet := _cPais
+                        ElseIf RTrim(_aStruct[_nX][1]) == "A2_XUCOMPR"
+                            _xRet := _cCodComp
                         Else 
                             _xRet := PadR(_oJSon[_cCpo],TamSx3(_cCpo)[1])
                         EndIf 
@@ -283,8 +314,8 @@ While (_cAlias)->( !Eof() )
             //--------------------+
             // Atualiza historico |
             //--------------------+
-            U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError,"3",4)
-            BPCOMM01G(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+            U_BzApi01d(_cZ12Id,_cZ12Chave,_cZ12Json,_cError,"3",4)
+            BPCOMM01G(_cZ12Id,_cZ12Chave,_cZ12Json,_cError)
 
         Else
 
@@ -293,8 +324,8 @@ While (_cAlias)->( !Eof() )
             _lRet       := .T.
             _cError     := "Fornecedor incluido com sucesso."
 
-            U_BzApi01d(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,"","2",4)
-            BPCOMM01G(Z12->Z12_ID,Z12->Z12_CHAVE,Z12->Z12_JSON,_cError)
+            U_BzApi01d(_cZ12Id,_cZ12Chave,_cZ12Json,"","2",4)
+            BPCOMM01G(_cZ12Id,_cZ12Chave,_cZ12Json,_cError)
 
         EndIf 
 
@@ -318,7 +349,7 @@ Return Nil
     @version version
 /*/
 /************************************************************************************/
-Static Function BPCOMM01D(_cNIF,_lInclui,_cCodigo,_cLoja,_nOpcA)
+Static Function BPCOMM01D(_cNIF,_lInclui,_cCodigo,_cLoja,_nOpcA,_cTipo)
 Local _cQuery := ""
 Local _cAlias := ""
 
@@ -345,6 +376,8 @@ If !Empty((_cAlias)->A2_COD)
     _cCodigo    := (_cAlias)->A2_COD
     _cLoja      := (_cAlias)->A2_LOJA
     _nOpcA      := 4
+Else
+    _cCodigo := ProxNum(_cTipo)
 EndIf 
 
 (_cAlias)->( dbCloseArea() )	
@@ -399,7 +432,7 @@ Return .T.
 @since 06/11/2020
 /*/
 /***********************************************************************************/
-Static Function BPCOMM01E(_cCnpj,_cCodigo,_cLoja,_nOpc)
+Static Function BPCOMM01E(_cCnpj,_cCodigo,_cLoja,_nOpc,_cTipo)
 
 dbSelectArea("SA2")
 SA2->( dbSetOrder(3) )
@@ -418,14 +451,9 @@ ElseIf SA2->( dbSeek(xFilial("SA2") + SubStr(_cCnpj,1,8)))
 // Novo Fornecedor |
 //-----------------+
 Else
-    _nOpc   := 3
-    _cCodigo:= GetSxeNum("SA2","A2_COD")
-    _cLoja  := "0000"
-    SA2->( dbSetOrder(1) )
-    While SA2->( dbSeek(xFilial("SA2") + _cCodigo + _cLoja) )
-        ConfirmSx8()
-        _cCodigo := GetSxeNum("SA2","A2_COD","",1)
-    EndDo
+    _nOpc    := 3
+    _cLoja   := '0000'
+    _cCodigo := ProxNum(_cTipo)
 EndIf
 
 Return Nil
@@ -494,3 +522,51 @@ Else
 EndIf
 
 Return _lRet
+
+Static Function ProxNum(_cTipo)
+
+Local _cRet   := ""
+Local _cQuery := ""
+
+_cQuery := " SELECT " + CRLF
+
+If _cTipo <> 'N'
+    _cQuery += " 	isnull(MAX(A2_COD),'" + _cTipo + "00001')  CODIGO " + CRLF
+Else
+    _cQuery += " 	MAX(A2_COD)  CODIGO " + CRLF
+EndIf
+
+_cQuery += " FROM " + CRLF
+_cQuery +=  	RetSqlName("SA2") + " WITH(NOLOCK) " + CRLF
+_cQuery += " WHERE " + CRLF
+_cQuery += " 	D_E_L_E_T_ = '' " + CRLF
+_cQuery += " AND A2_FILIAL  = '" + xFilial("SA2") + "' " + CRLF
+
+If _cTipo <> 'N'
+    _cQuery += " AND A2_COD     LIKE '" + _cTipo + "%' " + CRLF
+    _cQuery += " AND SUBSTRING(A2_COD,2,1) IN('0','1','2','3','4','5','6','7','8','9') "
+Else
+    _cQuery += " AND SUBSTRING(A2_COD,1,1) IN('0','1','2','3','4','5','6','7','8','9') "
+EndIf
+
+_cAlias     := MPSysOpenQuery(_cQuery)
+
+If (_cAlias)->(!EOF())
+    If _cTipo == 'N'
+        _cRet := Soma1((_cAlias)->CODIGO)
+        SA2->(dbSetOrder(1))
+        While SA2->( dbSeek(xFilial("SA2") + _cRet + '0000') )
+            _cRet := Soma1(_cRet)
+        EndDo
+    Else
+        _cRet := Soma1(SubStr((_cAlias)->CODIGO,2,5))
+        SA2->(dbSetOrder(1))
+        While SA2->( dbSeek(xFilial("SA2") + _cRet + '0000') )
+            _cRet := Soma1(SubStr(_cRet,2,5))
+        EndDo
+    EndIf
+EndIf
+
+(_cAlias)->( dbCloseArea() )
+
+Return _cRet
