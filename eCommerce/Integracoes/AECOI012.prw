@@ -421,8 +421,8 @@ cQuery += "		DESCPROD," + CRLF
 cQuery += "		IDPROD, " + CRLF 
 cQuery += "		IDSKU, " + CRLF
 cQuery += "		RECNOSB5, " + CRLF
-cQuery += "		RECNOWS5, " + CRLF
-cQuery += "		RECNOWS6 " + CRLF
+cQuery += "		RECNOZTI, " + CRLF
+cQuery += "		RECNOZTE " + CRLF
 cQuery += "	FROM " + CRLF
 cQuery += "	( " + CRLF
 cQuery += "		SELECT " + CRLF
@@ -431,8 +431,8 @@ cQuery += "			B5.B5_CEME DESCPROD, " + CRLF
 cQuery += "			B5.B5_XIDPROD IDPROD, " + CRLF 
 cQuery += "			B5.B5_XIDSKU IDSKU, " + CRLF 
 cQuery += "			B5.R_E_C_N_O_ RECNOSB5, " + CRLF
-cQuery += "			0 RECNOWS5, " + CRLF
-cQuery += "			0 RECNOWS6 " + CRLF
+cQuery += "			0 RECNOZTI, " + CRLF
+cQuery += "			0 RECNOZTE " + CRLF
 cQuery += "		FROM " + CRLF
 cQuery += "			" + RetSqlName("SB5") + " B5 " + CRLF 
 cQuery += "			INNER JOIN " + RetSqlName("DA1") + " DA1 ON DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND DA1.DA1_CODPRO = B5.B5_COD AND DA1.DA1_CODTAB = '" + cCodTab + "' AND DA1.DA1_ENVECO = '2' AND DA1.D_E_L_E_T_ = '' " + CRLF 
@@ -455,18 +455,18 @@ cQuery += "			0 RECNOSB5, " + CRLF
 cQuery += "			WS5.R_E_C_N_O_ RECNOWS5, " + CRLF
 cQuery += "			WS6.R_E_C_N_O_ RECNOWS6 " + CRLF
 cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("WS5") + " WS5 " + CRLF 
-cQuery += "			INNER JOIN " + RetSqlName("WS6") + " WS6 ON WS6.WS6_FILIAL = '" + xFilial("WS6") + "' AND WS6.WS6_CODPRD = WS5.WS5_CODPRD AND WS6.WS6_IDSKU > 0 AND WS6.WS6_ATVSKU IN('1','2') AND WS6.D_E_L_E_T_ = '' " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = WS6.WS6_CODSKU AND B1.D_E_L_E_T_ = '' " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("DA1") + " DA1 ON DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND DA1.DA1_CODPRO = WS6.WS6_CODSKU AND DA1.DA1_CODTAB = '" + cCodTab + "' AND DA1.DA1_ENVECO = '2' AND DA1.D_E_L_E_T_ = '' " + CRLF 
-cQuery += "			INNER JOIN " + RetSqlName("SB2") + " B2 ON B2.B2_FILIAL = '" + xFilial("SB2") + "' AND B2.B2_COD = WS6.WS6_CODSKU AND B2.B2_LOCAL = '" + cLocal + "' AND B2.B2_MSEXP <> '' AND B2.D_E_L_E_T_ = '' " + CRLF 
+cQuery += "			" + RetSqlName("ZTI") + " ZTI " + CRLF 
+cQuery += "			INNER JOIN " + RetSqlName("ZTE") + " ZTE ON WS6.WS6_FILIAL = '" + xFilial("ZTE") + "' AND ZTE.ZTE_CODPRD = WS5.WS5_CODPRD AND ZTE.ZTE_IDSKU > 0 AND ZTE.ZTE_ATVSKU IN('1','2') AND ZTE.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = ZTE.ZTE_CODSKU AND B1.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("DA1") + " DA1 ON DA1.DA1_FILIAL = '" + xFilial("DA1") + "' AND DA1.DA1_CODPRO = ZTE.ZTE_CODSKU AND DA1.DA1_CODTAB = '" + cCodTab + "' AND DA1.DA1_ENVECO = '2' AND DA1.D_E_L_E_T_ = '' " + CRLF 
+cQuery += "			INNER JOIN " + RetSqlName("SB2") + " B2 ON B2.B2_FILIAL = '" + xFilial("SB2") + "' AND B2.B2_COD = ZTE.ZTE_CODSKU AND B2.B2_LOCAL = '" + cLocal + "' AND B2.B2_MSEXP <> '' AND B2.D_E_L_E_T_ = '' " + CRLF 
 cQuery += "		WHERE " + CRLF
-cQuery += "			WS5.WS5_FILIAL = '" + xFilial("WS5") + "' AND " + CRLF 
-cQuery += "			WS5.WS5_USAECO = 'S' AND " + CRLF 
-cQuery += "			WS5.WS5_ENVECO = '2' AND " + CRLF
-cQuery += "			WS5.WS5_ATVPRD = '1' AND " + CRLF
-cQuery += "			WS5.WS5_STATUS = 'A' AND " + CRLF
-cQuery += "			WS5.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			ZTI.ZTI_FILIAL = '" + xFilial("ZTI") + "' AND " + CRLF 
+cQuery += "			ZTI.ZTI_USAECO = 'S' AND " + CRLF 
+cQuery += "			ZTI.ZTI_ENVECO = '2' AND " + CRLF
+cQuery += "			ZTI.ZTI_ATVPRD = '1' AND " + CRLF
+cQuery += "			ZTI.ZTI_STATUS = 'A' AND " + CRLF
+cQuery += "			ZTI.D_E_L_E_T_ = '' " + CRLF
 cQuery += "	)ATVPRD " + CRLF
 cQuery += "	ORDER BY IDPROD,IDSKU "
 
