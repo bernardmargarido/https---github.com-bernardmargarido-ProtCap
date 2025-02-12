@@ -225,38 +225,38 @@ Default _cLojaID	:= ""
 //-----------------------------+
 // Query consulta produtos pai |
 //-----------------------------+
-cQuery := "	SELECT " + CRLF
-cQuery += "		CODIGO, " + CRLF      
-cQuery += "    	NOME, " + CRLF
-cQuery += "    	IDPROD, " + CRLF     
-cQuery += "    	COD_CAMPO, " + CRLF
+cQuery := " SELECT " + CRLF
+cQuery += "		CODIGO, " + CRLF
+cQuery += "		NOME, " + CRLF
+cQuery += "		IDPROD, " + CRLF
+cQuery += "		COD_CAMPO, " + CRLF
 cQuery += "		NOME_CAMPO, " + CRLF
 cQuery += "		IDESPECIFICO, " + CRLF
 cQuery += "		DESC_ESPE, " + CRLF
-cQuery += "    	RECNOB5 " + CRLF
-cQuery += "	FROM " + CRLF
-cQuery += "	( " + CRLF
+cQuery += "		RECNOZTG " + CRLF
+cQuery += " FROM " + CRLF
+cQuery += " ( " + CRLF
 cQuery += "		SELECT " + CRLF 
-cQuery += "			B5.B5_COD CODIGO, " + CRLF 
-cQuery += "			B5.B5_XNOMPRD NOME, " + CRLF
-cQuery += "			B5.B5_XIDPROD IDPROD, " + CRLF
-cQuery += "			WS6.WS6_CODIGO COD_CAMPO, " + CRLF     
-cQuery += "			WS6.WS6_CAMPO NOME_CAMPO, " + CRLF 
-cQuery += "			WS7.WS7_IDECO IDESPECIFICO, " + CRLF 
-cQuery += "			COALESCE(CAST(CAST(WS6.WS6_DESCEC AS BINARY(8000)) AS VARCHAR(8000)),'') DESC_ESPE, " + CRLF 
-cQuery += "			B5.R_E_C_N_O_ RECNOB5 " + CRLF
+cQuery += "			B4.B4_COD CODIGO, " + CRLF 
+cQuery += "			B4.B4_DESC NOME, " + CRLF
+cQuery += "			B4.B4_XIDPRD IDPROD, " + CRLF
+cQuery += "			ZTE.ZTE_COD COD_CAMPO, " + CRLF     
+cQuery += "			ZTE.ZTE_NOME NOME_CAMPO, " + CRLF 
+cQuery += "			ZTE.ZTE_IDCAMP IDESPECIFICO, " + CRLF
+cQuery += "			ZTE.ZTE_DESC DESC_ESPE, " + CRLF 
+cQuery += "			ZTE.R_E_C_N_O_ RECNOZTG " + CRLF
 cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("SB5") + " B5 " + CRLF 
-cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = B5.B5_COD AND B1.D_E_L_E_T_ = '' " + CRLF
-cQuery += "			INNER JOIN " + RetSqlName("WS6") + " WS6 ON WS6.WS6_FILIAL = '" + xFilial("WS6") + "' AND WS6.WS6_CODPRD = B5.B5_COD AND WS6.WS6_ENVECO = '1' AND WS6.D_E_L_E_T_ = '' " + CRLF    
-cQuery += "			INNER JOIN " + RetSqlName("WS7") + " WS7 ON WS7.WS7_FILIAL = '" + xFilial("WS7") + "' AND WS7.WS7_ITEM = WS6.WS6_CODIGO AND WS7.WS7_IDECO > 0 AND WS7.D_E_L_E_T_ = '' " + CRLF 
-cQuery += "		WHERE " + CRLF
-cQuery += "			B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-cQuery += "			B5.B5_XENVECO = '2' AND " + CRLF
-cQuery += "			B5.B5_XUSAECO = 'S' AND " + CRLF
-cQuery += "			B5.D_E_L_E_T_ = '' " + CRLF
-cQuery += "	) CAMPOS_ESPECIFICOS " + CRLF
-cQuery += "	ORDER BY CODIGO "
+cQuery += "		" + RetSqlName("ZTG") + " ZTG " + CRLF 
+cQuery += "		INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = ZTG.ZTG_PRODUT AND B1.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		INNER JOIN " + RetSqlName("SB4") + " B4 ON B4.B4_FILIAL = '" + xFilial("SB4") + "' AND B4.B4_COD = SUBSTRING(B1.B1_COD,1,10) AND B4.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		INNER JOIN " + RetSqlName("ZTF") + " ZTF ON ZTF.ZTF_FILIAL = '" + xFilial("ZTF") + "' AND ZTF.ZTF_COD = ZTG.ZTG_VALUE AND ZTG.D_E_L_E_T_ = '' " + CRLF
+cQuery += "		INNER JOIN " + RetSqlName("ZTE") + " ZTE ON ZTE.ZTE_FILIAL = '" + xFilial("ZTE") + "' AND ZTE.ZTE_COD = ZTG.ZTG_ESPECI AND ZTG.D_E_L_E_T_ = '' " + CRLF 
+cQuery += "	WHERE " + CRLF
+cQuery += "		ZTG.ZTG_FILIAL = '" + xFilial("ZTG") + "' AND  " + CRLF 
+cQuery += "		ZTG.ZTG_PRDSKU = '1' AND " + CRLF
+cQuery += "		ZTG.D_E_L_E_T_ = '' " + CRLF
+cQuery += " ) CAMPOS_ESPECIFICOS " + CRLF
+cQuery += " ORDER BY CODIGO "
 
 dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAlias,.T.,.T.)
 Count To nToReg  

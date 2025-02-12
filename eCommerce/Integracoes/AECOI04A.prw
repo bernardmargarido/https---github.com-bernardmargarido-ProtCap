@@ -248,43 +248,23 @@ cQuery += "		CODIGO, " + CRLF
 cQuery += "		NOME, " + CRLF
 cQuery += "		IDSKU, " + CRLF
 cQuery += "		TAMANHO, " + CRLF
-cQuery += "		RECNOB5, " + CRLF
-cQuery += "		RECNOWS6 " + CRLF
+cQuery += "		RECNOZTG " + CRLF
 cQuery += "	FROM " + CRLF
 cQuery += "	( " + CRLF
-cQuery += "		SELECT " + CRLF 
-cQuery += "			B5.B5_COD CODIGO, " + CRLF 
-cQuery += "			B5.B5_XNOMPRD NOME, " + CRLF
-cQuery += "			B5.B5_XIDSKU IDSKU, " + CRLF
-cQuery += "			B1.B1_ZZTAM TAMANHO, " + CRLF
-cQuery += "			B5.R_E_C_N_O_ RECNOB5, " + CRLF
-cQuery += "			0 RECNOWS6 " + CRLF
-cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("SB5") + " B5 " + CRLF 
-cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = '" + SB5->B5_COD + "' AND B1.D_E_L_E_T_ = '' " + CRLF
-cQuery += "		WHERE " + CRLF
-cQuery += "			B5.B5_FILIAL = '" + xFilial("SB5") + "' AND " + CRLF  
-cQuery += "			B5.B5_XENVECO = '2' AND " + CRLF
-cQuery += "			B5.B5_XENVSKU = '1' AND " + CRLF
-cQuery += "			B5.B5_XUSAECO = 'S' AND " + CRLF
-cQuery += "			B5.D_E_L_E_T_ = '' " + CRLF
-cQuery += "	UNION " + CRLF
 cQuery += "		SELECT " + CRLF
-cQuery += "			WS6.WS6_CODSKU CODIGO, " + CRLF 
-cQuery += "			WS5.WS5_NOMPRD NOME, " + CRLF
-cQuery += "			WS6.WS6_IDSKU IDSKU, " + CRLF
-cQuery += "			WS6.WS6_TAMANH TAMANHO, " + CRLF
-cQuery += "			0 RECNOB5, " + CRLF
-cQuery += "			WS6.R_E_C_N_O_ RECNOWS6 " + CRLF 
+cQuery += "			B1.B1_COD CODIGO, " + CRLF 
+cQuery += "			B1.B1_DESC NOME, " + CRLF
+cQuery += "			B1.B1_XIDSKU IDSKU, " + CRLF
+cQuery += "			ZTF.ZTF_VALUE TAMANHO, " + CRLF
+cQuery += "			ZTG.R_E_C_N_O_ RECNOZTG " + CRLF 
 cQuery += "		FROM " + CRLF
-cQuery += "			" + RetSqlName("WS5") + " WS5 " + CRLF  
-cQuery += "			INNER JOIN " + RetSqlName("WS6") + " WS6 ON WS6.WS6_FILIAL = '" + xFilial("WS6") + "' AND WS6.WS6_CODPRD = WS5.WS5_CODPRD AND WS6.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			" + RetSqlName("ZTG") + " ZTG " + CRLF  
+cQuery += "			INNER JOIN " + RetSqlName("SB1") + " B1 ON B1.B1_FILIAL = '" + xFilial("SB1") + "' AND B1.B1_COD = ZTG.ZTG_PRODUT AND B1.D_E_L_E_T_ = '' " + CRLF
+cQuery += "			INNER JOIN " + RetSqlName("ZTF") + " ZTF ON ZTF.ZTF_FILIAL = '" + xFilial("ZTF") + "' AND ZTF.ZTF_COD = ZTG.ZTG_VALUE AND ZTG.D_E_L_E_T_ = '' " + CRLF
 cQuery += "		WHERE " + CRLF
-cQuery += "			WS5.WS5_FILIAL = '" + xFilial("WS5") + "' AND " + CRLF  
-cQuery += "			WS5.WS5_ENVECO = '2' AND " + CRLF
-cQuery += "			WS5.WS5_USAECO = 'S' AND " + CRLF
-cQuery += "			WS5.D_E_L_E_T_ = '' " + CRLF
-cQuery += "	GROUP BY WS6.WS6_CODSKU,WS5.WS5_NOMPRD,WS6.WS6_IDSKU,WS6.WS6_TAMANH,WS6.R_E_C_N_O_ " + CRLF 
+cQuery += "			ZTG.ZTG_FILIAL = '" + xFilial("ZTG") + "' AND " + CRLF  
+cQuery += "			ZTG.ZTG_PRDSKU = '2' AND " + CRLF
+cQuery += "			ZTG.D_E_L_E_T_ = '' " + CRLF
 cQuery += "	) PRDSKU " + CRLF
 cQuery += "	ORDER BY CODIGO "
 
@@ -308,18 +288,9 @@ Return .T.
 
 /*********************************************************************************/
 /*/{Protheus.doc} LogExec
-
-@description Grava Log do processo 
-
-@author SYMM Consultoria
-@since 26/01/2017
-@version undefined
-
-@param cMsg, characters, descricao
-
-@type function
+	@description Grava Log do processo 
+	@type function
 /*/
-
 /*********************************************************************************/
 Static Function LogExec(cMsg)
 	CONOUT(cMsg)
