@@ -3,14 +3,14 @@
 #INCLUDE "FWMVCDEF.CH"
 
 /*************************************************************************************************************/
-/*/{Protheus.doc} BSFINA15
+/*/{Protheus.doc} BPFINA15
     @description Transferencias PagarMe
     @type  Function
     @author Bernard M. Margarido
     @since 15/07/2021
 /*/
 /*************************************************************************************************************/
-User Function BSFINA15()
+User Function BPFINA15()
 Private _nOldLen := SetVarNameLen(255) 
 Private _oBrowse := Nil 
 
@@ -95,7 +95,7 @@ Local _oStrViewXTQ	:= Nil
 //-------------------------+
 // Carrega Modelo de Dados | 
 //-------------------------+
-_oModel := FWLoadModel("BSFINA15")
+_oModel := FWLoadModel("BPFINA15")
 
 //--------------------------------------+
 // Cria a estrutura a ser usada na View |
@@ -136,10 +136,11 @@ Return _oView
     @version version
 /*/
 /************************************************************************************/
-User Function BSFIN15A()
+User Function BPFIN15A()
 Local _aParam	:= {}
 Local _aRet		:= {}
 
+Local _cMsg     := ""
 Local _cCodBco	:= GetNewPar("PG_BCONUM",CriaVar("A6_COD",.F.))
 Local _cAgencia	:= GetNewPar("PG_AGNUM",CriaVar("A6_AGENCIA",.F.))
 Local _cConta   := GetNewPar("PG_NCONTA",CriaVar("A6_NUMCON",.F.))
@@ -319,9 +320,9 @@ Static Function MenuDef()
 Local _aRotina := {}
 
 ADD OPTION _aRotina TITLE "Pesquisar"            	ACTION "PesqBrw"            		OPERATION 1 ACCESS 0  
-ADD OPTION _aRotina TITLE "Visualizar"           	ACTION "VIEWDEF.BSFINA15" 			OPERATION 2 ACCESS 0 
-ADD OPTION _aRotina TITLE "Excluir"              	ACTION "VIEWDEF.BSFINA15" 			OPERATION 5 ACCESS 0 
-ADD OPTION _aRotina TITLE "Enviar Transf."         	ACTION "U_BSFINM11"		 			OPERATION 6 ACCESS 0 
-ADD OPTION _aRotina TITLE "Banco Transf."         	ACTION "U_BSFIN15A"		 			OPERATION 3 ACCESS 0 
+ADD OPTION _aRotina TITLE "Visualizar"           	ACTION "VIEWDEF.BPFINA15" 			OPERATION 2 ACCESS 0 
+ADD OPTION _aRotina TITLE "Excluir"              	ACTION "VIEWDEF.BPFINA15" 			OPERATION 5 ACCESS 0 
+ADD OPTION _aRotina TITLE "Enviar Transf."         	ACTION "U_BPFINM11"		 			OPERATION 6 ACCESS 0 
+ADD OPTION _aRotina TITLE "Banco Transf."         	ACTION "U_BPFIN15A"		 			OPERATION 3 ACCESS 0 
 
 Return _aRotina

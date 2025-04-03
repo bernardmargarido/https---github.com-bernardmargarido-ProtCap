@@ -31,14 +31,14 @@
 #DEFINE COL_TVLRLIQ  10
 
 /********************************************************************************************************************/
-/*/{Protheus.doc} BSFINA13
+/*/{Protheus.doc} BPFINA13
     @description Tela de conciliação 
     @type  Function
     @author Bernard M. Margarido
     @since 20/07/2021
 /*/
 /********************************************************************************************************************/
-User Function BSFINA13()
+User Function BPFINA13()
 Local _aArea        := GetArea()
 
 Private _aEcomm     := {}
@@ -50,7 +50,7 @@ Private _oBrowseB  := Nil
 //----------------------------+
 // Grava dados de conciliação |
 //----------------------------+
-FwMsgRun(,{|| BsFina13A()},"Aguarde...","Buscando concilações em aberto.")
+FwMsgRun(,{|| BPFINA13A()},"Aguarde...","Buscando concilações em aberto.")
 
 //------------------+
 // Tela conciliação | 
@@ -63,14 +63,14 @@ RestArea(_aArea)
 Return Nil 
 
 /********************************************************************************************************************/
-/*/{Protheus.doc} BsFina13A
+/*/{Protheus.doc} BPFINA13A
     @description Consulta dados conciliação 
     @type  Static Function
     @author Bernard M. Margarido
     @since 20/07/2021
 /*/
 /********************************************************************************************************************/
-Static Function BsFina13A(_nTotal,_nCount,_nTotLiq,_nTotTx,_oSay_02,_oSay_04)
+Static Function BPFINA13A(_nTotal,_nCount,_nTotLiq,_nTotTx,_oSay_02,_oSay_04)
 Local _cAlias   := ""
 Local _cQuery   := ""
 
@@ -122,14 +122,14 @@ _cQuery += "		XTP.XTP_TAXA VALOR_TAXA, " + CRLF
 _cQuery += "		XTP.XTP_VLRREB VALOR_REEMBOLSO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_NUM,'') TITULO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_PREFIXO,'') PREFIXO, " + CRLF
-_cQuery += "		COALESCE(E1.E1_DOCTEF,'') ID_PAY_TITULO, " + CRLF
+_cQuery += "		COALESCE(E1.E1_XNSUCAR,'') ID_PAY_TITULO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_EMISSAO,'') DT_EMISS_TITULO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_VENCREA,'') DT_PGTO_TITULO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_PARCELA,'') PARCELA_TITULO, " + CRLF
 _cQuery += "		COALESCE(E1.E1_VALOR,0) VALOR_TOTAL_TITULO " + CRLF
 _cQuery += "	FROM " + CRLF
 _cQuery += "		" + RetSqlName("XTP") + " XTP " + CRLF 
-_cQuery += "		INNER JOIN " + RetSqlName("SE1") + " E1 ON E1.E1_FILORIG = XTP.XTP_FILIAL AND E1.E1_PARCELA = IIF(E1.E1_PARCELA = '','',XTP.XTP_PARC) AND E1.E1_DOCTEF = XTP.XTP_IDPAY AND E1.E1_BAIXA = '' AND E1.E1_SALDO > 0 AND E1.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "		INNER JOIN " + RetSqlName("SE1") + " E1 ON E1.E1_FILORIG = XTP.XTP_FILIAL AND E1.E1_PARCELA = IIF(E1.E1_PARCELA = '','',XTP.XTP_PARC) AND E1.E1_XNSUCAR = XTP.XTP_IDPAY AND E1.E1_BAIXA = '' AND E1.E1_SALDO > 0 AND E1.D_E_L_E_T_ = '' " + CRLF
 _cQuery += "	WHERE " + CRLF
 _cQuery += "		XTP.XTP_FILIAL = '" + xFilial("XTP") + "' AND " + CRLF
 _cQuery += "		XTP.XTP_STATUS = '1' AND " + CRLF
@@ -264,7 +264,7 @@ Local _lTodos       := .F.
 
 Local _aCoors   	:= FWGetDialogSize( oMainWnd )
 
-Local _bChkMark		:= {|| IIF(_lTodos,(BsFinA13F(.T.,@_nTotLiq,@_nTotTx,@_nTotal,@_nCount,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08),_oChkMark:Refresh()),(BsFinA13F(.F.,@_nTotLiq,@_nTotTx,@_nTotal,@_nCount,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08),_oChkMark:Refresh())) }
+Local _bChkMark		:= {|| IIF(_lTodos,(BPFINA13F(.T.,@_nTotLiq,@_nTotTx,@_nTotal,@_nCount,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08),_oChkMark:Refresh()),(BPFINA13F(.F.,@_nTotLiq,@_nTotTx,@_nTotal,@_nCount,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08),_oChkMark:Refresh())) }
 
 Local _oSize    	:= FWDefSize():New(.T.)
 Local _oLayer       := FWLayer():New()
@@ -333,12 +333,12 @@ _oDlg := MsDialog():New(_oSize:aWindSize[1], _oSize:aWindSize[2], _oSize:aWindSi
     //---------------------+
     // Cria Grid eCommerce |
     //---------------------+
-    BsFinA13C(@_oBrowseA,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_oTEcom,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos)
+    BPFINA13C(@_oBrowseA,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_oTEcom,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos)
 
     //--------------------+
     // Cria Grid Protheus |
     //--------------------+
-    BsFinA13D(@_oBrowseB,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_oTTitul,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos)
+    BPFINA13D(@_oBrowseB,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_oTTitul,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos)
 
     //-----------------------+
 	// Painel para os Botoes | 
@@ -381,7 +381,7 @@ _oDlg := MsDialog():New(_oSize:aWindSize[1], _oSize:aWindSize[2], _oSize:aWindSi
     //--------+
     // Botoes |
     //--------+
-    _oBtnOk     := TButton():New( _nLinIni - 26, _nColFin - 100, "Confirmar", _oPanel_02,{|| IIF( BsFinA13J(),( FwMsgRun(,{|_oSay| BsFinA13G(_oSay) },"Aguarde...","Processando conciliação"), FwMsgRun(,{|| BsFinA13A(_nTotal,_nCount,_nTotLiq,_nTotTx,_oSay_02,_oSay_04)},"Aguarde...","Buscando concilações em aberto.") ),Nil)}	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
+    _oBtnOk     := TButton():New( _nLinIni - 26, _nColFin - 100, "Confirmar", _oPanel_02,{|| IIF( BPFINA13J(),( FwMsgRun(,{|_oSay| BPFINA13G(_oSay) },"Aguarde...","Processando conciliação"), FwMsgRun(,{|| BPFINA13A(_nTotal,_nCount,_nTotLiq,_nTotTx,_oSay_02,_oSay_04)},"Aguarde...","Buscando concilações em aberto.") ),Nil)}	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_oBtnSair   := TButton():New( _nLinIni - 26, _nColFin - 050, "Sair", _oPanel_02,{|| _oDlg:End() }	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
 
     _oDlg:lEscClose := .F.    
@@ -391,14 +391,14 @@ _oDlg:Activate(,,,.T.,,,)
 Return Nil 
 
 /********************************************************************************************************************/
-/*/{Protheus.doc} BsFinA13C
+/*/{Protheus.doc} BPFINA13C
     @description Cria GRID com os dados dos titulos e-Commerce
     @type  Static Function
     @author Bernard M. Margarido
     @since 21/07/2021
 /*/
 /********************************************************************************************************************/
-Static Function BsFinA13C(_oBrowseA,_nTotTx,_nTotLiq,_nTotal,_nCount,_oTEcom,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos)
+Static Function BPFINA13C(_oBrowseA,_nTotTx,_nTotLiq,_nTotal,_nCount,_oTEcom,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos)
 Local _aSeek 	:= {}
 
 //------------------+
@@ -412,7 +412,7 @@ aAdd( 	_aSeek, 	{ AllTrim("Valor")		        ,{{"","N",TamSx3("XTP_VALOR")[1],Tam
 // Cria browser |
 //--------------+
 _oBrowseA := FWBrowse():New(_oTEcom)
-_oBrowseA:AddMarkColumns( {|| IIF( Len(_aEcomm) > 0 .And. _aEcomm[_oBrowseA:At()][COL_MARK] == "LBOK" , "LBOK", "LBNO")}, {|| BsFinA13E(_oBrowseA,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aEcomm,1,1) }, {|| BsFinA13E(_oBrowseA,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aEcomm,2,1) })
+_oBrowseA:AddMarkColumns( {|| IIF( Len(_aEcomm) > 0 .And. _aEcomm[_oBrowseA:At()][COL_MARK] == "LBOK" , "LBOK", "LBNO")}, {|| BPFINA13E(_oBrowseA,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aEcomm,1,1) }, {|| BPFINA13E(_oBrowseA,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aEcomm,2,1) })
 _oBrowseA:AddLegend({|| _aEcomm[_oBrowseA:At()][COL_STATUS] == '1'}, "GREEN"	, "Título encontrado")
 _oBrowseA:AddLegend({|| _aEcomm[_oBrowseA:At()][COL_STATUS] == '2'}, "YELLOW"	, "Título encontrado com divergencia")
 _oBrowseA:AddLegend({|| _aEcomm[_oBrowseA:At()][COL_STATUS] == '3'}, "RED"	    , "Título não encontrado")
@@ -500,14 +500,14 @@ _oBrowseA:Refresh()
 Return Nil 
 
 /********************************************************************************************************************/
-/*/{Protheus.doc} BsFinA13D
+/*/{Protheus.doc} BPFINA13D
     @description Cria GRID com os dados dos titulos e-Commerce
     @type  Static Function
     @author Bernard M. Margarido
     @since 21/07/2021
 /*/
 /********************************************************************************************************************/
-Static Function BsFinA13D(_oBrowseB,_nTotTx,_nTotLiq,_nTotal,_nCount,_oTTitul,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos)
+Static Function BPFINA13D(_oBrowseB,_nTotTx,_nTotLiq,_nTotal,_nCount,_oTTitul,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos)
 Local _aSeek 	:= {}
 
 //------------------+
@@ -522,7 +522,7 @@ aAdd( 	_aSeek, 	{ AllTrim("Valor")		        ,{{"","N",TamSx3("XTP_VALOR")[1],Tam
 // Cria browser |
 //--------------+
 _oBrowseB := FWBrowse():New(_oTTitul)                                                                              
-_oBrowseB:AddMarkColumns( {|| IIF( Len(_aTitulo) > 0 .And. _aTitulo[_oBrowseB:At()][COL_TMARK] == "LBOK" , "LBOK", "LBNO")}, {|| BsFinA13E(_oBrowseB,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aTitulo,1,2) }, {|| BsFinA13E(_oBrowseB,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aTitulo,2,2) })
+_oBrowseB:AddMarkColumns( {|| IIF( Len(_aTitulo) > 0 .And. _aTitulo[_oBrowseB:At()][COL_TMARK] == "LBOK" , "LBOK", "LBNO")}, {|| BPFINA13E(_oBrowseB,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aTitulo,1,2) }, {|| BPFINA13E(_oBrowseB,@_oSay_02,@_oSay_04,@_oSay_06,@_oSay_08,@_oChkMark,@_lTodos,@_nTotTx,@_nTotLiq,@_nTotal,@_nCount,_aTitulo,2,2) })
 _oBrowseB:AddLegend({|| _aTitulo[_oBrowseB:At()][COL_TSTATUS] == '1'}, "GREEN"	, "Título encontrado")
 _oBrowseB:AddLegend({|| _aTitulo[_oBrowseB:At()][COL_TSTATUS] == '2'}, "YELLOW"	, "Título encontrado com divergencia")
 _oBrowseB:AddLegend({|| _aTitulo[_oBrowseB:At()][COL_TSTATUS] == '3'}, "RED"	, "Título não encontrado")
@@ -602,14 +602,14 @@ _oBrowseB:Refresh()
 Return Nil 
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13E
+/*/{Protheus.doc} BPFINA13E
     @description Marca titulos aprovados
     @type  Static Function
     @author Bernard M. Margarido
     @since 25/03/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13E(_oBrowse,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos,_nTotTx,_nTotLiq,_nTotal,_nCount,_aArray,_nMark,_nGrid)
+Static Function BPFINA13E(_oBrowse,_oSay_02,_oSay_04,_oSay_06,_oSay_08,_oChkMark,_lTodos,_nTotTx,_nTotLiq,_nTotal,_nCount,_aArray,_nMark,_nGrid)
 Local _nPos     := 0
 Local _nLin     := _oBrowse:nAt
 Local _nIDPay   := IIF(_nGrid == 1,COL_TIDPAY,COL_IDPAY)
@@ -750,14 +750,14 @@ EndIf
 Return .T.
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13F
+/*/{Protheus.doc} BPFINA13F
     @description Marca ou desmarca todos os titulos 
     @type  Static Function
     @author Bernard M. Margarido
     @since 25/03/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13F(_lMark,_nTotLiq,_nTotTx,_nTotal,_nCount,_oSay_02,_oSay_04,_oSay_06,_oSay_08)
+Static Function BPFINA13F(_lMark,_nTotLiq,_nTotTx,_nTotal,_nCount,_oSay_02,_oSay_04,_oSay_06,_oSay_08)
 Local _nX   := 1
 
 _nTotLiq    := 0
@@ -802,18 +802,18 @@ EndIf
 Return Nil 
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13G
+/*/{Protheus.doc} BPFINA13G
     @description Realiza a baixa dos titulos eCommerce 
     @type  Static Function
     @author Bernard M. Margarido
     @since 22/07/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13G(_oSay)
+Static Function BPFINA13G(_oSay)
 Local _aArea    := GetArea()
 Local _aBaixa   := {}
 
-Local _cFilFat  := dToS( Date() ) + StrTran( Time(), ":", "" )
+Local _cFilFat  := FWUUIDV4()
 Local _cNumFat  := ""
 Local _cCodTran := ""
 
@@ -822,7 +822,7 @@ Local _nValFat  := 0
 Local _nValLiq  := 0
 Local _nVlrTit  := 0
 
-If !MsgYesNo("Confirma a conciliação dos pagametos marcados?","Bunzl Saude - Avisos!")
+If !MsgYesNo("Confirma a conciliação dos pagametos marcados?","BEPI - Avisos!")
     RestArea(_aArea)
     Return .F.
 EndIf 
@@ -855,22 +855,22 @@ If Len(_aBaixa) > 0
     //----------------------------+
     // Atualiza dados dos titulos |
     //----------------------------+
-    BsFinA13I(_aBaixa,_cFilFat,@_nValFat,@_nValLiq,@_oSay)
+    BPFINA13I(_aBaixa,_cFilFat,@_nValFat,@_nValLiq,@_oSay)
 
     //------------------------------+
     // Cria fatura de transferencia |
     //------------------------------+
-    If BsFinA13H(_cFilFat,_nValFat,_nValLiq,@_cNumFat,@_cCodTran,@_oSay)
+    If BPFINA13H(_cFilFat,_nValFat,_nValLiq,@_cNumFat,@_cCodTran,@_oSay)
 
         //-----------------------------+
         // Atualiza status conciliação |
         //-----------------------------+
-        BsFinA13K(_aBaixa,@_oSay)
+        BPFINA13K(_aBaixa,@_oSay)
 
         //----------------------------------+
         // Envia transferencia para PagarMe |
         //----------------------------------+
-        BsFinA13L(_cFilFat,_cNumFat,_cCodTran,@_oSay)
+        BPFINA13L(_cFilFat,_cNumFat,_cCodTran,@_oSay)
     EndIf
 
 EndIf
@@ -880,17 +880,15 @@ RestArea(_aArea)
 Return Nil
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13H
+/*/{Protheus.doc} BPFINA13H
     @description Realiza a baixa dos titulos eCommerce 
     @type  Static Function
     @author Bernard M. Margarido
     @since 22/07/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13H(_cFilFat,_nValFat,_nValLiq,_cNumFat,_cCodTran,_oSay)
+Static Function BPFINA13H(_cFilFat,_nValFat,_nValLiq,_cNumFat,_cCodTran,_oSay)
 Local _aArea            := GetArea()
-
-Local _aErro            := {}
 Local _aCabec		    := {}
 Local _aItens		    := {}
 Local _aItem		    := {}
@@ -900,16 +898,16 @@ Local _cErro            := ""
 Local _cFiltro		    := ""
 Local _cParcela         := ""
 Local _c1DUP            := SuperGetMv("MV_1DUP")
-Local _cCliAdm		    := GetNewPar("PG_CODADM","025904")
-Local _cLojaAdm		    := GetNewPar("PG_LOJADM","0001")
-Local _cNumBco		    := PadR( Rtrim( GetMv( "PG_BCONUM" ,,"033") ), TamSX3("E1_BCOCHQ")[1] )
-Local _cNumAg		    := PadR( Rtrim( GetMv( "PG_AGNUM" ,,"3689") ), TamSX3("E1_AGECHQ")[1] )
-Local _cAccount		    := PadR( Rtrim( GetMv( "PG_NCONTA" ,,"13006505") ), TamSX3("E1_CTACHQ")[1] )
-Local _cCond		    := PadR( Rtrim( GetMv( "PG_CONDPG" ,,"100") ), TamSX3("E4_CODIGO")[1] )
-Local _cNaturez		    := PadR( Rtrim( GetMv( "PG_NATUREZ" ,,"0010101") ), TamSX3("E1_NATUREZ")[1] )
-Local _cTipo		    := PadR( Rtrim( GetMv( "PG_TPFATEC" ,,"PGE") ), TamSX3("E1_TIPO")[1] )
+Local _cCliAdm		    := GetNewPar("PG_CODADM","C20944")
+Local _cLojaAdm		    := GetNewPar("PG_LOJADM","0000")
+Local _cNumBco		    := PadR( Rtrim( GetMv( "PG_BCONUM" ,,"341") ), TamSX3("E1_BCOCHQ")[1] )
+Local _cNumAg		    := PadR( Rtrim( GetMv( "PG_AGNUM" ,,"0002") ), TamSX3("E1_AGECHQ")[1] )
+Local _cAccount		    := PadR( Rtrim( GetMv( "PG_NCONTA" ,,"358802") ), TamSX3("E1_CTACHQ")[1] )
+Local _cCond		    := PadR( Rtrim( GetMv( "PG_CONDPG" ,,"001") ), TamSX3("E4_CODIGO")[1] )
+Local _cNaturez		    := PadR( Rtrim( GetMv( "PG_NATUREZ" ,,"010212") ), TamSX3("E1_NATUREZ")[1] )
+Local _cTipo		    := PadR( Rtrim( GetMv( "PG_TPFATEC" ,,"PGM") ), TamSX3("E1_TIPO")[1] )
 Local _nMoeda		    := 1 
-Local _cPrefixo		    := PadR( Rtrim( GetMv( "PG_PREFIX",,"ECO" ) ), TamSX3("E1_PREFIXO")[1] )
+Local _cPrefixo		    := PadR( Rtrim( GetMv( "PG_PREFIX",,"PGM" ) ), TamSX3("E1_PREFIXO")[1] )
 
 Local _nX               := 0
 Local _nValXTB          := 0
@@ -961,7 +959,7 @@ For _nX := 1 To Len(_aParcelas)
     aAdd(_aItens, {"E1_EMITCHQ"	, "PAGARME"				}) 		//Emitente do cheque
     aAdd(_aItens, {"E1_VENCTO"	, _aParcelas[_nX][1]    })		//Data boa 
     aAdd(_aItens, {"E1_VLCRUZ"	, _aParcelas[_nX][2]    })		//Valor do cheque/titulo
-    aAdd(_aItens, {"E1_XECOMME"	, "S"					})		//Titulo eCommerce
+    //aAdd(_aItens, {"E1_XECOMME"	, "S"					})		//Titulo eCommerce
     //aAdd(_aItens, {"E1_DECRESC"	, _nValLiq		        })		//Valor do cheque/titulo
 
     aAdd(_aItem,_aItens)
@@ -993,35 +991,34 @@ If Len(_aItem) > 0 .And. Len(_aCabec) > 0
 	lMsErroAuto := .F.
 
     Pergunte("AFI460",.F.)
-    mv_par01 := 2
-    mv_par02 := 2
-    mv_par03 := 2
-    mv_par04 := 1
-    mv_par05 := 2
-    mv_par06 := 2
-    mv_par07 := 2
-    mv_par08 := ""
-    mv_par09 := 1
+    SetMVValue("AFI460","mv_par01", 2)
+    SetMVValue("AFI460","mv_par02", 2)
+    SetMVValue("AFI460","mv_par03", 2)
+    SetMVValue("AFI460","mv_par04", 1)
+    SetMVValue("AFI460","mv_par05", 2)
+    SetMVValue("AFI460","mv_par06", 2)
+    SetMVValue("AFI460","mv_par07", 2)
+    SetMVValue("AFI460","mv_par08", "")
+    SetMVValue("AFI460","mv_par09", 1)
+
+    SetFunName("FINA460")
 
     nModulo  := 6 
-	FINA460(,_aCabec,_aItem,4,_cFiltro)
+	FINA460(,_aCabec, _aItem, 3, _cFiltro)
 		
 	//------+
 	// Erro | 
 	//------+
 	If lMsErroAuto
+        
         RollBackSX8()
+
         _lRet  := .F.
-		_aErro := GetAutoGRLog()
-    	If Len(_aErro) > 0
-        _cErro := "Erro ao gerar fatura. " + CRLF
-            For _nX := 1 To Len(_aErro)
-                _cErro += _aErro[_nX] + CRLF
-            Next _nX
-        Else
-            _cErro += "Verifique os dados enviados."
-        EndIf
-        MsgInfo(_cErro, "Bunzl Saude - Avisos")
+		_cErro := "" 
+    	
+        AEval(GetAutoGRLog(), {|x| _cErro += x + CRLF})
+
+        MsgInfo(_cErro, "BEPI - Avisos")
 	Else
 		ConfirmSX8()
 
@@ -1050,7 +1047,7 @@ If Len(_aItem) > 0 .And. Len(_aCabec) > 0
             XTQ->XTQ_STATUS := "1"
         XTQ->( MsUnLock() )  
 
-        MsgInfo("Fatura " + _cNumFat + " " + _cPrefixo + " gerada com sucesso no valor de " + Alltrim(Transform(_nValXTB,PesqPict("SE1","E1_VALOR"))) + ".", "Bunzl Saude - Avisos")
+        MsgInfo("Fatura " + _cNumFat + " " + _cPrefixo + " gerada com sucesso no valor de " + Alltrim(Transform(_nValXTB,PesqPict("SE1","E1_VALOR"))) + ".", "BEPI - Avisos")
 	EndIf
 EndIf	
 
@@ -1059,14 +1056,14 @@ RestArea(_aArea)
 Return _lRet 
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13I
+/*/{Protheus.doc} BPFINA13I
     @description Realiza a atualização dos titulos ecommerce
     @type  Static Function
     @author Bernard M. Margarido
     @since 22/07/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13I(_aBaixa,_cFilFat,_nValFat,_nValLiq,_oSay)
+Static Function BPFINA13I(_aBaixa,_cFilFat,_nValFat,_nValLiq,_oSay)
 Local _aArea    := GetArea()
 Local _nVlrTit  := 0
 Local _nVlrPGM  := 0 
@@ -1107,14 +1104,14 @@ RestArea(_aArea)
 Return Nil 
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13K
+/*/{Protheus.doc} BPFINA13K
     @description Atualiza status conciliação eCommerce
     @type  Static Function
     @author Bernard M. Margarido
     @since 29/07/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13K(_aBaixa,_oSay)
+Static Function BPFINA13K(_aBaixa,_oSay)
 Local _aArea    := GetArea()
 Local _aCodConc := {}
 
@@ -1145,18 +1142,18 @@ RestArea(_aArea)
 Return Nil 
 
 /*********************************************************************************/
-/*/{Protheus.doc} BsFinA13J
+/*/{Protheus.doc} BPFINA13J
     @description Valida se existem titulos marcados após confirmar
     @type  Static Function
     @author Bernard M. Margarido
     @since 22/07/2021
 /*/
 /*********************************************************************************/
-Static Function BsFinA13J()
+Static Function BPFINA13J()
 Local _lRet := .T. 
 
 If aScan(_aEcomm,{|x| RTrim(x[COL_MARK]) == "LBOK"}) == 0
-    MsgInfo("Não é possivel realizar a conciliação. Não existem titulos marcados.","Bunzl Saude - Avisos")
+    MsgInfo("Não é possivel realizar a conciliação. Não existem titulos marcados.","BEPI - Avisos")
     _lRet := .F.
 EndIf 
 
@@ -1164,14 +1161,14 @@ EndIf
 // Valida dados bancários |
 //------------------------+
 If Empty(GetMv("PG_BCONUM"))
-    MsgInfo("Não é possivel realizar a conciliação. Não existem as informações bancárias. " + CRLF + " Favor cadastrar os dados bancários para realizar a conciliação","Bunzl Saude - Avisos")
+    MsgInfo("Não é possivel realizar a conciliação. Não existem as informações bancárias. " + CRLF + " Favor cadastrar os dados bancários para realizar a conciliação","BEPI - Avisos")
     _lRet := .F.
 EndIf
 
 Return _lRet
 
 /********************************************************************************/
-/*/{Protheus.doc} BsFinA13L
+/*/{Protheus.doc} BPFINA13L
     @description Realiza o envio da transferencia para PagarMe
     @type  Static Function
     @author Bernard M Margarido
@@ -1179,7 +1176,7 @@ Return _lRet
     @version version
 /*/
 /********************************************************************************/
-Static Function BsFinA13L(_cFilFat,_cNumFat,_cCodTran,_oSay)
+Static Function BPFINA13L(_cFilFat,_cNumFat,_cCodTran,_oSay)
 Local _aArea    := GetArea() 
 
 Local _cPrefixo	:= PadR( Rtrim( GetMv( "PG_PREFIX",,"ECO" ) ), TamSX3("E1_PREFIXO")[1] )
@@ -1196,8 +1193,8 @@ Local _lGrava   := .F.
 //--------------------------------+
 // Localiza ID conta do recebedor |
 //--------------------------------+
-If !BsFinA13M(@_cRecID)
-    MsgStop("ID conta recebedor não localizado!","Bunzl Saude - Avisos")
+If !BPFINA13M(@_cRecID)
+    MsgStop("ID conta recebedor não localizado!","BEPI - Avisos")
     RestArea(_aArea)
     Return .F.
 EndIf 
@@ -1208,7 +1205,7 @@ EndIf
 dbSelectArea("SE1")
 SE1->( dbSetOrder(1) )
 If !SE1->( dbSeek(xFilial("SE1") + _cPrefixo + _cNumFat))
-    MsgStop("Fatura " + _cNumFat + " não localizada!","Bunzl Saude - Avisos")
+    MsgStop("Fatura " + _cNumFat + " não localizada!","BEPI - Avisos")
     RestArea(_aArea)
     Return .F.
 EndIf 
@@ -1216,15 +1213,15 @@ EndIf
 //--------------------------------------------+
 // Cria interface para envio da Transferencia | 
 //--------------------------------------------+
-_oJSon := Array(#)
-_oJSon[#"amount"]       := SE1->E1_SALDO * 100
-_oJSon[#"recipient_id"] := _cRecID
-_oJSon[#"metadata"]     := ""
+_oJSon  := JSonObject():New()
+_oJSon["amount"]       := SE1->E1_SALDO * 100
+_oJSon["recipient_id"] := _cRecID
+_oJSon["metadata"]     := ""
 
 //-------------------+
 // Cria arquivo JSon |
 //-------------------+
-_cRest := xToJson(_oJSon)
+_cRest := _oJSon:ToJson(_oJSon)
 
 //--------------------------------------+
 // Envia transferencia para o eCommerce |
@@ -1256,13 +1253,13 @@ If _lGrava
     EndIf 
 EndIF 
 
-MsgAlert(_cMsg,"Bunzl Saude - Avisos")
+MsgAlert(_cMsg,"BEPI - Avisos")
 
 RestArea(_aArea)
 Return Nil 
 
 /************************************************************************************/
-/*/{Protheus.doc} BsFinA13M
+/*/{Protheus.doc} BPFINA13M
     @description Consulta ID conta recebedor
     @type  Static Function
     @author Bernard M Margarido
@@ -1270,7 +1267,7 @@ Return Nil
     @version version
 /*/
 /************************************************************************************/
-Static Function BsFinA13M(_cRecID)
+Static Function BPFINA13M(_cRecID)
 Local _lRet     := .F.
 
 Local _cRest    := ""
