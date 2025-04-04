@@ -860,7 +860,7 @@ If Len(_aBaixa) > 0
     //------------------------------+
     // Cria fatura de transferencia |
     //------------------------------+
-    If BPFINA13H(_cFilFat,_nValFat,_nValLiq,@_cNumFat,@_cCodTran,@_oSay)
+    If BPFINA13H(_cFilFat,_nValFat,_nValLiq,_aBaixa,@_cNumFat,@_cCodTran,@_oSay)
 
         //-----------------------------+
         // Atualiza status conciliação |
@@ -887,7 +887,7 @@ Return Nil
     @since 22/07/2021
 /*/
 /*********************************************************************************/
-Static Function BPFINA13H(_cFilFat,_nValFat,_nValLiq,_cNumFat,_cCodTran,_oSay)
+Static Function BPFINA13H(_cFilFat,_nValFat,_nValLiq,_aBaixa,_cNumFat,_cCodTran,_oSay)
 Local _aArea            := GetArea()
 Local _aCabec		    := {}
 Local _aItens		    := {}
@@ -937,12 +937,10 @@ aAdd(_aCabec, {"cCondicao"	, _cCond 	})
 aAdd(_aCabec, {"cNatureza"	, _cNaturez })
 aAdd(_aCabec, {"E1_TIPO" 	, _cTipo 	})
 aAdd(_aCabec, {"cCliente"	, _cCliAdm 	})
-aAdd(_aCabec, {"nMoeda"		, _nMoeda 	}) 
 aAdd(_aCabec, {"cLoja"		, _cLojaAdm })
+aAdd(_aCabec, {"nMoeda"		, _nMoeda 	}) 
 
-//_aParcelas  := Condicao( _nValFat, _cCond,, dDataBase)
 _aParcelas  := Condicao( _nValLiq, _cCond,, dDataBase)
-//_nValLiq    := IIF(Len(_aParcelas) > 1, _nValLiq / Len(_aParcelas), _nValLiq )
 
 For _nX := 1 To Len(_aParcelas)
 
@@ -951,16 +949,13 @@ For _nX := 1 To Len(_aParcelas)
     _nValXTB  += _aParcelas[_nX][2]
 
     aAdd(_aItens, {"E1_PREFIXO"	, _cPrefixo				})		//Prefixo
+    aAdd(_aItens, {"E1_NUM"		, _cNumFat 				})		//Nro. cheque (dará origem ao numero do titulo)
+    aAdd(_aItens, {"E1_PARCELA"	, _cParcela		        })		//Numero da Parcela
     aAdd(_aItens, {"E1_BCOCHQ"	, _cNumBco 				})		//Banco
     aAdd(_aItens, {"E1_AGECHQ"	, _cNumAg 				})		//Agencia
     aAdd(_aItens, {"E1_CTACHQ"	, _cAccount 			})		//Conta
-    aAdd(_aItens, {"E1_NUM"		, _cNumFat 				})		//Nro. cheque (dará origem ao numero do titulo)
-    aAdd(_aItens, {"E1_PARCELA"	, _cParcela		        })		//Numero da Parcela
-    aAdd(_aItens, {"E1_EMITCHQ"	, "PAGARME"				}) 		//Emitente do cheque
     aAdd(_aItens, {"E1_VENCTO"	, _aParcelas[_nX][1]    })		//Data boa 
     aAdd(_aItens, {"E1_VLCRUZ"	, _aParcelas[_nX][2]    })		//Valor do cheque/titulo
-    //aAdd(_aItens, {"E1_XECOMME"	, "S"					})		//Titulo eCommerce
-    //aAdd(_aItens, {"E1_DECRESC"	, _nValLiq		        })		//Valor do cheque/titulo
 
     aAdd(_aItem,_aItens)
 
@@ -969,7 +964,7 @@ Next _nX
 //--------+
 // Filtro |
 //--------+
-_cFiltro := " E1_XFILFAT == '" + _cFilFat + "' "
+_cFiltro := "RTRIM(E1_XFILFAT) == '" + RTrim(_cFilFat) + "' .AND. E1_SALDO > 0 .AND. Empty(E1_NUMLIQ) "
 
 //-------------+
 // Gera Fatura |
@@ -981,9 +976,6 @@ If Len(_aItem) > 0 .And. Len(_aCabec) > 0
 	//---------------+
 	// Numero Fatura |
 	//---------------+
-	//dbSelectArea("SE1")
-	//SE1->( dbSetOrder(1) )
-	//SE1->( dbGoTop() )
     dbSelectArea("SA1")
     SA1->( dbSetOrder(1) )
     SA1->( dbSeek(xFilial("SA1") + PadR(_cCliAdm,TamSx3("A1_COD")[1]) + PadR(_cLojaAdm,TamSx3("A1_LOJA")[1])) )
@@ -1004,7 +996,7 @@ If Len(_aItem) > 0 .And. Len(_aCabec) > 0
     SetFunName("FINA460")
 
     nModulo  := 6 
-	FINA460(,_aCabec, _aItem, 3, _cFiltro)
+	FINA460(,_aCabec, _aItem, 4, _cFiltro)
 		
 	//------+
 	// Erro | 
