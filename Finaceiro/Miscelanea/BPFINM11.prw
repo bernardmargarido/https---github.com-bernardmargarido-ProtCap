@@ -45,15 +45,15 @@ BPFINM11B(@_cRecID)
 // Cria interface para envio da Transferencia | 
 //--------------------------------------------+
 _oPagarMe               := PagarMe():New() 
-_oJSon                  := Array(#)
-_oJSon[#"amount"]       := XTQ->XTQ_VALOR * 100
-_oJSon[#"recipient_id"] := _cRecID
-_oJSon[#"metadata"]     := ""
+_oJSon                  := JSonObject():New()
+_oJSon["amount"]        := XTQ->XTQ_VALOR * 100
+_oJSon["recipient_id"]  := _cRecID
+_oJSon["metadata"]      := ""
 
 //-------------------+
 // Cria arquivo JSon |
 //-------------------+
-_cRest := xToJson(_oJSon)
+_cRest := _oJSon:ToJson()
 
 //--------------------------------------+
 // Envia transferencia para o eCommerce |

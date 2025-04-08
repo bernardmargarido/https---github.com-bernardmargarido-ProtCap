@@ -182,8 +182,9 @@ If ::oFwRest:Get(::aHeadOut)
     _lRet       := .T.
 Else
     ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-    ::oRetJSon	:= xFromJson(::cRetJSon)
-    ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+    ::oRetJSon  := JSonObject():New()
+    ::oRetJSon:FromJson(::cRetJSon)
+    ::cError    := ::oRetJSon["errors"][1]["message"] 
     _lRet   := .F.
 EndIf
 
@@ -265,8 +266,9 @@ If ::oFwRest:Get(::aHeadOut)
     _lRet       := .T.
 Else
     ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-    ::oRetJSon	:= xFromJson(::cRetJSon)
-    ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+    ::oRetJSon  := JSonObject():New()
+    ::oRetJSon:FromJson(::cRetJSon)
+    ::cError    := ::oRetJSon["errors"][1]["message"]  
     _lRet   := .F.
 EndIf
 
@@ -317,8 +319,9 @@ If ::oFwRest:Post(::aHeadOut)
     _lRet       := .T.
 Else
     ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-    ::oRetJSon	:= xFromJson(::cRetJSon)
-    ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+    ::oRetJSon  := JSonObject():New()
+    ::oRetJSon:FromJson(::cRetJSon)
+    ::cError    := ::oRetJSon["errors"][1]["message"] 
     _lRet   := .F.
 EndIf
 
@@ -388,12 +391,13 @@ If ::cMetodo == "POST"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
         If ValType(::oRetJSon) == "O"
             If At("errors",::cRetJSon) > 0
-                ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+                ::cError    := ::oRetJSon["errors"][1]["message"] 
             Else 
-                ::cError    := ::oRetJSon[#"message"] 
+                ::cError    := ::oRetJSon["message"] 
             EndIf
         EndIf
         _lRet   := .F.
@@ -411,8 +415,9 @@ ElseIf ::cMetodo == "PUT"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 
@@ -428,8 +433,9 @@ ElseIf ::cMetodo == "GET"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 
@@ -505,18 +511,19 @@ If ::cMetodo == "POST"
         Else 
             ::cRetJSon	:= ::oFwRest:GetResult()
         EndIf
-        ::oRetJSon	:= xFromJson(::cRetJSon)
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
         If ValType(::oRetJSon) == "O"
             If At("errors",::cRetJSon) > 0
-                If ValType(::oRetJSon[#"errors"]) == "A"
-                    For _nX := 1 To Len(::oRetJSon[#"errors"])
-                        ::cError    += ::oRetJSon[#"errors"][_nX][#"message"] + CRLF
+                If ValType(::oRetJSon["errors"]) == "A"
+                    For _nX := 1 To Len(::oRetJSon["errors"])
+                        ::cError    += ::oRetJSon["errors"][_nX]["message"] + CRLF
                     Next _nX 
                 Else 
-                    ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+                    ::cError    := ::oRetJSon["errors"][1]["message"] 
                 EndIf
             Else 
-                ::cError    := ::oRetJSon[#"message"] 
+                ::cError    := ::oRetJSon["message"] 
             EndIf
         EndIf
         _lRet   := .F.
@@ -534,8 +541,9 @@ ElseIf ::cMetodo == "GET"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 
@@ -589,8 +597,9 @@ If ::cMetodo == "GET"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 
@@ -645,8 +654,9 @@ If ::cMetodo == "GET"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 
@@ -700,8 +710,9 @@ If ::cMetodo == "GET"
         _lRet       := .T.
     Else
         ::cRetJSon	:= DecodeUtf8(::oFwRest:GetResult())
-        ::oRetJSon	:= xFromJson(::cRetJSon)
-        ::cError    := ::oRetJSon[#"errors"][1][#"message"] 
+        ::oRetJSon  := JSonObject():New()
+        ::oRetJSon:FromJson(::cRetJSon)
+        ::cError    := ::oRetJSon["errors"][1]["message"] 
         _lRet   := .F.
     EndIf
 

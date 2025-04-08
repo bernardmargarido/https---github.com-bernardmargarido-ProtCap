@@ -2,6 +2,8 @@
 #INCLUDE "PROTHEUS.CH"
 #INCLUDE "FWMVCDEF.CH"
 
+#DEFINE CRLF CHR(13) + CHR(10)
+
 /*************************************************************************************************************/
 /*/{Protheus.doc} BPFINA15
     @description Transferencias PagarMe
@@ -306,6 +308,57 @@ If ParamBox(_aParam,"Parametros Transferencia PagarMe",@_aRet,/*_bVldParam*/,,,,
     EndIf
 
 EndIf    
+Return Nil 
+
+/************************************************************************************/
+/*/{Protheus.doc} BPFIN15D
+    @description Realiza a deleção da transferencia 
+    @type user function
+    @author Bernard M Margarido
+    @since 07/04/2025
+    @version version
+/*/
+/************************************************************************************/
+User Function BPFIN15D(_cFilial,_cTitulo,_cPrefixo)
+Local _aArea    := GetArea()
+
+Local _cQuery   := ""
+Local _cAlias   := ""
+
+_cQuery := " SELECT " + CRLF
+_cQuery += "    XTQ.R_E_C_N_O_ RECNOXTQ, " + CRLF
+_cQuery += "    XTQ.XTQ_IDTRAN " + CRLF
+_cQuery += " FROM " + CRLF
+_cQuery += "    " + RetSqlName("XTQ") + " XTQ " + CRLF
+_cQuery += " WHERE " + CRLF 
+_cQuery += "    XTQ.XTQ_FILIAL = '" + _cFilial + "' AND " + CRLF
+_cQuery += "    XTQ.XTQ_NUMSE1 = '" + _cTitulo + "' AND " + CRLF
+_cQuery += "    XTQ.XTQ_PRESE1 = '" + _cPrefixo + "' AND " + CRLF
+_cQuery += "    XTQ.D_E_L_E_T_ = '' " 
+
+_cAlias := MPSysOpenQuery(_cQuery)
+
+//--------------------------------+
+// XTQ - Posiciona transferencias |
+//--------------------------------+
+dbSelectArea("XTQ")
+XTQ->( dbSetOrder(1) )
+
+While (_cAlias)->( !Eof() )
+    XTQ->( dbGoTo((_cAlias)->RECNOXTQ))
+
+    If Empty(xtq->XTQ_IDTRAN)
+        RecLock("XTQ",.F.)
+            XTQ->( dbDelete() )
+        XTQ->( MsUnLock() )
+    EndIF 
+
+    (_cAlias)->( dbSkip() )
+EndDo 
+
+(_cAlias)->( dbCloseArea() ) 
+
+RestArea(_aArea)
 Return Nil 
 
 /************************************************************************************/

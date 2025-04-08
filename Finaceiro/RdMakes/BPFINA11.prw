@@ -134,6 +134,67 @@ _oView:EnableTitleView('XTP_FORM','Dados Recebiveis')
 Return _oView 
 
 /************************************************************************************/
+/*/{Protheus.doc} BPFIN11A
+    @descriptiom Estorna conciliação 
+    @type user function
+    @author Bernard M Margarido
+    @since 07/04/2025
+    @version version
+/*/
+/************************************************************************************/
+User Function BPFIN11A(_cFilial,_cNumLiq)
+Local _aArea    := GetArea()
+
+Local _cQuery   := ""
+Local _cAlias   := ""
+
+_cQuery := " SELECT " + CRLF
+_cQuery += "	FO0_FILIAL, " + CRLF 
+_cQuery += "	FO0_CLIENT, " + CRLF
+_cQuery += "	FO0_LOJA, " + CRLF
+_cQuery += "	FK7_PREFIX, " + CRLF
+_cQuery += "	FK7_NUM, " + CRLF
+_cQuery += "	FK7_PARCEL, " + CRLF
+_cQuery += "	E1_XNSUCAR, " + CRLF
+_cQuery += "	XTP.XTP_IDPAY, " + CRLF
+_cQuery += "	XTP.XTP_PARC, " + CRLF
+_cQuery += "	XTP.R_E_C_N_O_ RECNOXTP " + CRLF
+_cQuery += " FROM " + CRLF
+_cQuery += "	" + RetSqlName("FO0") + " FO0 " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("FO1") + " FO1 ON FO1.FO1_FILIAL = FO0.FO0_FILIAL AND FO1.FO1_PROCES = FO0.FO0_PROCES AND FO1.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("FK7") + " FK7 ON FK7.FK7_FILTIT = FO1.FO1_FILIAL AND FK7.FK7_IDDOC = FO1.FO1_IDDOC AND FK7.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("SE1") + " SE1 ON SE1.E1_FILIAL = FK7.FK7_FILTIT AND SE1.E1_PREFIXO = FK7.FK7_PREFIX	AND SE1.E1_NUM = FK7.FK7_NUM AND SE1.E1_PARCELA = FK7.FK7_PARCEL AND SE1.E1_TIPO = FK7.FK7_TIPO	AND SE1.E1_CLIENTE = FK7.FK7_CLIFOR	AND SE1.E1_LOJA = FK7.FK7_LOJA AND SE1.D_E_L_E_T_ = '' " + CRLF
+_cQuery += "	INNER JOIN " + RetSqlName("XTP") + " XTP ON XTP.XTP_FILIAL = SE1.E1_FILORIG AND XTP.XTP_IDPAY = SE1.E1_XNSUCAR AND XTP.XTP_PARC = IIF(SE1.E1_PARCELA = '','AA',SE1.E1_PARCELA) AND XTP.D_E_L_E_T_ = '' " + CRLF
+_cQuery += " WHERE " + CRLF
+_cQuery += "	FO0_FILIAL = '" + _cFilial + "' AND " + CRLF
+_cQuery += "	FO0_NUMLIQ = '" + _cNumLiq + "' AND " + CRLF
+_cQuery += "	FO0_STATUS = '4' AND " + CRLF
+_cQuery += "	FO0.D_E_L_E_T_ = '' "
+
+_cAlias := MPSysOpenQuery(_cQuery)
+
+//-----------------------------+
+// XTP - Posiciona conciliacao |
+//-----------------------------+
+dbSelectArea("XTP")
+XTP->( dbSetOrder(1) )
+
+While (_cAlias)->( !Eof() )
+    XTP->( dbGoTo((_cAlias)->RECNOXTP))
+
+    RecLock("XTP",.F.)
+        XTP->XTP_STATUS := "1"
+    XTP->( MsUnLock() )
+
+    (_cAlias)->( dbSkip() )
+EndDo 
+
+(_cAlias)->( dbCloseArea() ) 
+
+RestArea(_aArea)
+Return Nil 
+
+/************************************************************************************/
 /*/{Protheus.doc} MenuDef
 	@description Menu padrao para manutencao do cadastro
 	@author Bernard M. Margarido

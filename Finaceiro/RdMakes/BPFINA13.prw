@@ -221,6 +221,9 @@ EndIf
 //---------------------------+
 If ValType(_oBrowseA) == "O"
 
+    _oBrowseA:SetArray(_aEcomm)
+    _oBrowseB:SetArray(_aTitulo)
+    
     _oBrowseA:Refresh()
     _oBrowseB:Refresh()
 
@@ -382,6 +385,7 @@ _oDlg := MsDialog():New(_oSize:aWindSize[1], _oSize:aWindSize[2], _oSize:aWindSi
     // Botoes |
     //--------+
     _oBtnOk     := TButton():New( _nLinIni - 26, _nColFin - 100, "Confirmar", _oPanel_02,{|| IIF( BPFINA13J(),( FwMsgRun(,{|_oSay| BPFINA13G(_oSay) },"Aguarde...","Processando conciliação"), FwMsgRun(,{|| BPFINA13A(_nTotal,_nCount,_nTotLiq,_nTotTx,_oSay_02,_oSay_04)},"Aguarde...","Buscando concilações em aberto.") ),Nil)}	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
+    //_oBtnOk     := TButton():New( _nLinIni - 26, _nColFin - 100, "Confirmar", _oPanel_02,{|| IIF( BPFINA13J(),( FwMsgRun(,{|_oSay| BPFINA13G(_oSay) },"Aguarde...","Processando conciliação")),Nil)}	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
 	_oBtnSair   := TButton():New( _nLinIni - 26, _nColFin - 050, "Sair", _oPanel_02,{|| _oDlg:End() }	, 045,015,,,.F.,.T.,.F.,,.F.,,,.F. )
 
     _oDlg:lEscClose := .F.    
@@ -964,12 +968,12 @@ Next _nX
 //--------+
 // Filtro |
 //--------+
-_cFiltro := "RTRIM(E1_XFILFAT) == '" + RTrim(_cFilFat) + "' .AND. E1_SALDO > 0 .AND. Empty(E1_NUMLIQ) "
+_cFiltro := "E1_FILORIG == '" + xFilial("SE1") + "' .AND. RTRIM(E1_XFILFAT) == '" + RTrim(_cFilFat) + "' .AND. E1_SALDO > 0 .AND. Empty(E1_NUMLIQ) "
 
 //-------------+
 // Gera Fatura |
 //-------------+	
-_oSay:cCaption := "Gerando fatura " + _cNumFat
+_oSay:cCaption := "Gerando fatura " + RTrim(_cNumFat)
 
 If Len(_aItem) > 0 .And. Len(_aCabec) > 0
 
@@ -1117,7 +1121,7 @@ dbSelectArea("XTP")
 XTP->( dbSetOrder(1) )
 
 For _nX := 1 To Len(_aBaixa)
-    _oSay:cCaption := "Atualizando status conciliação" + _aBaixa[_nX][6] + " " + _aBaixa[_nX][3]
+    _oSay:cCaption := "Atualizando status conciliação" + RTrim(_aBaixa[_nX][6]) + " " + RTrim(_aBaixa[_nX][3])
     If XTP->( dbSeek(xFilial("XTP") + PadR(_aBaixa[_nX][6],_nTIdPay) + PadR(_aBaixa[_nX][3],_nTParc) ))
         
         If aScan(_aCodConc,{|x| RTrim(x) == RTrim(XTP->XTP_CODIGO)}) == 0
@@ -1171,7 +1175,7 @@ Return _lRet
 Static Function BPFINA13L(_cFilFat,_cNumFat,_cCodTran,_oSay)
 Local _aArea    := GetArea() 
 
-Local _cPrefixo	:= PadR( Rtrim( GetMv( "PG_PREFIX",,"ECO" ) ), TamSX3("E1_PREFIXO")[1] )
+Local _cPrefixo	:= PadR( Rtrim( GetMv( "PG_PREFIX",,"PGM" ) ), TamSX3("E1_PREFIXO")[1] )
 Local _cRecID   := ""
 Local _cRest    := ""
 Local _cMsg     := ""
